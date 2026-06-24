@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Backend: Prisma client + build + unit tests ─────────────────────────────
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      # native modules: pnpm skips their build scripts by default
+      - run: pnpm rebuild argon2 sharp
+      - run: pnpm --filter @aldiafa/backend prisma:generate
+      - run: pnpm --filter @aldiafa/backend build
+      - run: pnpm --filter @aldiafa/backend test
+
+  # ── Dashboards + shared: typecheck + production build ────────────────────────
+  dashboards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @aldiafa/shared typecheck
+      - run: pnpm --filter @aldiafa/admin typecheck
+      - run: pnpm --filter @aldiafa/employee typecheck
+      - run: pnpm --filter @aldiafa/admin build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.aldiafah.example/api
+      - run: pnpm --filter @aldiafa/employee build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.aldiafah.example/api

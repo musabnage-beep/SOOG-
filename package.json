@@ -1,0 +1,22 @@
+{
+  "name": "aldiafa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ALDIAFAH (الضيافة) — commerce & order-management platform",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "backend:dev": "pnpm --filter @aldiafa/backend start:dev",
+    "backend:build": "pnpm --filter @aldiafa/backend build",
+    "backend:test": "pnpm --filter @aldiafa/backend test",
+    "backend:test:e2e": "pnpm --filter @aldiafa/backend test:e2e",
+    "db:migrate": "pnpm --filter @aldiafa/backend prisma:migrate",
+    "db:seed": "pnpm --filter @aldiafa/backend prisma:seed",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"apps/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  }
+}

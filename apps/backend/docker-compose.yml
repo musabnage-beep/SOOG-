@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aldiafa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aldiafa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aldiafa}
+      POSTGRES_DB: ${POSTGRES_DB:-aldiafa}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aldiafa} -d ${POSTGRES_DB:-aldiafa}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aldiafa-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-aldiafa}:${POSTGRES_PASSWORD:-aldiafa}@postgres:5432/${POSTGRES_DB:-aldiafa}?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-access-secret-min-16-chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-refresh-secret-min-16-chars}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@aldiafah.example}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeMe!1}
+      SEED_ADMIN_PHONE: ${SEED_ADMIN_PHONE:-+966500000000}
+    ports:
+      - "${API_PORT:-3000}:3000"
+    volumes:
+      - uploads:/app/uploads
+
+  adminer:
+    image: adminer:latest
+    container_name: aldiafa-adminer
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+
+volumes:
+  pgdata:
+  uploads:

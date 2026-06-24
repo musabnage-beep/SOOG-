@@ -1,0 +1,19 @@
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { RoleName } from '@prisma/client';
+
+export interface AuthUser {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  role: RoleName;
+  permissions: string[];
+}
+
+/** Injects the authenticated user (attached by JwtStrategy) into a handler param. */
+export const CurrentUser = createParamDecorator(
+  (data: keyof AuthUser | undefined, ctx: ExecutionContext): AuthUser | AuthUser[keyof AuthUser] => {
+    const request = ctx.switchToHttp().getRequest();
+    const user: AuthUser = request.user;
+    return data ? user?.[data] : user;
+  },
+);

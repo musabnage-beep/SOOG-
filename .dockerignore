@@ -1,0 +1,14 @@
+**/node_modules
+**/.next
+**/dist
+**/build
+.git
+.github
+**/.env
+**/.env.*
+!**/.env.example
+**/*.log
+**/coverage
+apps/mobile
+infra
+**/.DS_Store
