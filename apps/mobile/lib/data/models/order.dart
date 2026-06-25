@@ -147,12 +147,60 @@ class OrderStatusEvent {
 
 enum FulfillmentType { delivery, pickup }
 
+enum PaymentMethod { cod, card }
+
+PaymentMethod paymentMethodFrom(dynamic v) =>
+    v?.toString() == 'CARD' ? PaymentMethod.card : PaymentMethod.cod;
+
+extension PaymentMethodX on PaymentMethod {
+  String get labelAr => this == PaymentMethod.card ? 'دفع إلكتروني' : 'الدفع عند الاستلام';
+  String get apiValue => this == PaymentMethod.card ? 'CARD' : 'COD';
+}
+
+enum PaymentStatus { pending, paid, failed, refunded, unknown }
+
+PaymentStatus paymentStatusFrom(dynamic v) {
+  switch (v?.toString()) {
+    case 'PENDING':
+      return PaymentStatus.pending;
+    case 'PAID':
+      return PaymentStatus.paid;
+    case 'FAILED':
+      return PaymentStatus.failed;
+    case 'REFUNDED':
+      return PaymentStatus.refunded;
+    default:
+      return PaymentStatus.unknown;
+  }
+}
+
+extension PaymentStatusX on PaymentStatus {
+  String get labelAr {
+    switch (this) {
+      case PaymentStatus.pending:
+        return 'بانتظار الدفع';
+      case PaymentStatus.paid:
+        return 'مدفوع';
+      case PaymentStatus.failed:
+        return 'فشل الدفع';
+      case PaymentStatus.refunded:
+        return 'مُسترجع';
+      case PaymentStatus.unknown:
+        return 'غير معروف';
+    }
+  }
+
+  bool get isPaid => this == PaymentStatus.paid;
+}
+
 class Order {
   Order({
     required this.id,
     required this.orderNumber,
     required this.status,
     required this.fulfillmentType,
+    required this.paymentMethod,
+    required this.paymentStatus,
     required this.subtotal,
     required this.deliveryFee,
     required this.total,
@@ -170,6 +218,8 @@ class Order {
   final String orderNumber;
   final OrderStatus status;
   final FulfillmentType fulfillmentType;
+  final PaymentMethod paymentMethod;
+  final PaymentStatus paymentStatus;
   final double subtotal;
   final double deliveryFee;
   final double total;
@@ -184,6 +234,8 @@ class Order {
 
   bool get isDelivery => fulfillmentType == FulfillmentType.delivery;
   bool get needsConfirmation => status == OrderStatus.confirmationRequired;
+  bool get isCard => paymentMethod == PaymentMethod.card;
+  bool get awaitingPayment => isCard && !paymentStatus.isPaid;
   List<OrderItem> get unavailableItems => items.where((i) => i.isUnavailable).toList();
 
   factory Order.fromJson(Map<String, dynamic> json) => Order(
@@ -193,6 +245,8 @@ class Order {
         fulfillmentType: json['fulfillmentType'] == 'PICKUP'
             ? FulfillmentType.pickup
             : FulfillmentType.delivery,
+        paymentMethod: paymentMethodFrom(json['paymentMethod']),
+        paymentStatus: paymentStatusFrom(json['paymentStatus']),
         subtotal: asDouble(json['subtotal']),
         deliveryFee: asDouble(json['deliveryFee']),
         total: asDouble(json['total']),

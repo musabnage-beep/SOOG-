@@ -96,7 +96,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             else if (addresses.items.isEmpty)
               _emptyAddresses()
             else
-              ...addresses.items.map(_addressTile),
+              RadioGroup<String>(
+                groupValue: _addressId,
+                onChanged: (v) => setState(() => _addressId = v),
+                child: Column(children: addresses.items.map(_addressTile).toList()),
+              ),
             const SizedBox(height: 22),
             _DeliveryQuoteCard(address: _selectedAddress),
             const SizedBox(height: 22),
@@ -163,8 +167,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       ),
       child: RadioListTile<String>(
         value: a.id,
-        groupValue: _addressId,
-        onChanged: (v) => setState(() => _addressId = v),
         activeColor: AppColors.primary,
         title: Text(a.label ?? a.city,
             style: const TextStyle(fontWeight: FontWeight.w700)),

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { FulfillmentType, OrderStatus } from '@prisma/client';
+import { FulfillmentType, OrderStatus, PaymentMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -21,6 +21,11 @@ export class CheckoutDto {
   @ValidateIf((o) => o.fulfillmentType === FulfillmentType.DELIVERY)
   @IsUUID()
   addressId?: string;
+
+  @ApiPropertyOptional({ enum: PaymentMethod, default: PaymentMethod.COD })
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  paymentMethod?: PaymentMethod;
 
   @ApiPropertyOptional()
   @IsOptional()

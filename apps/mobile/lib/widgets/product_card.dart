@@ -161,8 +161,8 @@ class ProductCard extends ConsumerWidget {
     return CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.cover,
-      placeholder: (_, __) => Container(color: AppColors.cream),
-      errorWidget: (_, __, ___) => Container(
+      placeholder: (_, _) => Container(color: AppColors.cream),
+      errorWidget: (_, _, _) => Container(
         color: AppColors.cream,
         alignment: Alignment.center,
         child: const Icon(Icons.broken_image_outlined, color: AppColors.muted),

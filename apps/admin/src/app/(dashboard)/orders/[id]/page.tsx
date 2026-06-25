@@ -38,6 +38,9 @@ import {
   ORDER_STATUS_LABEL_AR,
   ORDER_STATUS_TONE,
   FULFILLMENT_LABEL_AR,
+  PAYMENT_METHOD_LABEL_AR,
+  PAYMENT_STATUS_LABEL_AR,
+  PAYMENT_STATUS_TONE,
   advanceTargets,
   type OrderStatus,
 } from '@aldiafa/shared';
@@ -228,6 +231,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               <div className="mt-3 flex items-center gap-2 text-gray-500">
                 <span>طريقة الاستلام:</span>
                 <Badge>{FULFILLMENT_LABEL_AR[order.fulfillmentType]}</Badge>
+              </div>
+              <div className="mt-2 flex items-center gap-2 text-gray-500">
+                <span>طريقة الدفع:</span>
+                <Badge>{PAYMENT_METHOD_LABEL_AR[order.paymentMethod]}</Badge>
+              </div>
+              <div className="mt-2 flex items-center gap-2 text-gray-500">
+                <span>حالة الدفع:</span>
+                <Badge tone={PAYMENT_STATUS_TONE[order.paymentStatus]}>
+                  {PAYMENT_STATUS_LABEL_AR[order.paymentStatus]}
+                </Badge>
               </div>
             </CardBody>
           </Card>

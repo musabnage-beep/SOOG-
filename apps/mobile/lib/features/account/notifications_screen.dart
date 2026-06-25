@@ -51,7 +51,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   child: ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: state.items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (_, i) => _NotifTile(notification: state.items[i]),
                   ),
                 ),

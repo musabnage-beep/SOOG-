@@ -86,7 +86,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             itemBuilder: (_, i) => CachedNetworkImage(
                               imageUrl: images[i],
                               fit: BoxFit.contain,
-                              errorWidget: (_, __, ___) =>
+                              errorWidget: (_, _, _) =>
                                   const Icon(Icons.broken_image_outlined),
                             ),
                           ),

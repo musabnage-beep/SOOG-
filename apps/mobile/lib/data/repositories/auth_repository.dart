@@ -15,8 +15,8 @@ class AuthRepository {
   }) async {
     final data = await _api.post<Map<String, dynamic>>('/auth/register', data: {
       'fullName': fullName,
-      if (email != null) 'email': email,
-      if (phone != null) 'phone': phone,
+      'email': ?email,
+      'phone': ?phone,
       'password': password,
     });
     return data['target'] as String;
@@ -41,8 +41,8 @@ class AuthRepository {
 
   Future<AuthResult> login({String? email, String? phone, required String password}) async {
     final data = await _api.post<Map<String, dynamic>>('/auth/login', data: {
-      if (email != null) 'email': email,
-      if (phone != null) 'phone': phone,
+      'email': ?email,
+      'phone': ?phone,
       'password': password,
     });
     return AuthResult.fromJson(data);
@@ -83,9 +83,9 @@ class AuthRepository {
 
   Future<AppUser> updateProfile({String? fullName, String? email, String? phone}) async {
     final data = await _api.patch<Map<String, dynamic>>('/users/me', data: {
-      if (fullName != null) 'fullName': fullName,
-      if (email != null) 'email': email,
-      if (phone != null) 'phone': phone,
+      'fullName': ?fullName,
+      'email': ?email,
+      'phone': ?phone,
     });
     return AppUser.fromJson(data);
   }

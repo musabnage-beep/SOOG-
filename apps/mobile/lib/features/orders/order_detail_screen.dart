@@ -132,6 +132,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               order.deliveryFee == 0 ? 'مجاني' : Formatters.money(order.deliveryFee)),
         const Divider(height: 24),
         _summaryRow('الإجمالي', Formatters.money(order.total), bold: true),
+        const SizedBox(height: 8),
+        _summaryRow('طريقة الدفع', order.paymentMethod.labelAr),
+        _summaryRow('حالة الدفع', order.paymentStatus.labelAr),
         if (order.isDelivery && order.address != null) ...[
           const SizedBox(height: 20),
           const _Title('عنوان التوصيل'),

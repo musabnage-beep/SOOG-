@@ -18,6 +18,8 @@ export type OrderStatus =
   | 'CANCELLED';
 
 export type FulfillmentType = 'DELIVERY' | 'PICKUP';
+export type PaymentMethod = 'COD' | 'CARD';
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 export type OrderItemAvailability = 'AVAILABLE' | 'UNAVAILABLE';
 export type StockStatus = 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 export type InventoryLogType = 'STOCK_IN' | 'STOCK_OUT' | 'SOLD' | 'ADJUST';
@@ -154,6 +156,10 @@ export interface Order {
   userId: string;
   status: OrderStatus;
   fulfillmentType: FulfillmentType;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  paymentRef?: string | null;
+  paidAt?: string | null;
   addressId: string | null;
   address?: Address | null;
   subtotal: string | number;

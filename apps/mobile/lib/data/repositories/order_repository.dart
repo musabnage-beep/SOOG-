@@ -14,7 +14,7 @@ class OrderRepository {
   }) async {
     final data = await _api.post<Map<String, dynamic>>('/orders/checkout', data: {
       'fulfillmentType': fulfillmentType == FulfillmentType.pickup ? 'PICKUP' : 'DELIVERY',
-      if (addressId != null) 'addressId': addressId,
+      'addressId': ?addressId,
       if (customerNote != null && customerNote.isNotEmpty) 'customerNote': customerNote,
     });
     return Order.fromJson(data);
@@ -24,7 +24,7 @@ class OrderRepository {
     final data = await _api.get<Map<String, dynamic>>('/orders/mine', query: {
       'page': page,
       'limit': limit,
-      if (status != null) 'status': status,
+      'status': ?status,
     });
     return Paginated.fromJson(data, (m) => Order.fromJson(m));
   }

@@ -34,6 +34,11 @@ export const envSchema = z.object({
   MAPS_PROVIDER: z.enum(['dev', 'google']).default('dev'),
   GOOGLE_MAPS_API_KEY: z.string().optional().default(''),
 
+  PAYMENT_PROVIDER: z.enum(['console', 'moyasar']).default('console'),
+  MOYASAR_SECRET_KEY: z.string().optional().default(''),
+  MOYASAR_WEBHOOK_SECRET: z.string().optional().default(''),
+  PAYMENT_CALLBACK_URL: z.string().default('http://localhost:3000/api/payments/callback'),
+
   PUSH_PROVIDER: z.enum(['console', 'fcm']).default('console'),
   FIREBASE_PROJECT_ID: z.string().optional().default(''),
   FIREBASE_CLIENT_EMAIL: z.string().optional().default(''),

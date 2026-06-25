@@ -9,6 +9,8 @@ import {
   NotificationType,
   OrderItemAvailability,
   OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
   Prisma,
 } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -103,6 +105,8 @@ export class OrdersService {
           userId,
           status: OrderStatus.SUBMITTED,
           fulfillmentType: dto.fulfillmentType,
+          paymentMethod: dto.paymentMethod ?? PaymentMethod.COD,
+          paymentStatus: PaymentStatus.PENDING,
           addressId,
           subtotal: new Prisma.Decimal(subtotal.toFixed(2)),
           deliveryFee: new Prisma.Decimal(deliveryFee),
@@ -281,6 +285,11 @@ export class OrdersService {
     const extra: Prisma.OrderUpdateInput = {};
     if (dto.status === OrderStatus.DELIVERED || dto.status === OrderStatus.PICKED_UP) {
       extra.deliveredAt = new Date();
+      // Cash is collected on handover — settle COD orders at this point.
+      if (order.paymentMethod === PaymentMethod.COD && order.paymentStatus !== PaymentStatus.PAID) {
+        extra.paymentStatus = PaymentStatus.PAID;
+        extra.paidAt = new Date();
+      }
     }
     const updated = await this.transition(orderId, dto.status, actor.id, extra, dto.note);
     await this.notifyCustomer(order.userId, this.statusNotificationType(dto.status), order.orderNumber);

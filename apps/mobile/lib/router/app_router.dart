@@ -26,7 +26,7 @@ import '../providers/auth_controller.dart';
 /// Bridges Riverpod [AuthState] changes to go_router's [refreshListenable].
 class _AuthRefresh extends ChangeNotifier {
   _AuthRefresh(Ref ref) {
-    ref.listen(authControllerProvider, (_, __) => notifyListeners());
+    ref.listen(authControllerProvider, (_, _) => notifyListeners());
   }
 }
 
@@ -56,9 +56,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+      GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(
         path: '/otp',
         builder: (_, state) {
@@ -66,17 +66,17 @@ final routerProvider = Provider<GoRouter>((ref) {
           return OtpScreen(args: args);
         },
       ),
-      GoRoute(path: '/forgot', builder: (_, __) => const ForgotPasswordScreen()),
+      GoRoute(path: '/forgot', builder: (_, _) => const ForgotPasswordScreen()),
 
       // Main tabbed shell.
       ShellRoute(
         navigatorKey: _shellKey,
-        builder: (_, __, child) => MainShell(child: child),
+        builder: (_, _, child) => MainShell(child: child),
         routes: [
-          GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/cart', builder: (_, __) => const CartScreen()),
-          GoRoute(path: '/orders', builder: (_, __) => const OrdersScreen()),
-          GoRoute(path: '/account', builder: (_, __) => const AccountScreen()),
+          GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
+          GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
+          GoRoute(path: '/orders', builder: (_, _) => const OrdersScreen()),
+          GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
         ],
       ),
 
@@ -97,7 +97,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/checkout',
         parentNavigatorKey: _rootKey,
-        builder: (_, __) => const CheckoutScreen(),
+        builder: (_, _) => const CheckoutScreen(),
       ),
       GoRoute(
         path: '/map-picker',
@@ -107,17 +107,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/addresses',
         parentNavigatorKey: _rootKey,
-        builder: (_, __) => const AddressesScreen(),
+        builder: (_, _) => const AddressesScreen(),
       ),
       GoRoute(
         path: '/favorites',
         parentNavigatorKey: _rootKey,
-        builder: (_, __) => const FavoritesScreen(),
+        builder: (_, _) => const FavoritesScreen(),
       ),
       GoRoute(
         path: '/notifications',
         parentNavigatorKey: _rootKey,
-        builder: (_, __) => const NotificationsScreen(),
+        builder: (_, _) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/order/:id',
@@ -127,7 +127,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/edit',
         parentNavigatorKey: _rootKey,
-        builder: (_, __) => const EditProfileScreen(),
+        builder: (_, _) => const EditProfileScreen(),
       ),
     ],
   );

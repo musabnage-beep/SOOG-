@@ -45,6 +45,18 @@ enum FulfillmentType {
   PICKUP
 }
 
+enum PaymentMethod {
+  COD
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
 enum OrderItemAvailability {
   AVAILABLE
   UNAVAILABLE
@@ -68,6 +80,8 @@ enum NotificationType {
   ORDER_OUT_FOR_DELIVERY
   ORDER_DELIVERED
   ORDER_PICKED_UP
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
   LOW_STOCK
   OUT_OF_STOCK
   SYSTEM
@@ -342,6 +356,12 @@ model Order {
   status           OrderStatus     @default(SUBMITTED)
   fulfillmentType  FulfillmentType @default(DELIVERY)
 
+  // payment
+  paymentMethod    PaymentMethod   @default(COD)
+  paymentStatus    PaymentStatus   @default(PENDING)
+  paymentRef       String?
+  paidAt           DateTime?
+
   addressId        String?
   address          Address?        @relation(fields: [addressId], references: [id])
 
@@ -373,6 +393,7 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([reviewedById])
+  @@index([paymentRef])
 }
 
 model OrderItem {

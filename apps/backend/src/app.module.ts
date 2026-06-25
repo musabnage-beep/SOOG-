@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { StorageModule } from './integrations/storage/storage.module';
 import { MessagingModule } from './integrations/messaging/messaging.module';
 import { MapsModule } from './integrations/maps/maps.module';
+import { PaymentModule } from './integrations/payment/payment.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuditModule } from './modules/audit/audit.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -21,6 +22,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { HealthController } from './modules/health/health.controller';
@@ -39,6 +41,7 @@ import { HealthController } from './modules/health/health.controller';
     StorageModule,
     MessagingModule,
     MapsModule,
+    PaymentModule,
     // Cross-cutting (global)
     AuditModule,
     NotificationsModule,
@@ -54,6 +57,7 @@ import { HealthController } from './modules/health/health.controller';
     FavoritesModule,
     DeliveryModule,
     OrdersModule,
+    PaymentsModule,
     DashboardModule,
     ReportsModule,
   ],

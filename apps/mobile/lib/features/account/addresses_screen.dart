@@ -46,7 +46,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: state.items.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (_, i) => _AddressTile(
                     address: state.items[i],
                     onDelete: () => _delete(state.items[i]),
@@ -116,7 +116,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                   const SizedBox(height: 8),
                   SwitchListTile(
                     value: isDefault,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     contentPadding: EdgeInsets.zero,
                     title: const Text('تعيين كعنوان افتراضي'),
                     onChanged: (v) => setSheet(() => isDefault = v),

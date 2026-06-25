@@ -2,6 +2,8 @@ import type {
   OrderStatus,
   StockStatus,
   FulfillmentType,
+  PaymentMethod,
+  PaymentStatus,
   InventoryLogType,
   ReportType,
   RoleName,
@@ -51,6 +53,25 @@ export const STOCK_STATUS_TONE: Record<StockStatus, string> = {
 export const FULFILLMENT_LABEL_AR: Record<FulfillmentType, string> = {
   DELIVERY: 'توصيل',
   PICKUP: 'استلام من المتجر',
+};
+
+export const PAYMENT_METHOD_LABEL_AR: Record<PaymentMethod, string> = {
+  COD: 'الدفع عند الاستلام',
+  CARD: 'دفع إلكتروني',
+};
+
+export const PAYMENT_STATUS_LABEL_AR: Record<PaymentStatus, string> = {
+  PENDING: 'بانتظار الدفع',
+  PAID: 'مدفوع',
+  FAILED: 'فشل الدفع',
+  REFUNDED: 'مُسترجع',
+};
+
+export const PAYMENT_STATUS_TONE: Record<PaymentStatus, string> = {
+  PENDING: 'bg-amber-100 text-amber-800',
+  PAID: 'bg-green-100 text-green-800',
+  FAILED: 'bg-red-100 text-red-800',
+  REFUNDED: 'bg-gray-200 text-gray-700',
 };
 
 export const INVENTORY_TYPE_LABEL_AR: Record<InventoryLogType, string> = {

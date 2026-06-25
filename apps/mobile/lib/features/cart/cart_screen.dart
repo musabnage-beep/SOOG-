@@ -53,7 +53,7 @@ class CartScreen extends ConsumerWidget {
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: state.cart!.items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (_, i) => _CartTile(line: state.cart!.items[i]),
       ),
     );
@@ -145,7 +145,7 @@ class _CartTile extends ConsumerWidget {
                   : CachedNetworkImage(
                       imageUrl: line.image!,
                       fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => Container(
+                      errorWidget: (_, _, _) => Container(
                         color: AppColors.cream,
                         child: const Icon(Icons.broken_image_outlined),
                       ),

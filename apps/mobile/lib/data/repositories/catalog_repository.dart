@@ -25,10 +25,10 @@ class CatalogRepository {
     final data = await _api.get<Map<String, dynamic>>('/products', query: {
       'page': page,
       'limit': limit,
-      if (categoryId != null) 'categoryId': categoryId,
-      if (categorySlug != null) 'categorySlug': categorySlug,
+      'categoryId': ?categoryId,
+      'categorySlug': ?categorySlug,
       if (search != null && search.isNotEmpty) 'search': search,
-      if (sort != null) 'sort': sort,
+      'sort': ?sort,
       if (inStockOnly) 'inStock': 'true',
     });
     return Paginated.fromJson(data, (m) => Product.fromJson(m));
