@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mail, Phone, Lock } from 'lucide-react';
 import { useAuth, RedirectIfAuthed } from '@aldiafa/shared/client';
-import { Button, Input, Field, useToast } from '@aldiafa/shared/ui';
+import { Button, Input, Field, useToast, BrandLogo } from '@aldiafa/shared/ui';
 import { ApiError } from '@aldiafa/shared';
 import { HOME_PATH } from '@/lib/config';
 
@@ -37,12 +37,9 @@ function LoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-brand-dark p-4" dir="rtl">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-gold text-2xl font-bold text-brand-dark">
-            ض
-          </div>
-          <h1 className="text-2xl font-bold text-white">الضيافة</h1>
-          <p className="mt-1 text-sm text-white/60">لوحة تحكم الإدارة</p>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <BrandLogo size={150} onDark />
+          <p className="mt-3 text-sm text-white/60">لوحة تحكم الإدارة</p>
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-xl">

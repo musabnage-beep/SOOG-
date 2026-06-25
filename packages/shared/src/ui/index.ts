@@ -7,3 +7,4 @@ export * from './toast';
 export * from './pagination';
 export * from './stat-card';
 export * from './charts';
+export * from './brand-logo';
