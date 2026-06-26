@@ -131,12 +131,31 @@ Swap single-host pieces for managed AWS services:
 ### S3 (uploads)
 1. Create bucket `aldiafa-uploads` (block public access; serve via CloudFront/presigned URLs).
 2. Create an IAM user/role with `s3:PutObject/GetObject/DeleteObject` on that bucket.
-3. In `infra/.env`: `STORAGE_PROVIDER=s3`, `AWS_REGION`, `AWS_S3_BUCKET`,
+3. In `infra/.env`: `STORAGE_PROVIDER=s3`, `AWS_REGION`, `S3_BUCKET`,
+   `S3_PUBLIC_BASE_URL` (CloudFront/bucket URL used to build public image links),
    `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (prefer an instance role over keys).
 
 ### SES (email)
 1. Verify your domain + DKIM in SES, request production access (out of sandbox).
 2. `MAIL_PROVIDER=ses` + the same AWS creds/region.
+
+### Payments (Moyasar)
+Card payments (mada / Apple Pay / Visa / Mastercard) go through Moyasar. The
+default `PAYMENT_PROVIDER=console` is a no-op dev adapter — switch to `moyasar`
+for real charges. Cash-on-delivery (COD) works regardless of this setting.
+1. Create a Moyasar account and grab the **secret API key** from the dashboard.
+2. In `infra/.env`:
+   ```
+   PAYMENT_PROVIDER=moyasar
+   MOYASAR_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxx
+   MOYASAR_WEBHOOK_SECRET=<a strong random token you choose>
+   PAYMENT_CALLBACK_URL=https://api.aldiafah.example/api/payments/callback
+   ```
+3. In the Moyasar dashboard → **Webhooks**, register:
+   `https://api.aldiafah.example/api/payments/webhook` and set its shared secret
+   to the same value as `MOYASAR_WEBHOOK_SECRET`. The backend rejects any webhook
+   whose `secret_token` does not match, and re-queries Moyasar before marking an
+   order paid (it never trusts the callback query string).
 
 ### ALB + ACM + CloudFront
 - Request an ACM certificate for `*.aldiafah.example` (in the ALB's region; for
