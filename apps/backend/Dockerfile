@@ -25,6 +25,7 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # node_modules already pruned to prod + contains generated .prisma client
+RUN mkdir -p /app/uploads
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./

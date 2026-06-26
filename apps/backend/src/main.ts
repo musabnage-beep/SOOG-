@@ -56,8 +56,8 @@ async function bootstrap() {
   });
 
   const port = config.get<number>('PORT', 3000);
-  await app.listen(port);
-  logger.log(`ALDIAFAH API running on http://localhost:${port}/${prefix}`);
+  await app.listen(port, '0.0.0.0');
+  logger.log(`ALDIAFAH API running on port ${port} (0.0.0.0/${prefix})`);
   logger.log(`Swagger docs at http://localhost:${port}/${prefix}/docs`);
 }
 
