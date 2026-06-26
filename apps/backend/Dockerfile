@@ -18,10 +18,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm prisma generate && pnpm build
 
-# ── Production dependencies only ─────────────────────────────────────────────
+# ── Production dependencies + Prisma client ──────────────────────────────────
 FROM base AS prod-deps
 COPY package.json ./
-RUN pnpm install --prod --no-frozen-lockfile
+COPY prisma ./prisma
+RUN pnpm install --prod --no-frozen-lockfile && pnpm prisma generate
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS runner
@@ -30,8 +31,6 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
 COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=build /app/dist ./dist
 COPY package.json ./
 COPY prisma ./prisma
