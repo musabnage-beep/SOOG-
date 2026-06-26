@@ -21,6 +21,7 @@ RUN pnpm prisma generate && pnpm build && pnpm prune --prod
 FROM node:20-bookworm-slim AS runner
 ENV NODE_ENV=production
 WORKDIR /app
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # node_modules already pruned to prod + contains generated .prisma client
