@@ -33,7 +33,7 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-access-secret-min-16-chars}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-refresh-secret-min-16-chars}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
-      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@aldiafah.example}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@aldiafah.com}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeMe!1}
       SEED_ADMIN_PHONE: ${SEED_ADMIN_PHONE:-+966500000000}
     ports:

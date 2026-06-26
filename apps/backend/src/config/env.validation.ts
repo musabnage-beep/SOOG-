@@ -45,7 +45,7 @@ export const envSchema = z.object({
   FIREBASE_PRIVATE_KEY: z.string().optional().default(''),
 
   MAIL_PROVIDER: z.enum(['console', 'ses']).default('console'),
-  MAIL_FROM: z.string().default('no-reply@aldiafah.example'),
+  MAIL_FROM: z.string().default('no-reply@aldiafah.com'),
   SES_REGION: z.string().default('me-central-1'),
 
   SEED_ADMIN_EMAIL: z.string().optional(),

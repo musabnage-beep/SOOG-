@@ -41,9 +41,9 @@ behind nginx) to AWS. Two paths are described:
 ### 2. DNS (Route 53)
 Create A records pointing at the Elastic IP:
 ```
-api.aldiafah.example    → <elastic-ip>
-admin.aldiafah.example  → <elastic-ip>
-staff.aldiafah.example  → <elastic-ip>
+api.aldiafah.com    → <elastic-ip>
+admin.aldiafah.com  → <elastic-ip>
+staff.aldiafah.com  → <elastic-ip>
 ```
 
 ### 3. Install Docker on the host
@@ -91,7 +91,7 @@ docker run --rm \
   -v /opt/aldiafa/infra/certbot/conf:/etc/letsencrypt \
   -v /opt/aldiafa/infra/certbot/www:/var/www/certbot \
   certbot/certbot certonly --webroot -w /var/www/certbot \
-  -d api.aldiafah.example -d admin.aldiafah.example -d staff.aldiafah.example \
+  -d api.aldiafah.com -d admin.aldiafah.com -d staff.aldiafah.com \
   --email you@example.com --agree-tos --no-eff-email
 ```
 Then uncomment the `443` server blocks + the http→https redirect in
@@ -149,16 +149,16 @@ for real charges. Cash-on-delivery (COD) works regardless of this setting.
    PAYMENT_PROVIDER=moyasar
    MOYASAR_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxx
    MOYASAR_WEBHOOK_SECRET=<a strong random token you choose>
-   PAYMENT_CALLBACK_URL=https://api.aldiafah.example/api/payments/callback
+   PAYMENT_CALLBACK_URL=https://api.aldiafah.com/api/payments/callback
    ```
 3. In the Moyasar dashboard → **Webhooks**, register:
-   `https://api.aldiafah.example/api/payments/webhook` and set its shared secret
+   `https://api.aldiafah.com/api/payments/webhook` and set its shared secret
    to the same value as `MOYASAR_WEBHOOK_SECRET`. The backend rejects any webhook
    whose `secret_token` does not match, and re-queries Moyasar before marking an
    order paid (it never trusts the callback query string).
 
 ### ALB + ACM + CloudFront
-- Request an ACM certificate for `*.aldiafah.example` (in the ALB's region; for
+- Request an ACM certificate for `*.aldiafah.com` (in the ALB's region; for
   CloudFront use `us-east-1`).
 - ALB target groups → EC2/ECS tasks on `:3000/:3100/:3200`, host-based routing rules
   mirroring the nginx vhosts. In this setup nginx can be dropped.

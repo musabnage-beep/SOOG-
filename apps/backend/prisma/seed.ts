@@ -109,7 +109,7 @@ async function main() {
   // Customer: no admin permissions.
 
   // 4) Default admin user
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@aldiafah.example';
+  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@aldiafah.com';
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe!2026';
   const adminPhone = process.env.SEED_ADMIN_PHONE ?? '+966500000000';
   const passwordHash = await argon2.hash(adminPassword);

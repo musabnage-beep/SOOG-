@@ -48,7 +48,7 @@ jobs:
       - run: pnpm --filter @aldiafa/employee typecheck
       - run: pnpm --filter @aldiafa/admin build
         env:
-          NEXT_PUBLIC_API_URL: https://api.aldiafah.example/api
+          NEXT_PUBLIC_API_URL: https://api.aldiafah.com/api
       - run: pnpm --filter @aldiafa/employee build
         env:
-          NEXT_PUBLIC_API_URL: https://api.aldiafah.example/api
+          NEXT_PUBLIC_API_URL: https://api.aldiafah.com/api

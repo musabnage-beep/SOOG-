@@ -1,5 +1,5 @@
 /// App-wide configuration. Override [apiBaseUrl] at build time with:
-/// `flutter run --dart-define=API_BASE_URL=https://api.aldiafah.example/api`
+/// `flutter run --dart-define=API_BASE_URL=https://api.aldiafah.com/api`
 abstract class Env {
   /// Base URL of the ALDIAFAH backend, including the `/api` prefix.
   ///
