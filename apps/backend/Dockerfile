@@ -33,4 +33,4 @@ COPY --from=builder /app/dist ./dist
 
 # Run pending migrations then boot the API.
 EXPOSE 3000
-CMD ["sh", "-c", "pnpm prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm prisma:seed && node dist/main.js"]
