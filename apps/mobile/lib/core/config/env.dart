@@ -7,7 +7,7 @@ abstract class Env {
   /// a backend running on the host machine during development.
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:3000/api',
+    defaultValue: 'http://18.194.190.26:3000/api',
   );
 
   /// Optional Google Maps API key for the Android manifest is configured
