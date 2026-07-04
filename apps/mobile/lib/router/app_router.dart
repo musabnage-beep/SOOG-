@@ -45,11 +45,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       final loc = state.matchedLocation;
       const authRoutes = {'/login', '/register', '/otp', '/forgot'};
 
+      // Routes that require a signed-in account. Everything else (home,
+      // products, cart, favorites) is open to guests for browsing.
+      bool requiresAuth(String p) =>
+          p == '/checkout' ||
+          p == '/orders' ||
+          p.startsWith('/order/') ||
+          p == '/account' ||
+          p == '/addresses' ||
+          p == '/notifications' ||
+          p == '/profile/edit';
+
       if (status == AuthStatus.unknown) {
         return loc == '/splash' ? null : '/splash';
       }
       if (status == AuthStatus.unauthenticated) {
-        return authRoutes.contains(loc) ? null : '/login';
+        // Guests may browse; only account-bound routes push them to login.
+        if (loc == '/splash') return '/home';
+        if (authRoutes.contains(loc)) return null;
+        return requiresAuth(loc) ? '/login' : null;
       }
       // authenticated
       if (loc == '/splash' || authRoutes.contains(loc)) return '/home';

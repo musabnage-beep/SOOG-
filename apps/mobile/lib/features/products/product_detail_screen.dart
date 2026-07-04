@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/product.dart';
+import '../../providers/auth_controller.dart';
 import '../../providers/cart_controller.dart';
 import '../../providers/catalog_providers.dart';
 import '../../providers/favorites_controller.dart';
@@ -225,6 +226,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   }
 
   Future<void> _addToCart(Product product) async {
+    if (!ref.read(authControllerProvider).isAuthenticated) {
+      _promptSignIn();
+      return;
+    }
     setState(() => _busy = true);
     try {
       await ref.read(cartControllerProvider.notifier).add(product.id, quantity: _qty);
@@ -248,6 +253,30 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  void _promptSignIn() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('يتطلب حساب'),
+        content: const Text(
+            'يمكنك تصفّح المنتجات بحرية، لكن لإتمام الطلب يجب تسجيل الدخول أو إنشاء حساب.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('لاحقاً'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.push('/login');
+            },
+            child: const Text('تسجيل الدخول'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
