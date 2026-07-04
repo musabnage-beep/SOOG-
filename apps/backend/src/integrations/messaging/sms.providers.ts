@@ -13,6 +13,45 @@ export class ConsoleSmsProvider implements SmsProvider {
 }
 
 /**
+ * msegat SMS provider (popular in KSA). Requires SMS_API_KEY (API key),
+ * SMS_SENDER_ID (approved sender name), and SMS_USERNAME (account username).
+ */
+@Injectable()
+export class MsegatSmsProvider implements SmsProvider {
+  private readonly logger = new Logger('SMS');
+  private readonly username: string;
+  private readonly apiKey: string;
+  private readonly senderId: string;
+
+  constructor(config: ConfigService) {
+    this.username = config.get<string>('SMS_USERNAME', '');
+    this.apiKey = config.get<string>('SMS_API_KEY', '');
+    this.senderId = config.get<string>('SMS_SENDER_ID', 'ALDIAFAH');
+  }
+
+  async send(to: string, message: string): Promise<void> {
+    const number = to.replace('+', '');
+    const res = await fetch('https://www.msegat.com/gw/sendsms.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userName: this.username,
+        apiKey: this.apiKey,
+        numbers: number,
+        userSender: this.senderId,
+        msg: message,
+        msgEncoding: 'UTF8',
+      }),
+    });
+    const text = await res.text();
+    if (!res.ok || text.includes('error') || text === '0') {
+      this.logger.error(`msegat SMS failed for ${to}: ${text}`);
+      throw new Error(`SMS provider error: ${text}`);
+    }
+  }
+}
+
+/**
  * Production SMS provider (Unifonic — common in KSA). Wired to call the HTTP API.
  * Requires SMS_API_KEY. Network call uses the global fetch (Node >= 18).
  */
