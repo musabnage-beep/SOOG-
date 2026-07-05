@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../router/app_router.dart';
 
 // ─── Brand Colours ────────────────────────────────────────────────────────────
 const _kBlack = Color(0xFF050505);
@@ -13,14 +15,14 @@ const _kGoldDark = Color(0xFF8C6528);
 const _kGreen = Color(0xFF1F6E3D);
 
 // ─── Splash Screen ───────────────────────────────────────────────────────────
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
@@ -51,7 +53,13 @@ class _SplashScreenState extends State<SplashScreen>
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 7000),
-    )..forward();
+    )
+      ..addStatusListener((s) {
+        if (s == AnimationStatus.completed && mounted) {
+          ref.read(splashDoneProvider.notifier).state = true;
+        }
+      })
+      ..forward();
 
     Animation<double> _c(double s, double e, Curve curve) =>
         CurvedAnimation(parent: _ctrl, curve: Interval(s, e, curve: curve));

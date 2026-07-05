@@ -23,10 +23,16 @@ import '../features/products/product_detail_screen.dart';
 import '../features/products/products_screen.dart';
 import '../providers/auth_controller.dart';
 
+/// Set to `true` by [SplashScreen] once its intro animation has fully played,
+/// so the router keeps showing the splash for the whole animation instead of
+/// jumping away the instant the auth session resolves.
+final splashDoneProvider = StateProvider<bool>((ref) => false);
+
 /// Bridges Riverpod [AuthState] changes to go_router's [refreshListenable].
 class _AuthRefresh extends ChangeNotifier {
   _AuthRefresh(Ref ref) {
     ref.listen(authControllerProvider, (_, _) => notifyListeners());
+    ref.listen(splashDoneProvider, (_, _) => notifyListeners());
   }
 }
 
@@ -42,6 +48,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: refresh,
     redirect: (context, state) {
       final status = ref.read(authControllerProvider).status;
+      final splashDone = ref.read(splashDoneProvider);
       final loc = state.matchedLocation;
       const authRoutes = {'/login', '/register', '/otp', '/forgot'};
 
@@ -56,17 +63,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           p == '/notifications' ||
           p == '/profile/edit';
 
-      if (status == AuthStatus.unknown) {
-        return loc == '/splash' ? null : '/splash';
+      // Hold on the splash until its animation has finished AND the session has
+      // been resolved, so the intro plays in full.
+      if (loc == '/splash') {
+        if (!splashDone || status == AuthStatus.unknown) return null;
+        return '/home';
       }
+
+      if (status == AuthStatus.unknown) return '/splash';
+
       if (status == AuthStatus.unauthenticated) {
         // Guests may browse; only account-bound routes push them to login.
-        if (loc == '/splash') return '/home';
         if (authRoutes.contains(loc)) return null;
         return requiresAuth(loc) ? '/login' : null;
       }
       // authenticated
-      if (loc == '/splash' || authRoutes.contains(loc)) return '/home';
+      if (authRoutes.contains(loc)) return '/home';
       return null;
     },
     routes: [
