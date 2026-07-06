@@ -310,20 +310,27 @@ class _AnimatedBrandLogo extends StatelessWidget {
               SizedBox(height: h * 0.18),
               Opacity(
                 opacity: ((drawProgress - 0.5) * 2).clamp(0.0, 1.0),
-                child: Text(
-                  'الضيافة',
-                  textDirection: TextDirection.rtl,
-                  style: GoogleFonts.cairo(
-                    fontSize: size * 0.28,
-                    height: 1.0,
-                    fontWeight: FontWeight.w900,
-                    foreground: Paint()
-                      ..shader = const LinearGradient(
-                        colors: [Colors.white, _kGoldLight],
-                      ).createShader(
-                        Rect.fromLTWH(0, 0, size, size * 0.28),
+                child: SizedBox(
+                  width: size * 0.92,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'الضيافة',
+                      textDirection: TextDirection.rtl,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: GoogleFonts.cairo(
+                        fontSize: size * 0.28,
+                        height: 1.0,
+                        fontWeight: FontWeight.w900,
+                        foreground: Paint()
+                          ..shader = const LinearGradient(
+                            colors: [Colors.white, _kGoldLight],
+                          ).createShader(
+                            Rect.fromLTWH(0, 0, size, size * 0.28),
+                          ),
                       ),
-                    letterSpacing: -0.5,
+                    ),
                   ),
                 ),
               ),

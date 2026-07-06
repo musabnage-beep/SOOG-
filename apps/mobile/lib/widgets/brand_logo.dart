@@ -48,15 +48,22 @@ class BrandLogo extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: height * 0.18),
-              Text(
-                'الضيافة',
-                textDirection: TextDirection.rtl,
-                style: GoogleFonts.cairo(
-                  fontSize: size * 0.28,
-                  height: 1,
-                  fontWeight: FontWeight.w900,
-                  color: wordColor,
-                  letterSpacing: -0.5,
+              SizedBox(
+                width: size * 0.92,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'الضيافة',
+                    textDirection: TextDirection.rtl,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: GoogleFonts.cairo(
+                      fontSize: size * 0.28,
+                      height: 1,
+                      fontWeight: FontWeight.w900,
+                      color: wordColor,
+                    ),
+                  ),
                 ),
               ),
               if (showLatin) ...[

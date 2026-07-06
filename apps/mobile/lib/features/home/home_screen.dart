@@ -383,8 +383,10 @@ class _CategoryStrip extends StatelessWidget {
                       borderRadius: BorderRadius.circular(18),
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.category_outlined,
-                        color: AppColors.primary, size: 28),
+                    child: (c.icon != null && c.icon!.trim().isNotEmpty)
+                        ? Text(c.icon!, style: const TextStyle(fontSize: 32))
+                        : const Icon(Icons.category_outlined,
+                            color: AppColors.primary, size: 28),
                   ),
                   const SizedBox(height: 6),
                   Text(
