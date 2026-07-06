@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// ALDIAFAH brand palette.
+/// ALDIAFAH brand palette. Values mirror [AppTokens] (the design system).
 abstract class AppColors {
-  static const Color primary = Color(0xFF166534); // deep green
-  static const Color secondary = Color(0xFF22C55E); // bright green
+  static const Color primary = Color(0xFF1F6E3D); // primary green (reference)
+  static const Color secondary = Color(0xFF2E8B57); // secondary green
   static const Color cream = Color(0xFFFFF8E7);
-  static const Color dark = Color(0xFF111827);
-  static const Color gold = Color(0xFFD4AF37);
+  static const Color dark = Color(0xFF111111);
+  static const Color gold = Color(0xFFCFA347); // primary gold (reference)
 
   static const Color white = Color(0xFFFFFFFF);
   static const Color surface = Color(0xFFFFFFFF);

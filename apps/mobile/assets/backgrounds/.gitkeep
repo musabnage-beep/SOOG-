@@ -1,0 +1,2 @@
+# Drop real "backgrounds" assets here. Files are referenced by name in lib/core/assets/app_assets.dart.
+# Do NOT rename existing keys; just place the real files to have them appear automatically.

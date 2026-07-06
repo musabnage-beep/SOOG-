@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/assets/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/category.dart';
 import '../../providers/auth_controller.dart';
 import '../../providers/catalog_providers.dart';
 import '../../providers/notifications_controller.dart';
+import '../../widgets/app_asset.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/state_views.dart';
@@ -383,10 +385,15 @@ class _CategoryStrip extends StatelessWidget {
                       borderRadius: BorderRadius.circular(18),
                     ),
                     alignment: Alignment.center,
-                    child: (c.icon != null && c.icon!.trim().isNotEmpty)
-                        ? Text(c.icon!, style: const TextStyle(fontSize: 32))
-                        : const Icon(Icons.category_outlined,
-                            color: AppColors.primary, size: 28),
+                    clipBehavior: Clip.antiAlias,
+                    // Real category art is loaded from assets/category-icons/<slug>.png.
+                    // Until the asset is provided nothing is drawn (no substitute).
+                    child: AppAssetImage(
+                      AppAssets.categoryIcon(c.slug),
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(

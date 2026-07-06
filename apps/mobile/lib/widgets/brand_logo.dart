@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/assets/app_assets.dart';
 import '../core/theme/app_colors.dart';
 
 /// ALDIAFAH brand wordmark — a sweeping arc (swoosh) with a gold accent of
 /// three descending dots and the Arabic logotype "الضيافة" + latin "ALDIAFAH".
 ///
-/// Rendered entirely with Flutter primitives so it scales crisply at any size
-/// and needs no raster asset. Use [onDark] on dark/gradient backgrounds.
+/// Prefers the official vector asset (`assets/logo/logo.svg`, or
+/// `logo-white.svg` on dark) when it is present, so dropping the real logo file
+/// swaps it everywhere automatically. Until then it falls back to the built-in
+/// vector mark below (the current brand mark — never a random placeholder).
 class BrandLogo extends StatelessWidget {
   const BrandLogo({
     super.key,
@@ -25,8 +29,37 @@ class BrandLogo extends StatelessWidget {
   /// Whether to render the latin "ALDIAFAH" sub-wordmark.
   final bool showLatin;
 
+  static final Map<String, Future<bool>> _presence = {};
+
+  static Future<bool> _exists(BuildContext context, String path) {
+    return _presence.putIfAbsent(path, () async {
+      try {
+        await DefaultAssetBundle.of(context).loadString(path);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final assetPath = onDark ? AppAssets.logoWhite : AppAssets.logoSvg;
+    return FutureBuilder<bool>(
+      future: _exists(context, assetPath),
+      builder: (context, snap) {
+        if (snap.data == true) {
+          return SizedBox(
+            width: size,
+            child: SvgPicture.asset(assetPath, fit: BoxFit.contain),
+          );
+        }
+        return _buildVectorMark(context);
+      },
+    );
+  }
+
+  Widget _buildVectorMark(BuildContext context) {
     final arcColor = onDark ? AppColors.white : AppColors.primary;
     final wordColor = onDark ? AppColors.white : AppColors.dark;
     final height = size * 0.62;

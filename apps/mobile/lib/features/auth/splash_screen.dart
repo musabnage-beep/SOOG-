@@ -4,14 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../router/app_router.dart';
 
 // ─── Brand Colours ────────────────────────────────────────────────────────────
 const _kBlack = Color(0xFF050505);
 const _kGold = Color(0xFFCFA347);
 const _kGoldLight = Color(0xFFFFD77A);
-const _kGoldDark = Color(0xFF8C6528);
 const _kGreen = Color(0xFF1F6E3D);
 
 // ─── Splash Screen ───────────────────────────────────────────────────────────
