@@ -9,6 +9,9 @@ abstract class Formatters {
 
   static String money(num value) => _money.format(value);
 
+  static String rawNumber(num value) =>
+      NumberFormat('#,##0.00', 'ar').format(value);
+
   static String date(DateTime date) =>
       DateFormat('d MMM y • h:mm a', 'ar').format(date.toLocal());
 

@@ -18,14 +18,45 @@ const COMPLETED_STATUSES: OrderStatus[] = [OrderStatus.DELIVERED, OrderStatus.PI
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Compact widget set for the employee dashboard. */
+  /** Enriched widget set for the employee dashboard. */
   async employeeWidgets() {
-    const [pending, underReview, lowStock, recent] = await Promise.all([
+    const since7 = new Date();
+    since7.setDate(since7.getDate() - 7);
+
+    const [
+      pending,
+      underReview,
+      lowStock,
+      totalOrders,
+      preparing,
+      delivered,
+      revenueAgg,
+      statusGroups,
+      dailyOrdersRaw,
+      recent,
+    ] = await Promise.all([
       this.prisma.order.count({ where: { status: OrderStatus.SUBMITTED } }),
       this.prisma.order.count({ where: { status: OrderStatus.UNDER_REVIEW } }),
       this.prisma.product.count({
         where: { isActive: true, stockStatus: { in: ['LOW_STOCK', 'OUT_OF_STOCK'] } },
       }),
+      this.prisma.order.count(),
+      this.prisma.order.count({
+        where: { status: { in: [OrderStatus.PREPARING, OrderStatus.READY] } },
+      }),
+      this.prisma.order.count({ where: { status: { in: COMPLETED_STATUSES } } }),
+      this.prisma.order.aggregate({
+        _sum: { total: true },
+        where: { status: { in: COMPLETED_STATUSES } },
+      }),
+      this.prisma.order.groupBy({ by: ['status'], _count: { _all: true } }),
+      this.prisma.$queryRaw<{ day: Date; orders: bigint }[]>`
+        SELECT date_trunc('day', "submittedAt") AS day, COUNT(*) AS orders
+        FROM "Order"
+        WHERE "submittedAt" >= ${since7}
+        GROUP BY day
+        ORDER BY day ASC
+      `,
       this.prisma.order.findMany({
         where: { status: { in: ACTIVE_ORDER_STATUSES } },
         orderBy: { submittedAt: 'desc' },
@@ -33,7 +64,19 @@ export class DashboardService {
         include: { user: { select: { fullName: true } }, _count: { select: { items: true } } },
       }),
     ]);
-    return { pending, underReview, lowStock, recent };
+
+    return {
+      pending,
+      underReview,
+      lowStock,
+      totalOrders,
+      preparing,
+      delivered,
+      totalRevenue: Number(revenueAgg._sum.total ?? 0),
+      ordersByStatus: Object.fromEntries(statusGroups.map((g) => [g.status, g._count._all])),
+      dailyOrders: dailyOrdersRaw.map((r) => ({ day: r.day, orders: Number(r.orders) })),
+      recent,
+    };
   }
 
   /** Full analytics for the admin dashboard. */
@@ -97,7 +140,7 @@ export class DashboardService {
     }));
   }
 
-  /** Top selling products. */
+  /** Top selling products with main image URL. */
   async topProducts(limit = 10) {
     const grouped = await this.prisma.orderItem.groupBy({
       by: ['productId', 'nameAr', 'nameEn'],
@@ -105,12 +148,21 @@ export class DashboardService {
       orderBy: { _sum: { quantity: 'desc' } },
       take: limit,
     });
+
+    const productIds = grouped.map((g) => g.productId);
+    const images = await this.prisma.productImage.findMany({
+      where: { productId: { in: productIds }, isMain: true },
+      select: { productId: true, url: true },
+    });
+    const imageMap = new Map(images.map((i) => [i.productId, i.url]));
+
     return grouped.map((g) => ({
       productId: g.productId,
       nameAr: g.nameAr,
       nameEn: g.nameEn,
       unitsSold: g._sum.quantity ?? 0,
       revenue: Number(g._sum.lineTotal ?? 0),
+      imageUrl: imageMap.get(g.productId) ?? null,
     }));
   }
 }

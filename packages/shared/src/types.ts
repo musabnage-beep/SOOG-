@@ -258,6 +258,12 @@ export interface EmployeeDashboard {
   pending: number;
   underReview: number;
   lowStock: number;
+  totalOrders: number;
+  preparing: number;
+  delivered: number;
+  totalRevenue: number;
+  ordersByStatus: Partial<Record<OrderStatus, number>>;
+  dailyOrders: Array<{ day: string; orders: number }>;
   recent: Array<{
     id: string;
     orderNumber: string;
@@ -290,6 +296,7 @@ export interface TopProduct {
   nameEn: string;
   unitsSold: number;
   revenue: number;
+  imageUrl?: string | null;
 }
 
 export interface ReportData {

@@ -1,33 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { Clock, ClipboardCheck, PackageX, ArrowLeft } from 'lucide-react';
+import { ShoppingBag, PackageCheck, CheckCircle, DollarSign } from 'lucide-react';
 import { useEmployeeDashboard } from '@aldiafa/shared/client';
 import {
-  StatCard,
   Card,
   CardHeader,
   CardTitle,
   CardBody,
-  Badge,
-  Button,
+  StatCard,
   Loading,
   ErrorState,
-  EmptyState,
-  Table,
-  THead,
-  TBody,
-  TR,
-  TH,
-  TD,
+  OrdersLineChart,
+  DonutChart,
 } from '@aldiafa/shared/ui';
 import {
   num,
-  formatDateTime,
+  money,
   ORDER_STATUS_LABEL_AR,
-  ORDER_STATUS_TONE,
 } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 export default function EmployeeHomePage() {
   const { data, isLoading, isError, refetch } = useEmployeeDashboard();
@@ -35,88 +26,82 @@ export default function EmployeeHomePage() {
   if (isLoading) return <Loading label="جارٍ التحميل..." />;
   if (isError || !data) return <ErrorState onRetry={() => refetch()} />;
 
+  const lineData = (data.dailyOrders ?? []).map((d) => ({
+    label: new Date(d.day).toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' }),
+    orders: d.orders,
+  }));
+
+  const donutData = Object.entries(data.ordersByStatus ?? {})
+    .filter(([, v]) => (v ?? 0) > 0)
+    .map(([status, value]) => ({
+      name: ORDER_STATUS_LABEL_AR[status as keyof typeof ORDER_STATUS_LABEL_AR] ?? status,
+      value: value ?? 0,
+    }));
+
   return (
     <div>
-      <PageHeader title="الرئيسية" subtitle="نظرة سريعة على المهام" />
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Link href="/review-queue">
+      {/* 4 Stat cards */}
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <Link href="/orders">
           <StatCard
-            label="بانتظار المراجعة"
-            value={num(data.pending)}
-            icon={<Clock className="h-5 w-5" />}
-            tone="bg-amber-100 text-amber-700"
+            label="إجمالي الطلبات"
+            value={num(data.totalOrders ?? 0)}
+            icon={<ShoppingBag className="h-5 w-5" />}
+            tone="bg-brand/10 text-brand"
           />
         </Link>
-        <Link href="/review-queue">
+        <Link href="/orders">
           <StatCard
-            label="قيد المراجعة"
-            value={num(data.underReview)}
-            icon={<ClipboardCheck className="h-5 w-5" />}
+            label="قيد التجهيز"
+            value={num(data.preparing ?? 0)}
+            icon={<PackageCheck className="h-5 w-5" />}
             tone="bg-blue-100 text-blue-700"
           />
         </Link>
-        <Link href="/inventory">
+        <Link href="/orders">
           <StatCard
-            label="مخزون منخفض"
-            value={num(data.lowStock)}
-            icon={<PackageX className="h-5 w-5" />}
-            tone="bg-red-100 text-red-700"
+            label="تم التوصيل"
+            value={num(data.delivered ?? 0)}
+            icon={<CheckCircle className="h-5 w-5" />}
+            tone="bg-emerald-100 text-emerald-700"
           />
         </Link>
+        <StatCard
+          label="إجمالي المبيعات"
+          value={money(data.totalRevenue ?? 0)}
+          icon={<DollarSign className="h-5 w-5" />}
+          tone="bg-amber-100 text-amber-700"
+        />
       </div>
 
-      <Card className="mt-6">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>أحدث الطلبات</CardTitle>
-          <Link href="/orders">
-            <Button variant="ghost" size="sm">
-              عرض الكل
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardBody className="p-0">
-          {data.recent.length === 0 ? (
-            <EmptyState title="لا توجد طلبات حديثة" />
-          ) : (
-            <Table>
-              <THead>
-                <TR>
-                  <TH>رقم الطلب</TH>
-                  <TH>العميل</TH>
-                  <TH>العناصر</TH>
-                  <TH>الحالة</TH>
-                  <TH>التاريخ</TH>
-                  <TH></TH>
-                </TR>
-              </THead>
-              <TBody>
-                {data.recent.map((o) => (
-                  <TR key={o.id}>
-                    <TD className="font-semibold text-gray-900">{o.orderNumber}</TD>
-                    <TD>{o.user.fullName}</TD>
-                    <TD>{o._count.items}</TD>
-                    <TD>
-                      <Badge tone={ORDER_STATUS_TONE[o.status]}>
-                        {ORDER_STATUS_LABEL_AR[o.status]}
-                      </Badge>
-                    </TD>
-                    <TD className="text-xs text-gray-500">{formatDateTime(o.submittedAt)}</TD>
-                    <TD>
-                      <Link href={`/orders/${o.id}`}>
-                        <Button variant="ghost" size="sm">
-                          فتح
-                        </Button>
-                      </Link>
-                    </TD>
-                  </TR>
-                ))}
-              </TBody>
-            </Table>
-          )}
-        </CardBody>
-      </Card>
+      {/* Charts row */}
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>الطلبات خلال آخر 7 أيام</CardTitle>
+          </CardHeader>
+          <CardBody>
+            {lineData.length === 0 ? (
+              <p className="py-12 text-center text-sm text-gray-400">لا توجد بيانات بعد</p>
+            ) : (
+              <OrdersLineChart data={lineData} />
+            )}
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>حالة الطلبات</CardTitle>
+          </CardHeader>
+          <CardBody>
+            {donutData.length === 0 ? (
+              <p className="py-12 text-center text-sm text-gray-400">لا توجد طلبات</p>
+            ) : (
+              <DonutChart data={donutData} />
+            )}
+          </CardBody>
+        </Card>
+      </div>
     </div>
   );
 }

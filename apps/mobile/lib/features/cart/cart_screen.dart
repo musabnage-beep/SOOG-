@@ -10,165 +10,183 @@ import '../../providers/cart_controller.dart';
 import '../../widgets/quantity_stepper.dart';
 import '../../widgets/state_views.dart';
 
+const _kBg = Color(0xFF0A1A0C);
+
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(cartControllerProvider);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('سلة التسوّق'),
-        automaticallyImplyLeading: false,
-        actions: [
-          if (!state.isEmpty)
-            IconButton(
-              onPressed: () => _confirmClear(context, ref),
-              icon: const Icon(Icons.delete_outline),
-            ),
-        ],
-      ),
-      body: _body(context, ref, state),
-      bottomNavigationBar: state.isEmpty ? null : _summary(context, ref, state),
+      backgroundColor: _kBg,
+      body: SafeArea(child: _body(context, ref, state)),
+      bottomNavigationBar: state.isEmpty ? null : _BottomBar(state: state),
     );
   }
 
   Widget _body(BuildContext context, WidgetRef ref, CartState state) {
-    if (state.isLoading && state.cart == null) return const AppLoader();
-    if (state.isEmpty) {
-      return EmptyView(
-        icon: Icons.shopping_cart_outlined,
-        title: 'سلتك فارغة',
-        subtitle: 'تصفّح المنتجات وأضف ما يعجبك',
-        action: ElevatedButton(
-          onPressed: () => context.go('/home'),
-          child: const Text('ابدأ التسوّق'),
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        // ── Title pill ──────────────────────────────────────────────
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: const Text(
+              'سلة التسوّق',
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+          ),
         ),
-      );
-    }
-    return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: () => ref.read(cartControllerProvider.notifier).load(),
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: state.cart!.items.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (_, i) => _CartTile(line: state.cart!.items[i]),
-      ),
-    );
-  }
-
-  Widget _summary(BuildContext context, WidgetRef ref, CartState state) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.border)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        const SizedBox(height: 20),
+        if (state.isLoading && state.cart == null)
+          const Expanded(child: AppLoader())
+        else if (state.isEmpty)
+          Expanded(child: _emptyState(context))
+        else ...[
+          // ── Count badge + label ────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
               children: [
-                const Text('الإجمالي الفرعي',
-                    style: TextStyle(color: AppColors.muted)),
-                Text(
-                  Formatters.money(state.subtotal),
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w800),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    state.cart!.items.length.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                const Text(
+                  'سلة مشترياتك',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: state.mutating ? null : () => context.push('/checkout'),
-              child: const Text('متابعة الدفع'),
+          ),
+          const SizedBox(height: 14),
+          // ── Items list ──────────────────────────────────────────
+          Expanded(
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () => ref.read(cartControllerProvider.notifier).load(),
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: state.cart!.items.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (_, i) => _CartTile(line: state.cart!.items[i]),
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        ],
+      ],
     );
   }
 
-  void _confirmClear(BuildContext context, WidgetRef ref) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('إفراغ السلة'),
-        content: const Text('هل تريد حذف جميع المنتجات من السلة؟'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ref.read(cartControllerProvider.notifier).clear();
-            },
-            child: const Text('حذف', style: TextStyle(color: AppColors.danger)),
+  Widget _emptyState(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.shopping_cart_outlined, size: 72, color: Colors.white38),
+        const SizedBox(height: 16),
+        const Text(
+          'سلتك فارغة',
+          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'تصفّح المنتجات وأضف ما يعجبك',
+          style: TextStyle(color: Colors.white54, fontSize: 14),
+        ),
+        const SizedBox(height: 28),
+        ElevatedButton(
+          onPressed: () => context.go('/home'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           ),
-        ],
-      ),
+          child: const Text(
+            'ابدأ التسوّق',
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
+        ),
+      ],
     );
   }
 }
 
+// ── Cart tile ─────────────────────────────────────────────────────────────────
 class _CartTile extends ConsumerWidget {
   const _CartTile({required this.line});
-
   final CartLine line;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(cartControllerProvider.notifier);
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              width: 72,
-              height: 72,
-              child: (line.image == null || line.image!.isEmpty)
-                  ? Container(
-                      color: AppColors.cream,
-                      child: const Icon(Icons.shopping_bag_outlined,
-                          color: AppColors.muted),
-                    )
-                  : CachedNetworkImage(
-                      imageUrl: line.image!,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, _, _) => Container(
-                        color: AppColors.cream,
-                        child: const Icon(Icons.broken_image_outlined),
-                      ),
-                    ),
+          // Product image
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(12),
             ),
+            clipBehavior: Clip.antiAlias,
+            child: (line.image == null || line.image!.isEmpty)
+                ? const Center(
+                    child: Icon(Icons.shopping_bag_outlined, color: AppColors.warning, size: 32),
+                  )
+                : CachedNetworkImage(
+                    imageUrl: line.image!,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => const Center(
+                      child: Icon(Icons.shopping_bag_outlined, color: AppColors.warning, size: 32),
+                    ),
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Name
                 Text(
                   line.nameAr,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  Formatters.money(line.unitPrice),
-                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: AppColors.dark,
+                  ),
                 ),
                 const SizedBox(height: 8),
+                // Stepper + price + delete
                 Row(
                   children: [
                     QuantityStepper(
@@ -177,9 +195,26 @@ class _CartTile extends ConsumerWidget {
                       onChanged: (v) => notifier.setQuantity(line.id, v),
                     ),
                     const Spacer(),
-                    IconButton(
-                      onPressed: () => notifier.remove(line.id),
-                      icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+                    Text(
+                      Formatters.money(line.unitPrice),
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => notifier.remove(line.id),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0x14DC2626),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.delete_outline, color: AppColors.danger, size: 18),
+                      ),
                     ),
                   ],
                 ),
@@ -187,6 +222,63 @@ class _CartTile extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Bottom bar ────────────────────────────────────────────────────────────────
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({required this.state});
+  final CartState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = state.cart?.items.length ?? 0;
+    final totalQty = state.cart?.items.fold<int>(0, (s, i) => s + i.quantity) ?? 0;
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        color: _kBg,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  Formatters.rawNumber(state.subtotal),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'الإجمالي ($count منتجات $totalQty)',
+                  style: const TextStyle(color: Color(0x80FFFFFF), fontSize: 12),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton(
+                onPressed: state.mutating ? null : () => context.push('/checkout'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text(
+                  'إتمام الطلب',
+                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
