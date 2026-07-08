@@ -13,10 +13,12 @@ import '../features/auth/otp_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/splash_screen.dart';
 import '../features/cart/cart_screen.dart';
+import '../features/categories/categories_screen.dart';
 import '../features/checkout/checkout_screen.dart';
 import '../features/checkout/map_picker_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/home/main_shell.dart';
+import '../features/offers/offers_screen.dart';
 import '../features/orders/order_detail_screen.dart';
 import '../features/orders/orders_screen.dart';
 import '../features/products/product_detail_screen.dart';
@@ -100,13 +102,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _, child) => MainShell(child: child),
         routes: [
           GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
+          GoRoute(path: '/offers', builder: (_, _) => const OffersScreen()),
           GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
-          GoRoute(path: '/orders', builder: (_, _) => const OrdersScreen()),
+          GoRoute(path: '/categories', builder: (_, _) => const CategoriesScreen()),
           GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
         ],
       ),
 
       // Detail routes (pushed over the shell, full screen).
+      GoRoute(
+        path: '/orders',
+        parentNavigatorKey: _rootKey,
+        builder: (_, _) => const OrdersScreen(),
+      ),
       GoRoute(
         path: '/products',
         parentNavigatorKey: _rootKey,

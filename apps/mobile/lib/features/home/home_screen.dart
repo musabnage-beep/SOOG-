@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/assets/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/category.dart';
-import '../../providers/auth_controller.dart';
+import '../../providers/cart_controller.dart';
 import '../../providers/catalog_providers.dart';
 import '../../providers/notifications_controller.dart';
 import '../../widgets/app_asset.dart';
@@ -23,10 +21,11 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoriesProvider);
     final products = ref.watch(productsControllerProvider(const ProductQuery()));
-    final user = ref.watch(authControllerProvider).user;
+    final cartCount = ref.watch(cartControllerProvider).count;
     final unread = ref.watch(notificationsControllerProvider).unreadCount;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
@@ -38,82 +37,89 @@ class HomeScreen extends ConsumerWidget {
           },
           child: CustomScrollView(
             slivers: [
+              // ── Top bar ─────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _TopBar(cartCount: cartCount, unread: unread),
+              ),
+              // ── Delivery location ────────────────────────────────────────
+              const SliverToBoxAdapter(child: _DeliveryRow()),
+              // ── Search bar ───────────────────────────────────────────────
+              const SliverToBoxAdapter(child: _SearchBar()),
+              // ── Hero banner ──────────────────────────────────────────────
+              const SliverToBoxAdapter(child: _HeroBanner()),
+              // ── Categories section ───────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const BrandLogo(size: 96, showLatin: false),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Text('أهلاً بك',
-                                style: TextStyle(color: AppColors.muted)),
-                            Text(
-                              user?.fullName ?? 'عميلنا العزيز',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
+                      GestureDetector(
+                        onTap: () => context.go('/categories'),
+                        child: const Text(
+                          'عرض الكل',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      _NotifButton(unread: unread),
+                      const Text(
+                        'الأقسام',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                      ),
                     ],
                   ),
                 ),
               ),
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: GestureDetector(
-                    onTap: () => context.push('/products'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.search, color: AppColors.muted),
-                          SizedBox(width: 10),
-                          Text('ابحث عن منتج...',
-                              style: TextStyle(color: AppColors.muted)),
-                        ],
+                child: categories.when(
+                  loading: () => const SizedBox(
+                    height: 80,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
+                  error: (_, _) => const SizedBox.shrink(),
+                  data: (items) => _CategoryGrid(items: items),
                 ),
               ),
-              const SliverToBoxAdapter(child: _HeroBanner()),
+              // ── Products section ─────────────────────────────────────────
               SliverToBoxAdapter(
-                child: categories.when(
-                  loading: () => const SizedBox(
-                    height: 100,
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  error: (e, _) => const SizedBox.shrink(),
-                  data: (items) => _CategoryStrip(items: items),
-                ),
-              ),
-              const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  child: Text('وصل حديثاً',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.push('/products'),
+                        child: const Text(
+                          'عرض الكل',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const Text(
+                        'الأطعمة المصنّعة',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               if (products.isLoading)
-                const SliverFillRemaining(child: AppLoader())
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 100, child: Center(child: AppLoader())),
+                )
               else if (products.error != null && products.items.isEmpty)
-                SliverFillRemaining(
+                SliverToBoxAdapter(
                   child: ErrorView(
                     message: products.error!,
                     onRetry: () => ref
@@ -122,7 +128,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 )
               else if (products.items.isEmpty)
-                const SliverFillRemaining(
+                const SliverToBoxAdapter(
                   child: EmptyView(
                     icon: Icons.inventory_2_outlined,
                     title: 'لا توجد منتجات بعد',
@@ -130,7 +136,7 @@ class HomeScreen extends ConsumerWidget {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
@@ -158,129 +164,209 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _HeroBanner extends StatefulWidget {
-  const _HeroBanner();
+// ── Top bar ──────────────────────────────────────────────────────────────────
 
-  @override
-  State<_HeroBanner> createState() => _HeroBannerState();
-}
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.cartCount, required this.unread});
 
-class _HeroBannerState extends State<_HeroBanner> {
-  static const _offerWindow = Duration(hours: 10, minutes: 45, seconds: 32);
-
-  Timer? _timer;
-  late Duration _remaining;
-
-  @override
-  void initState() {
-    super.initState();
-    _remaining = _offerWindow;
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() {
-        _remaining = _remaining.inSeconds > 0
-            ? _remaining - const Duration(seconds: 1)
-            : _offerWindow;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  String _two(int v) => v.toString().padLeft(2, '0');
+  final int cartCount;
+  final int unread;
 
   @override
   Widget build(BuildContext context) {
-    final h = _two(_remaining.inHours);
-    final m = _two(_remaining.inMinutes.remainder(60));
-    final s = _two(_remaining.inSeconds.remainder(60));
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          // Back icon (visual left)
+          _IconBox(
+            child: const Icon(Icons.arrow_back_ios_new, size: 16, color: AppColors.dark),
+            onTap: () => Navigator.of(context).maybePop(),
+          ),
+          const Spacer(),
+          // Brand logo (center)
+          const BrandLogo(size: 88, showLatin: false),
+          const Spacer(),
+          // Notification + cart (visual right)
+          Row(
+            children: [
+              _NotifBox(unread: unread),
+              const SizedBox(width: 8),
+              _CartBox(count: cartCount),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
+class _IconBox extends StatelessWidget {
+  const _IconBox({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.cream,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.center,
+        child: child,
+      ),
+    );
+  }
+}
+
+class _NotifBox extends StatelessWidget {
+  const _NotifBox({required this.unread});
+
+  final int unread;
+
+  @override
+  Widget build(BuildContext context) {
+    return _IconBox(
+      onTap: () => context.push('/notifications'),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          const Icon(Icons.notifications_outlined, size: 20, color: AppColors.dark),
+          if (unread > 0)
+            Positioned(
+              top: -2,
+              right: -2,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.danger,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CartBox extends StatelessWidget {
+  const _CartBox({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go('/cart'),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.center,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const Icon(Icons.shopping_bag_outlined, size: 20, color: Colors.white),
+            if (count > 0)
+              Positioned(
+                top: -6,
+                right: -8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  constraints: const BoxConstraints(minWidth: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.danger,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    count > 99 ? '99+' : '$count',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Delivery row ──────────────────────────────────────────────────────────────
+
+class _DeliveryRow extends StatelessWidget {
+  const _DeliveryRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          const Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.primary),
+          const SizedBox(width: 2),
+          const Text(
+            'الرياض - حي التخصص',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.dark,
+            ),
+          ),
+          const SizedBox(width: 6),
+          const Text(
+            'توصيل إلى',
+            style: TextStyle(fontSize: 13, color: AppColors.muted),
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Search bar ────────────────────────────────────────────────────────────────
+
+class _SearchBar extends StatelessWidget {
+  const _SearchBar();
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: GestureDetector(
         onTap: () => context.push('/products'),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [AppColors.primary, Color(0xFF0B3D1E)],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.28),
-                blurRadius: 22,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: const Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.gold.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
-                ),
-                child: const Text(
-                  'عرض اليوم · خصم حتى 40%',
-                  style: TextStyle(
-                    color: AppColors.gold,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                'كل احتياجاتك في مكان واحد',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  height: 1.3,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 6),
+              Icon(Icons.search, color: AppColors.muted, size: 20),
+              SizedBox(width: 10),
               Text(
-                'جودة عالية · أسعار منافسة · توصيل سريع',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _timeBox(s),
-                  _timeColon(),
-                  _timeBox(m),
-                  _timeColon(),
-                  _timeBox(h),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: () => context.push('/products'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.gold,
-                      foregroundColor: AppColors.dark,
-                      minimumSize: const Size(0, 44),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('تسوّق الآن',
-                        style: TextStyle(fontWeight: FontWeight.w800)),
-                  ),
-                ],
+                'ابحث عن متجر...',
+                style: TextStyle(color: AppColors.muted, fontSize: 14),
               ),
             ],
           ),
@@ -288,122 +374,202 @@ class _HeroBannerState extends State<_HeroBanner> {
       ),
     );
   }
-
-  Widget _timeBox(String value) => Container(
-        width: 38,
-        height: 38,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: 16,
-          ),
-        ),
-      );
-
-  Widget _timeColon() => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 4),
-        child: Text(':',
-            style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
-      );
 }
 
-class _NotifButton extends StatelessWidget {
-  const _NotifButton({required this.unread});
+// ── Hero banner ───────────────────────────────────────────────────────────────
 
-  final int unread;
+class _HeroBanner extends StatelessWidget {
+  const _HeroBanner();
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        IconButton(
-          onPressed: () => context.push('/notifications'),
-          icon: const Icon(Icons.notifications_outlined),
-          style: IconButton.styleFrom(
-            backgroundColor: AppColors.cream,
-            foregroundColor: AppColors.primary,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: GestureDetector(
+        onTap: () => context.push('/products'),
+        child: Container(
+          height: 180,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [Color(0xFF0C3A1C), Color(0xFF031608)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Stack(
+            clipBehavior: Clip.antiAlias,
+            children: [
+              // Basket image — left side
+              Positioned(
+                left: -8,
+                bottom: 0,
+                top: 0,
+                width: 170,
+                child: AppAssetImage(
+                  AppAssets.heroBasket,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              // Text content — right side
+              Positioned(
+                right: 16,
+                top: 0,
+                bottom: 24,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border:
+                            Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+                      ),
+                      child: const Text(
+                        'عروض خاصة',
+                        style: TextStyle(
+                          color: AppColors.gold,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'خصم\nحتى 40%',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'تسوق الآن',
+                        style: TextStyle(
+                          color: Color(0xFF0C3A1C),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Carousel dots
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 16,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        if (unread > 0)
-          Positioned(
-            right: 6,
-            top: 6,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                color: AppColors.danger,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }
 
-class _CategoryStrip extends StatelessWidget {
-  const _CategoryStrip({required this.items});
+// ── Category grid ─────────────────────────────────────────────────────────────
+
+class _CategoryGrid extends StatelessWidget {
+  const _CategoryGrid({required this.items});
 
   final List<Category> items;
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) return const SizedBox.shrink();
-    return SizedBox(
-      height: 104,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: items.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
+    final visible = items.take(10).toList();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: visible.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 5,
+          childAspectRatio: 0.82,
+          crossAxisSpacing: 6,
+          mainAxisSpacing: 12,
+        ),
         itemBuilder: (context, i) {
-          final c = items[i];
+          final c = visible[i];
           return GestureDetector(
-            onTap: () => context.push('/products',
-                extra: ProductsArgs(
-                  categorySlug: c.slug,
-                  title: c.nameAr,
-                )),
-            child: SizedBox(
-              width: 76,
-              child: Column(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.cream,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.antiAlias,
-                    // Real category art is loaded from assets/category-icons/<slug>.png.
-                    // Until the asset is provided nothing is drawn (no substitute).
-                    child: AppAssetImage(
-                      AppAssets.categoryIcon(c.slug),
-                      width: 52,
-                      height: 52,
-                      fit: BoxFit.contain,
-                    ),
+            onTap: () => context.push(
+              '/products',
+              extra: ProductsArgs(categorySlug: c.slug, title: c.nameAr),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    color: AppColors.cream,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    c.nameAr,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  alignment: Alignment.center,
+                  child: AppAssetImage(
+                    AppAssets.categoryIcon(c.slug),
+                    width: 36,
+                    height: 36,
+                    fit: BoxFit.contain,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  c.nameAr,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                ),
+              ],
             ),
           );
         },

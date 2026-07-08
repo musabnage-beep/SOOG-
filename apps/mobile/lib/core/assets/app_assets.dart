@@ -58,9 +58,15 @@ abstract class AppAssets {
   // ── Backgrounds & illustrations ───────────────────────────────────────────
   static const String heroBasket = '$_backgrounds/hero-basket.png';
   static const String splashBg = '$_backgrounds/splash-bg.png';
+  static const String splashBasket = '$_backgrounds/splash-basket.png';
+  static const String splashSwoosh = '$_backgrounds/splash-swoosh.png';
   static const String storeBuilding = '$_illustrations/store-building.png';
   static const String deliveryTruck = '$_illustrations/delivery-truck.png';
   static const String deliveryHero = '$_illustrations/delivery-hero.png';
+
+  /// Floating product shot used on the splash, keyed by a stable slot name.
+  /// e.g. `chips-a` → `assets/products/splash-chips-a.png`.
+  static String splashFloat(String key) => '$_products/splash-$key.png';
 
   /// Category tile image, keyed by the backend category `slug`.
   /// e.g. slug `canned-goods` → `assets/category-icons/canned-goods.png`.
