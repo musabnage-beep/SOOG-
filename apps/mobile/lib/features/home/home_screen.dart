@@ -352,7 +352,7 @@ class _SearchBar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: GestureDetector(
-        onTap: () => context.push('/products'),
+        onTap: () => context.push('/search'),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
@@ -365,7 +365,7 @@ class _SearchBar extends StatelessWidget {
               Icon(Icons.search, color: AppColors.muted, size: 20),
               SizedBox(width: 10),
               Text(
-                'ابحث عن متجر...',
+                'ابحث عن منتج...',
                 style: TextStyle(color: AppColors.muted, fontSize: 14),
               ),
             ],

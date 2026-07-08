@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_controller.dart';
-import '../../widgets/brand_logo.dart';
+
+const _kBg = Color(0xFF0A1A0C);
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -18,7 +19,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _identifier = TextEditingController();
   final _password = TextEditingController();
-  bool _usePhone = true;
   bool _obscure = true;
   bool _busy = false;
 
@@ -34,12 +34,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _busy = true);
     try {
       final value = _identifier.text.trim();
+      final isEmail = value.contains('@');
       await ref.read(authControllerProvider.notifier).login(
-            phone: _usePhone ? value : null,
-            email: _usePhone ? null : value,
+            phone: isEmail ? null : value,
+            email: isEmail ? value : null,
             password: _password.text,
           );
-      // Router redirects to /home automatically.
     } on ApiException catch (e) {
       _show(e.message);
     } catch (_) {
@@ -59,142 +59,244 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _kBg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 24),
-                const Center(child: BrandLogo(size: 150)),
-                const SizedBox(height: 24),
-                const Text(
-                  'مرحباً بعودتك',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+            // ── Pill title ──────────────────────────────────────────
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(30),
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  'سجّل الدخول لمتابعة التسوّق',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.muted),
-                ),
-                const SizedBox(height: 28),
-                _ToggleTabs(
-                  usePhone: _usePhone,
-                  onChanged: (v) => setState(() => _usePhone = v),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _identifier,
-                  keyboardType:
-                      _usePhone ? TextInputType.phone : TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: _usePhone ? 'رقم الجوال' : 'البريد الإلكتروني',
-                    prefixIcon:
-                        Icon(_usePhone ? Icons.phone_outlined : Icons.email_outlined),
+                child: const Text(
+                  'تسجيل الدخول',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'هذا الحقل مطلوب' : null,
                 ),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _password,
-                  obscureText: _obscure,
-                  decoration: InputDecoration(
-                    labelText: 'كلمة المرور',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+              ),
+            ),
+            const SizedBox(height: 40),
+            // ── White card ──────────────────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                child: Form(
+                  key: _formKey,
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Header row: icon (left) + title (right)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFEEF4EE),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.person_outline,
+                                color: AppColors.primary,
+                                size: 22,
+                              ),
+                            ),
+                            const Spacer(),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: const [
+                                Text(
+                                  'مرحبًا بك في ضياف',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.dark,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'سجل دخولك لتستمر',
+                                  style: TextStyle(
+                                    color: AppColors.muted,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 28),
+
+                        // Identifier field
+                        TextFormField(
+                          controller: _identifier,
+                          textAlign: TextAlign.right,
+                          textDirection: TextDirection.rtl,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            hintText: 'البريد الإلكتروني أو رقم الجوال',
+                            hintStyle: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 13,
+                            ),
+                            hintTextDirection: TextDirection.rtl,
+                            filled: true,
+                            fillColor: const Color(0xFFF7F7F7),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? 'هذا الحقل مطلوب' : null,
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Password field
+                        TextFormField(
+                          controller: _password,
+                          obscureText: _obscure,
+                          textAlign: TextAlign.right,
+                          textDirection: TextDirection.rtl,
+                          decoration: InputDecoration(
+                            hintText: 'كلمة المرور',
+                            hintStyle: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 13,
+                            ),
+                            hintTextDirection: TextDirection.rtl,
+                            filled: true,
+                            fillColor: const Color(0xFFF7F7F7),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(() => _obscure = !_obscure),
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.muted,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                          validator: (v) =>
+                              (v == null || v.isEmpty) ? 'أدخل كلمة المرور' : null,
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Forgot password
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.push('/forgot'),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              'نسيت كلمة المرور؟',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Login button
+                        SizedBox(
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _busy ? null : _submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: AppColors.primary.withOpacity(0.6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: _busy
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'تسجيل الدخول',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Register link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: () => context.push('/register'),
+                              child: const Text(
+                                'إنشاء حساب',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Text(
+                              'ليس لديك حساب؟',
+                              style: TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'أدخل كلمة المرور' : null,
                 ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () => context.push('/forgot'),
-                    child: const Text('نسيت كلمة المرور؟'),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: _busy ? null : _submit,
-                  child: _busy
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('تسجيل الدخول'),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('ليس لديك حساب؟'),
-                    TextButton(
-                      onPressed: () => context.push('/register'),
-                      child: const Text('إنشاء حساب'),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ToggleTabs extends StatelessWidget {
-  const _ToggleTabs({required this.usePhone, required this.onChanged});
-
-  final bool usePhone;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.cream,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          _tab('الجوال', usePhone, () => onChanged(true)),
-          _tab('البريد', !usePhone, () => onChanged(false)),
-        ],
-      ),
-    );
-  }
-
-  Widget _tab(String label, bool active, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: active ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(11),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: active ? Colors.white : AppColors.muted,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          ],
         ),
       ),
     );

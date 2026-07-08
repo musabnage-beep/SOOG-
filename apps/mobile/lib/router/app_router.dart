@@ -9,6 +9,7 @@ import '../features/account/favorites_screen.dart';
 import '../features/account/notifications_screen.dart';
 import '../features/auth/forgot_password_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/search/search_screen.dart';
 import '../features/auth/otp_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/splash_screen.dart';
@@ -162,6 +163,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile/edit',
         parentNavigatorKey: _rootKey,
         builder: (_, _) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/search',
+        parentNavigatorKey: _rootKey,
+        builder: (_, _) => const SearchScreen(),
       ),
     ],
   );
