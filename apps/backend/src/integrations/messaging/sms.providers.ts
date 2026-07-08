@@ -52,6 +52,42 @@ export class MsegatSmsProvider implements SmsProvider {
 }
 
 /**
+ * Twilio SMS provider. Requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
+ * and TWILIO_FROM_NUMBER (the purchased Twilio phone number, e.g. +12345678900).
+ */
+@Injectable()
+export class TwilioSmsProvider implements SmsProvider {
+  private readonly logger = new Logger('SMS');
+  private readonly accountSid: string;
+  private readonly authToken: string;
+  private readonly fromNumber: string;
+
+  constructor(config: ConfigService) {
+    this.accountSid = config.get<string>('TWILIO_ACCOUNT_SID', '');
+    this.authToken = config.get<string>('TWILIO_AUTH_TOKEN', '');
+    this.fromNumber = config.get<string>('TWILIO_FROM_NUMBER', '');
+  }
+
+  async send(to: string, message: string): Promise<void> {
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`;
+    const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString('base64');
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({ From: this.fromNumber, To: to, Body: message }).toString(),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      this.logger.error(`Twilio SMS failed (${res.status}) for ${to}: ${text}`);
+      throw new Error(`SMS provider error: ${res.status}`);
+    }
+  }
+}
+
+/**
  * Production SMS provider (Unifonic — common in KSA). Wired to call the HTTP API.
  * Requires SMS_API_KEY. Network call uses the global fetch (Node >= 18).
  */

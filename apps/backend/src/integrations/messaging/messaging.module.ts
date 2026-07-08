@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MAIL_PROVIDER, PUSH_PROVIDER, SMS_PROVIDER } from './messaging.interface';
-import { ConsoleSmsProvider, MsegatSmsProvider, UnifonicSmsProvider } from './sms.providers';
+import { ConsoleSmsProvider, MsegatSmsProvider, TwilioSmsProvider, UnifonicSmsProvider } from './sms.providers';
 import { ConsolePushProvider, FcmPushProvider } from './push.providers';
 import { ConsoleMailProvider, SesMailProvider } from './mail.providers';
 
@@ -15,6 +15,7 @@ import { ConsoleMailProvider, SesMailProvider } from './mail.providers';
         const p = config.get('SMS_PROVIDER');
         if (p === 'unifonic') return new UnifonicSmsProvider(config);
         if (p === 'msegat') return new MsegatSmsProvider(config);
+        if (p === 'twilio') return new TwilioSmsProvider(config);
         return new ConsoleSmsProvider();
       },
     },
