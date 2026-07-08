@@ -400,24 +400,32 @@ class _HeroBanner extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.antiAlias,
             children: [
-              // Basket image — left side
+              // Basket image — right side
               Positioned(
-                left: -8,
+                right: -8,
                 bottom: 0,
                 top: 0,
                 width: 170,
                 child: AppAssetImage(
                   AppAssets.heroBasket,
                   fit: BoxFit.contain,
+                  fallback: Opacity(
+                    opacity: 0.25,
+                    child: Icon(
+                      Icons.shopping_basket_rounded,
+                      size: 120,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
-              // Text content — right side
+              // Text content — left side
               Positioned(
-                right: 16,
+                left: 16,
                 top: 0,
                 bottom: 24,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
@@ -440,7 +448,7 @@ class _HeroBanner extends StatelessWidget {
                     const SizedBox(height: 10),
                     const Text(
                       'خصم\nحتى 40%',
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 22,
@@ -559,6 +567,13 @@ class _CategoryGrid extends StatelessWidget {
                     width: 36,
                     height: 36,
                     fit: BoxFit.contain,
+                    fallback: c.icon != null
+                        ? Text(
+                            c.icon!,
+                            style: const TextStyle(fontSize: 26),
+                          )
+                        : const Icon(Icons.category_outlined,
+                            size: 22, color: AppColors.primary),
                   ),
                 ),
                 const SizedBox(height: 5),
