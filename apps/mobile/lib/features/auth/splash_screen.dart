@@ -181,7 +181,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                 // ── Taglines ──────────────────────────────────────────────────
                 Positioned(
-                  top: h * 0.475,
+                  top: h * 0.57,
                   left: 24,
                   right: 24,
                   child: Opacity(
@@ -221,7 +221,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                 // ── Hero shopping basket ──────────────────────────────────────
                 Positioned(
-                  top: h * 0.55,
+                  top: h * 0.65,
                   left: 0,
                   right: 0,
                   child: Center(

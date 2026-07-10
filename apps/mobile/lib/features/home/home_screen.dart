@@ -178,10 +178,10 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          // Back icon (visual left)
+          // Menu / location icon (visual left)
           _IconBox(
-            child: const Icon(Icons.arrow_back_ios_new, size: 16, color: AppColors.dark),
-            onTap: () => Navigator.of(context).maybePop(),
+            child: const Icon(Icons.location_on_outlined, size: 18, color: AppColors.primary),
+            onTap: () {},
           ),
           const Spacer(),
           // Brand logo (center)

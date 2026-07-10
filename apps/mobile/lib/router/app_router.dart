@@ -26,12 +26,9 @@ import '../features/products/product_detail_screen.dart';
 import '../features/products/products_screen.dart';
 import '../providers/auth_controller.dart';
 
-/// Set to `true` by [SplashScreen] once its intro animation has fully played,
-/// so the router keeps showing the splash for the whole animation instead of
-/// jumping away the instant the auth session resolves.
+/// Set to `true` by [SplashScreen] once its intro animation has fully played.
 final splashDoneProvider = StateProvider<bool>((ref) => false);
 
-/// Bridges Riverpod [AuthState] changes to go_router's [refreshListenable].
 class _AuthRefresh extends ChangeNotifier {
   _AuthRefresh(Ref ref) {
     ref.listen(authControllerProvider, (_, _) => notifyListeners());
@@ -40,7 +37,6 @@ class _AuthRefresh extends ChangeNotifier {
 }
 
 final _rootKey = GlobalKey<NavigatorState>();
-final _shellKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _AuthRefresh(ref);
@@ -55,8 +51,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       final loc = state.matchedLocation;
       const authRoutes = {'/login', '/register', '/otp', '/forgot'};
 
-      // Routes that require a signed-in account. Everything else (home,
-      // products, cart, favorites) is open to guests for browsing.
       bool requiresAuth(String p) =>
           p == '/checkout' ||
           p == '/orders' ||
@@ -66,8 +60,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           p == '/notifications' ||
           p == '/profile/edit';
 
-      // Hold on the splash until its animation has finished AND the session has
-      // been resolved, so the intro plays in full.
       if (loc == '/splash') {
         if (!splashDone || status == AuthStatus.unknown) return null;
         return '/home';
@@ -76,11 +68,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (status == AuthStatus.unknown) return '/splash';
 
       if (status == AuthStatus.unauthenticated) {
-        // Guests may browse; only account-bound routes push them to login.
         if (authRoutes.contains(loc)) return null;
         return requiresAuth(loc) ? '/login' : null;
       }
-      // authenticated
       if (authRoutes.contains(loc)) return '/home';
       return null;
     },
@@ -90,27 +80,33 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(
         path: '/otp',
-        builder: (_, state) {
-          final args = state.extra as OtpArgs;
-          return OtpScreen(args: args);
-        },
+        builder: (_, state) => OtpScreen(args: state.extra as OtpArgs),
       ),
       GoRoute(path: '/forgot', builder: (_, _) => const ForgotPasswordScreen()),
 
-      // Main tabbed shell.
-      ShellRoute(
-        navigatorKey: _shellKey,
-        builder: (_, _, child) => MainShell(child: child),
-        routes: [
-          GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
-          GoRoute(path: '/offers', builder: (_, _) => const OffersScreen()),
-          GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
-          GoRoute(path: '/categories', builder: (_, _) => const CategoriesScreen()),
-          GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
+      // StatefulShellRoute preserves each tab's state and navigation stack
+      // independently — fixes back-button behaviour across tabs.
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, shell) => MainShell(shell: shell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/offers', builder: (_, _) => const OffersScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/categories', builder: (_, _) => const CategoriesScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
+          ]),
         ],
       ),
 
-      // Detail routes (pushed over the shell, full screen).
       GoRoute(
         path: '/orders',
         parentNavigatorKey: _rootKey,
@@ -119,10 +115,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/products',
         parentNavigatorKey: _rootKey,
-        builder: (_, state) {
-          final extra = state.extra as ProductsArgs?;
-          return ProductsScreen(args: extra);
-        },
+        builder: (_, state) => ProductsScreen(args: state.extra as ProductsArgs?),
       ),
       GoRoute(
         path: '/product/:id',
