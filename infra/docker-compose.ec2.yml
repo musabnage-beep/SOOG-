@@ -52,7 +52,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      CORS_ORIGINS: ${CORS_ORIGINS}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://18.194.190.26:3100,http://18.194.190.26:3200,http://18.194.190.26:3300}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@aldiafah.com}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeMe!2026}
       SEED_ADMIN_PHONE: ${SEED_ADMIN_PHONE:-+966500000000}
@@ -71,8 +71,17 @@ services:
       MOYASAR_SECRET_KEY: ${MOYASAR_SECRET_KEY:-}
       MOYASAR_WEBHOOK_SECRET: ${MOYASAR_WEBHOOK_SECRET:-}
       PAYMENT_CALLBACK_URL: ${PAYMENT_CALLBACK_URL:-}
+      # SMS — Twilio
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+      # Push — Firebase (service account JSON mounted as volume)
+      FIREBASE_SERVICE_ACCOUNT_PATH: /app/firebase-service-account.json
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
     volumes:
       - uploads:/app/uploads
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
     networks:
       - aldiafa
 

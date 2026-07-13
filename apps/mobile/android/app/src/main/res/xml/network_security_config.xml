@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network security configuration.
+  Allows cleartext (HTTP) traffic to the EC2 backend IP until a domain + TLS is set up.
+  All other traffic defaults to HTTPS only.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- EC2 backend (HTTP until a domain/SSL is configured) -->
+        <domain includeSubdomains="false">18.194.190.26</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

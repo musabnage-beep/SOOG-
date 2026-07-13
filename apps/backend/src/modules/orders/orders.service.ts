@@ -380,9 +380,17 @@ export class OrdersService {
   }
 
   private async nextOrderNumber(tx: Prisma.TransactionClient): Promise<string> {
-    const count = await tx.order.count();
-    const seq = String(count + 1).padStart(6, '0');
-    return `ALD-${new Date().getFullYear()}-${seq}`;
+    // Use MAX(orderNumber) within the current year to derive the next sequence
+    // instead of COUNT(*), which is not safe under concurrent inserts.
+    const year = new Date().getFullYear();
+    const prefix = `ALD-${year}-`;
+    const last = await tx.order.findFirst({
+      where: { orderNumber: { startsWith: prefix } },
+      orderBy: { orderNumber: 'desc' },
+      select: { orderNumber: true },
+    });
+    const seq = last ? parseInt(last.orderNumber.replace(prefix, ''), 10) + 1 : 1;
+    return `${prefix}${String(seq).padStart(6, '0')}`;
   }
 
   private statusNotificationType(status: OrderStatus): NotificationType {

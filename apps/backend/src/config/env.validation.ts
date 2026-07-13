@@ -22,7 +22,7 @@ export const envSchema = z.object({
   SMS_SENDER_ID: z.string().default('ALDIAFAH'),
   TWILIO_ACCOUNT_SID: z.string().optional().default(''),
   TWILIO_AUTH_TOKEN: z.string().optional().default(''),
-  TWILIO_FROM_NUMBER: z.string().optional().default(''),
+  TWILIO_PHONE_NUMBER: z.string().optional().default(''),
 
   THROTTLE_TTL: z.coerce.number().default(60),
   THROTTLE_LIMIT: z.coerce.number().default(120),

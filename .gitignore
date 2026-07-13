@@ -13,6 +13,16 @@ build/
 !.env.example
 !.env.*.example
 
+# Firebase / Google credentials — never commit these
+infra/firebase-service-account.json
+apps/mobile/android/app/google-services.json
+apps/mobile/ios/Runner/GoogleService-Info.plist
+
+# Android signing keystore
+*.jks
+*.keystore
+apps/mobile/android/key.properties
+
 # prisma
 apps/backend/prisma/*.db
 apps/backend/prisma/migrations/dev.db*

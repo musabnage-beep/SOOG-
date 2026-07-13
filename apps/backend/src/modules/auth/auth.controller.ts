@@ -58,6 +58,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 30, ttl: 60 } })
   @Post('refresh')
   refresh(@Body() dto: RefreshDto, @Ip() ip: string, @Req() req: Request) {
     return this.auth.refresh(dto.refreshToken, { ip, userAgent: this.ua(req) });

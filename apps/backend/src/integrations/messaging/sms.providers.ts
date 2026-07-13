@@ -53,7 +53,7 @@ export class MsegatSmsProvider implements SmsProvider {
 
 /**
  * Twilio SMS provider. Requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
- * and TWILIO_FROM_NUMBER (the purchased Twilio phone number, e.g. +12345678900).
+ * and TWILIO_PHONE_NUMBER (the purchased Twilio phone number, e.g. +12345678900).
  */
 @Injectable()
 export class TwilioSmsProvider implements SmsProvider {
@@ -65,7 +65,7 @@ export class TwilioSmsProvider implements SmsProvider {
   constructor(config: ConfigService) {
     this.accountSid = config.get<string>('TWILIO_ACCOUNT_SID', '');
     this.authToken = config.get<string>('TWILIO_AUTH_TOKEN', '');
-    this.fromNumber = config.get<string>('TWILIO_FROM_NUMBER', '');
+    this.fromNumber = config.get<string>('TWILIO_PHONE_NUMBER', '');
   }
 
   async send(to: string, message: string): Promise<void> {
