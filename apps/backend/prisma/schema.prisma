@@ -485,9 +485,9 @@ model DeliveryZone {
 // Single-row store/system configuration.
 model Settings {
   id                 String   @id @default("singleton")
-  storeName          String   @default("ALDIAFAH")
-  storeLatitude      Float    @default(24.7136)
-  storeLongitude     Float    @default(46.6753)
+  storeName          String   @default("الضيافة")
+  storeLatitude      Float    @default(24.5249853)
+  storeLongitude     Float    @default(44.3978595)
   freeDeliveryRadiusM Int     @default(3000)
   deliveryRadiusM    Int      @default(15000)
   baseDeliveryFee    Decimal  @default(15) @db.Decimal(10, 2)

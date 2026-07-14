@@ -138,23 +138,30 @@ async function main() {
     });
   }
 
-  // 6) Store settings (singleton)
+  // 6) Store settings (singleton) — real store location (الضيافة).
+  //    Coordinates are a fixed fact so they are enforced on every seed run;
+  //    delivery fee / radii are left for the admin to tune from the dashboard.
   await prisma.settings.upsert({
     where: { id: 'singleton' },
-    update: {},
-    create: { id: 'singleton' },
+    update: {
+      storeName: 'الضيافة',
+      storeLatitude: 24.5249853,
+      storeLongitude: 44.3978595,
+    },
+    create: {
+      id: 'singleton',
+      storeName: 'الضيافة',
+      storeLatitude: 24.5249853,
+      storeLongitude: 44.3978595,
+    },
   });
 
-  // 7) Default delivery zones (radius-based)
-  const zones = [
-    { name: 'Free zone', minRadiusM: 0, maxRadiusM: 3000, fee: 0 },
-    { name: 'Near zone', minRadiusM: 3000, maxRadiusM: 8000, fee: 15 },
-    { name: 'Far zone', minRadiusM: 8000, maxRadiusM: 15000, fee: 25 },
-  ];
-  for (const z of zones) {
-    const exists = await prisma.deliveryZone.findFirst({ where: { name: z.name } });
-    if (!exists) await prisma.deliveryZone.create({ data: z });
-  }
+  // 7) Delivery pricing model: FREE inside the district (Settings.freeDeliveryRadiusM)
+  //    and a SINGLE admin-set fee (Settings.baseDeliveryFee) for anything outside it.
+  //    Remove the legacy distance-band zones so they never override the admin's fee.
+  await prisma.deliveryZone.deleteMany({
+    where: { name: { in: ['Free zone', 'Near zone', 'Far zone'] } },
+  });
 
   console.log('✅ Seed complete.');
   console.log(`   Admin login: ${adminEmail} / (password from SEED_ADMIN_PASSWORD)`);
