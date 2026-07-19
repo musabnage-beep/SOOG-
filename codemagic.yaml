@@ -16,9 +16,6 @@ workflows:
       vars:
         BUNDLE_ID: com.aldiafah.aldiafa
         APP_STORE_APP_ID: "6791276970"
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.aldiafah.aldiafa
 
     scripts:
       - name: Install Flutter dependencies
@@ -31,9 +28,21 @@ workflows:
           cd apps/mobile/ios
           pod install
 
-      - name: Inject Google Maps API key into Xcode build settings
+      - name: Set up code signing
         script: |
-          # Write the key into the xcconfig so Xcode picks up $(GOOGLE_MAPS_API_KEY)
+          app-store-connect fetch-signing-files \
+            --bundle-id "$BUNDLE_ID" \
+            --platform IOS \
+            --type IOS_APP_STORE \
+            --issuer-id "$ASC_ISSUER_ID" \
+            --key-id "$ASC_KEY_ID" \
+            --private-key "@env:ASC_PRIVATE_KEY" \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - name: Inject Google Maps API key
+        script: |
           XCCONFIG="apps/mobile/ios/Flutter/Release.xcconfig"
           echo "GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY" >> "$XCCONFIG"
 
@@ -67,7 +76,7 @@ workflows:
         PACKAGE_NAME: com.aldiafah.aldiafa
 
     scripts:
-      - name: Set TMP path (Windows Gradle socket fix — not needed on Linux but harmless)
+      - name: Set TMP path
         script: export TMP=/tmp && export TEMP=/tmp
 
       - name: Install Flutter dependencies
