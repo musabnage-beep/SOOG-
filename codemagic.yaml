@@ -3,6 +3,9 @@ workflows:
     name: iOS Release — الضيافة
     max_build_duration: 60
     instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: codemagic
+
     environment:
       flutter: stable
       xcode: latest
@@ -13,8 +16,6 @@ workflows:
       vars:
         BUNDLE_ID: com.aldiafah.aldiafa
         APP_STORE_APP_ID: "6791276970"
-      integrations:
-        app_store_connect: codemagic
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.aldiafah.aldiafa
