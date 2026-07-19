@@ -39,7 +39,8 @@ workflows:
             --private-key "@env:ASC_PRIVATE_KEY" \
             --create
           keychain add-certificates
-          xcode-project use-profiles
+          xcode-project use-profiles \
+            --workspace apps/mobile/ios/Runner.xcworkspace
 
       - name: Inject Google Maps API key
         script: |
