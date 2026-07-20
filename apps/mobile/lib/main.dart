@@ -11,55 +11,49 @@ import 'providers/core_providers.dart';
 import 'router/app_router.dart';
 
 Future<void> main() async {
-  // TEMP DIAGNOSTIC: surface any startup error on screen (works in release)
-  // instead of a blank white screen. Remove once the white-screen bug is fixed.
-  ErrorWidget.builder = (FlutterErrorDetails details) => _ErrorScreen(
-        '${details.exceptionAsString()}\n\n${details.stack}',
-      );
-
+  // Safety net: if the app fails to boot, show a clean message instead of a
+  // blank white screen.
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
-    FlutterError.onError = (details) {
-      FlutterError.presentError(details);
-    };
-    try {
-      await initializeDateFormatting('ar');
-    } catch (e, s) {
-      runApp(_ErrorApp('initializeDateFormatting failed:\n$e\n\n$s'));
-      return;
-    }
+    FlutterError.onError = (details) => FlutterError.presentError(details);
+    await initializeDateFormatting('ar');
     runApp(const ProviderScope(child: AldiafaApp()));
   }, (error, stack) {
-    runApp(_ErrorApp('Uncaught startup error:\n$error\n\n$stack'));
+    runApp(const _ErrorApp());
   });
 }
 
-/// Minimal standalone app that renders a fatal startup error on screen.
+/// Minimal standalone app shown only if the app fails to start.
 class _ErrorApp extends StatelessWidget {
-  const _ErrorApp(this.message);
-  final String message;
+  const _ErrorApp();
 
   @override
   Widget build(BuildContext context) => MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: _ErrorScreen(message),
-      );
-}
-
-class _ErrorScreen extends StatelessWidget {
-  const _ErrorScreen(this.message);
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Directionality(
-        textDirection: TextDirection.ltr,
-        child: Container(
-          color: const Color(0xFF7A0000),
-          padding: const EdgeInsets.fromLTRB(16, 60, 16, 24),
-          child: SingleChildScrollView(
-            child: SelectableText(
-              message,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+                    SizedBox(height: 16),
+                    Text(
+                      'حدث خطأ غير متوقع',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'يرجى إغلاق التطبيق وإعادة فتحه',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

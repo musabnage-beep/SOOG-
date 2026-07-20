@@ -67,7 +67,7 @@ class AccountScreen extends ConsumerWidget {
           _tile(Icons.favorite_border, 'المفضّلة', () => context.push('/favorites')),
           _tile(Icons.notifications_outlined, 'الإشعارات',
               () => context.push('/notifications')),
-          _tile(Icons.receipt_long_outlined, 'طلباتي', () => context.go('/orders')),
+          _tile(Icons.receipt_long_outlined, 'طلباتي', () => context.push('/orders')),
           const Divider(height: 32),
           _tile(
             Icons.logout,

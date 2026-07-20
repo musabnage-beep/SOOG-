@@ -7,11 +7,13 @@ import '../../core/theme/app_colors.dart';
 import '../../data/models/category.dart';
 import '../../providers/cart_controller.dart';
 import '../../providers/catalog_providers.dart';
+import '../../providers/delivery_location_provider.dart';
 import '../../providers/notifications_controller.dart';
 import '../../widgets/app_asset.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/state_views.dart';
+import '../checkout/map_picker_screen.dart';
 import '../products/products_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -166,22 +168,22 @@ class HomeScreen extends ConsumerWidget {
 
 // ── Top bar ──────────────────────────────────────────────────────────────────
 
-class _TopBar extends StatelessWidget {
+class _TopBar extends ConsumerWidget {
   const _TopBar({required this.cartCount, required this.unread});
 
   final int cartCount;
   final int unread;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          // Menu / location icon (visual left)
+          // Location icon (visual left) — opens the delivery-location picker
           _IconBox(
             child: const Icon(Icons.location_on_outlined, size: 18, color: AppColors.primary),
-            onTap: () {},
+            onTap: () => pickDeliveryLocation(context, ref),
           ),
           const Spacer(),
           // Brand logo (center)
@@ -309,34 +311,70 @@ class _CartBox extends StatelessWidget {
 
 // ── Delivery row ──────────────────────────────────────────────────────────────
 
-class _DeliveryRow extends StatelessWidget {
+/// Opens the map picker, and on confirm stores the chosen location so the home
+/// bar reflects the customer's real delivery address.
+Future<void> pickDeliveryLocation(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(deliveryLocationProvider);
+  final result = await context.push<MapPickerResult>(
+    '/map-picker',
+    extra: current == null
+        ? null
+        : MapPickerArgs(
+            latitude: current.latitude,
+            longitude: current.longitude,
+          ),
+  );
+  if (result == null) return;
+  final label = [result.district, result.city]
+      .where((e) => e.isNotEmpty)
+      .join(' - ');
+  await ref.read(deliveryLocationProvider.notifier).set(
+        DeliveryLocation(
+          label: label.isEmpty ? 'موقعي الحالي' : label,
+          latitude: result.latitude,
+          longitude: result.longitude,
+        ),
+      );
+}
+
+class _DeliveryRow extends ConsumerWidget {
   const _DeliveryRow();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final location = ref.watch(deliveryLocationProvider);
+    final label = location?.label ?? 'حدّد موقعك';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          const Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.primary),
-          const SizedBox(width: 2),
-          const Text(
-            'الرياض - حي التخصص',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppColors.dark,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => pickDeliveryLocation(context, ref),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            const Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.primary),
+            const SizedBox(width: 2),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.dark,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 6),
-          const Text(
-            'توصيل إلى',
-            style: TextStyle(fontSize: 13, color: AppColors.muted),
-          ),
-          const SizedBox(width: 4),
-          const Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
-        ],
+            const SizedBox(width: 6),
+            const Text(
+              'توصيل إلى',
+              style: TextStyle(fontSize: 13, color: AppColors.muted),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
+          ],
+        ),
       ),
     );
   }

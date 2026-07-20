@@ -65,6 +65,10 @@ class CategoriesScreen extends ConsumerWidget {
                       width: 44,
                       height: 44,
                       fit: BoxFit.contain,
+                      fallback: c.icon != null
+                          ? Text(c.icon!, style: const TextStyle(fontSize: 30))
+                          : const Icon(Icons.category_outlined,
+                              size: 28, color: AppColors.primary),
                     ),
                   ),
                   const SizedBox(height: 6),

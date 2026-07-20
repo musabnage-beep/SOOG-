@@ -19,7 +19,10 @@ class OrdersScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('طلباتي'),
-        automaticallyImplyLeading: false,
+        leading: BackButton(
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
+        ),
       ),
       body: orders.when(
         loading: () => const AppLoader(),
