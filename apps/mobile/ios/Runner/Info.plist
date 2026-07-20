@@ -71,6 +71,10 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Portrait-locked phone app: opt out of iPad multitasking so restricted
+	     orientations are allowed (fixes App Store upload error 90474). -->
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
