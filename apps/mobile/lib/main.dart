@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/theme/app_theme.dart';
@@ -114,40 +113,9 @@ class _AldiafaAppState extends ConsumerState<AldiafaApp> {
       ],
       builder: (context, child) => Directionality(
         textDirection: TextDirection.rtl,
-        child: _RootBackHandler(
-          router: router,
-          child: child ?? const SizedBox.shrink(),
-        ),
+        child: child ?? const SizedBox.shrink(),
       ),
     );
   }
 }
 
-/// Intercepts the Android back button at the root so that top-level pages
-/// reached via a redirect (e.g. `/login`) fall back to `/home` instead of
-/// exiting the app. Only `/home` and `/splash` are allowed to exit.
-class _RootBackHandler extends StatelessWidget {
-  const _RootBackHandler({required this.router, required this.child});
-
-  final GoRouter router;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return BackButtonListener(
-      onBackButtonPressed: () async {
-        if (router.canPop()) {
-          router.pop();
-          return true;
-        }
-        final loc = router.routerDelegate.currentConfiguration.uri.path;
-        if (loc != '/home' && loc != '/splash') {
-          router.go('/home');
-          return true;
-        }
-        return false; // on home/splash → let the OS close the app
-      },
-      child: child,
-    );
-  }
-}
