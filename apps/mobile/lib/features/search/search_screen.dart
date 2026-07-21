@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,10 +10,8 @@ import '../../providers/catalog_providers.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/state_views.dart';
 
-const _kBg = Color(0xFF0A1A0C);
-const _kCard = Color(0xFF0F2414);
 const _kHistoryKey = 'search_history';
-const _kMaxHistory = 8;
+const _kMaxHistory = 10;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Search history provider (local prefs)
@@ -54,7 +54,7 @@ class SearchHistoryNotifier extends StateNotifier<List<String>> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Search screen
+// Search screen — live (debounced) search-as-you-type
 // ─────────────────────────────────────────────────────────────────────────────
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -66,159 +66,151 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _controller = TextEditingController();
+  final _focus = FocusNode();
+  Timer? _debounce;
   String _query = '';
 
   @override
+  void initState() {
+    super.initState();
+    // Open the keyboard immediately, like a dedicated search screen.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focus.requestFocus());
+  }
+
+  @override
   void dispose() {
+    _debounce?.cancel();
     _controller.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
-  void _search(String query) {
-    final trimmed = query.trim();
+  void _onChanged(String value) {
+    // Reflect the clear (×) button instantly, then debounce the actual query.
+    setState(() {});
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      final trimmed = value.trim();
+      if (trimmed == _query) return;
+      setState(() => _query = trimmed);
+    });
+  }
+
+  void _submit(String value) {
+    _debounce?.cancel();
+    final trimmed = value.trim();
     setState(() => _query = trimmed);
     if (trimmed.isNotEmpty) {
       ref.read(searchHistoryProvider.notifier).add(trimmed);
     }
   }
 
+  void _runSearch(String query) {
+    _controller.text = query;
+    _controller.selection = TextSelection.collapsed(offset: query.length);
+    _submit(query);
+    _focus.unfocus();
+  }
+
   void _clear() {
+    _debounce?.cancel();
     _controller.clear();
     setState(() => _query = '');
+    _focus.requestFocus();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            // ── Pill title ───────────────────────────────────────────
-            Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: const Text(
-                  'البحث',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.white,
+        foregroundColor: AppColors.dark,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        titleSpacing: 0,
+        leading: BackButton(
+          color: AppColors.dark,
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
+        ),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: TextField(
+              controller: _controller,
+              focusNode: _focus,
+              textInputAction: TextInputAction.search,
+              textAlignVertical: TextAlignVertical.center,
+              cursorColor: AppColors.primary,
+              style: const TextStyle(
+                color: AppColors.dark,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+              onChanged: _onChanged,
+              onSubmitted: _submit,
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'ابحث عن منتج...',
+                hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
+                border: InputBorder.none,
+                prefixIcon: const Icon(Icons.search,
+                    color: AppColors.muted, size: 20),
+                suffixIcon: _controller.text.isNotEmpty
+                    ? IconButton(
+                        splashRadius: 18,
+                        icon: const Icon(Icons.close,
+                            color: AppColors.muted, size: 18),
+                        onPressed: _clear,
+                      )
+                    : null,
               ),
             ),
-            const SizedBox(height: 16),
-
-            // ── Search field ─────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: _kCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.primary.withOpacity(0.3),
-                  ),
-                ),
-                child: TextField(
-                  controller: _controller,
-                  textAlign: TextAlign.right,
-                  textDirection: TextDirection.rtl,
-                  textInputAction: TextInputAction.search,
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
-                  onSubmitted: _search,
-                  onChanged: (v) {
-                    if (v.trim().isEmpty) setState(() => _query = '');
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'ابحث عن منتج...',
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF5A7A5A),
-                      fontSize: 14,
-                    ),
-                    hintTextDirection: TextDirection.rtl,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                    prefixIcon: _query.isNotEmpty
-                        ? IconButton(
-                            onPressed: _clear,
-                            icon: const Icon(Icons.close,
-                                color: Color(0xFF5A7A5A), size: 18),
-                          )
-                        : null,
-                    suffixIcon: IconButton(
-                      onPressed: () => _search(_controller.text),
-                      icon: const Icon(Icons.search,
-                          color: AppColors.primary, size: 22),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Body ─────────────────────────────────────────────────
-            Expanded(
-              child: _query.isEmpty
-                  ? _HistoryView(onSelect: (q) {
-                      _controller.text = q;
-                      _search(q);
-                    })
-                  : _ResultsView(query: _query),
-            ),
-          ],
+          ),
         ),
       ),
+      body: _query.isEmpty
+          ? _SuggestionsView(onSelect: _runSearch)
+          : _ResultsView(query: _query),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// History chips
+// Empty state — recent searches + category suggestions
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _HistoryView extends ConsumerWidget {
-  const _HistoryView({required this.onSelect});
+class _SuggestionsView extends ConsumerWidget {
+  const _SuggestionsView({required this.onSelect});
   final ValueChanged<String> onSelect;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(searchHistoryProvider);
+    final categories = ref.watch(categoriesProvider);
 
-    if (history.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.search_outlined, color: Color(0xFF2A4A2A), size: 56),
-            SizedBox(height: 12),
-            Text(
-              'ابحث عن ما تريد',
-              style: TextStyle(color: Color(0xFF5A7A5A), fontSize: 15),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      children: [
+        if (history.isNotEmpty) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              const Text(
+                'عمليات البحث الأخيرة',
+                style: TextStyle(
+                  color: AppColors.dark,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               TextButton(
                 onPressed: () =>
                     ref.read(searchHistoryProvider.notifier).clear(),
@@ -230,24 +222,15 @@ class _HistoryView extends ConsumerWidget {
                 ),
                 child: const Text('مسح الكل', style: TextStyle(fontSize: 13)),
               ),
-              const Text(
-                'عمليات البحث الأخيرة',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            alignment: WrapAlignment.end,
             children: history
                 .map(
-                  (q) => _HistoryChip(
+                  (q) => _RecentChip(
                     label: q,
                     onTap: () => onSelect(q),
                     onDelete: () =>
@@ -256,14 +239,58 @@ class _HistoryView extends ConsumerWidget {
                 )
                 .toList(),
           ),
+          const SizedBox(height: 28),
         ],
-      ),
+        const Text(
+          'تصفّح حسب القسم',
+          style: TextStyle(
+            color: AppColors.dark,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        categories.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.only(top: 24),
+            child: AppLoader(),
+          ),
+          error: (_, _) => const SizedBox.shrink(),
+          data: (items) => Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items
+                .map(
+                  (c) => _SuggestChip(
+                    label: c.nameAr,
+                    onTap: () => onSelect(c.nameAr),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        const SizedBox(height: 40),
+        if (history.isEmpty)
+          const Center(
+            child: Column(
+              children: [
+                Icon(Icons.search_rounded,
+                    color: AppColors.border, size: 56),
+                SizedBox(height: 12),
+                Text(
+                  'ابحث عن أي منتج تريده',
+                  style: TextStyle(color: AppColors.muted, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
 
-class _HistoryChip extends StatelessWidget {
-  const _HistoryChip({
+class _RecentChip extends StatelessWidget {
+  const _RecentChip({
     required this.label,
     required this.onTap,
     required this.onDelete,
@@ -278,30 +305,26 @@ class _HistoryChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: _kCard,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primary.withOpacity(0.25)),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            GestureDetector(
-              onTap: onDelete,
-              child: const Icon(Icons.close,
-                  size: 14, color: Color(0xFF5A7A5A)),
-            ),
+            const Icon(Icons.history, size: 15, color: AppColors.muted),
             const SizedBox(width: 6),
             Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFFA3C9A3),
-                fontSize: 13,
-              ),
+              style: const TextStyle(color: AppColors.dark, fontSize: 13),
             ),
-            const SizedBox(width: 4),
-            const Icon(Icons.history, size: 13, color: Color(0xFF5A7A5A)),
+            const SizedBox(width: 6),
+            GestureDetector(
+              onTap: onDelete,
+              child: const Icon(Icons.close, size: 15, color: AppColors.muted),
+            ),
           ],
         ),
       ),
@@ -309,8 +332,38 @@ class _HistoryChip extends StatelessWidget {
   }
 }
 
+class _SuggestChip extends StatelessWidget {
+  const _SuggestChip({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Search results grid
+// Search results grid (live)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ResultsView extends ConsumerWidget {
@@ -323,7 +376,7 @@ class _ResultsView extends ConsumerWidget {
       productsControllerProvider(ProductQuery(search: query)),
     );
 
-    if (products.isLoading) {
+    if (products.isLoading && products.items.isEmpty) {
       return const Center(child: AppLoader());
     }
 
@@ -343,12 +396,17 @@ class _ResultsView extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.search_off_rounded,
-                color: Color(0xFF2A4A2A), size: 56),
+                color: AppColors.border, size: 56),
             const SizedBox(height: 12),
             Text(
               'لا توجد نتائج لـ "$query"',
-              style: const TextStyle(color: Color(0xFF5A7A5A), fontSize: 14),
+              style: const TextStyle(color: AppColors.muted, fontSize: 14),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'جرّب كلمة أخرى',
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
             ),
           ],
         ),
@@ -356,13 +414,13 @@ class _ResultsView extends ConsumerWidget {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Text(
             '${products.items.length} نتيجة',
-            style: const TextStyle(color: Color(0xFF5A7A5A), fontSize: 13),
+            style: const TextStyle(color: AppColors.muted, fontSize: 13),
           ),
         ),
         Expanded(
