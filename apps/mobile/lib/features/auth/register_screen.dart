@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../providers/auth_controller.dart';
 import '../../providers/core_providers.dart';
-import 'otp_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -45,15 +44,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     try {
       final phone = _normalizeSaudi(_phone.text.trim());
       final email = _email.text.trim();
-      final target = await ref.read(authRepositoryProvider).register(
+      final result = await ref.read(authRepositoryProvider).register(
             fullName: _name.text.trim(),
             phone: phone,
             email: email,
             password: _password.text,
           );
       if (!mounted) return;
-      context.push('/otp',
-          extra: OtpArgs(target: target, purpose: 'REGISTRATION'));
+      // No OTP — sign the user in immediately. Router redirects to /home.
+      await ref.read(authControllerProvider.notifier).completeWithTokens(result);
     } on ApiException catch (e) {
       _show(e.message);
     } catch (_) {

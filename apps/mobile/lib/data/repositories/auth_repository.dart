@@ -7,7 +7,7 @@ class AuthRepository {
 
   final ApiClient _api;
 
-  Future<String> register({
+  Future<AuthResult> register({
     required String fullName,
     String? email,
     String? phone,
@@ -19,7 +19,7 @@ class AuthRepository {
       'phone': ?phone,
       'password': password,
     });
-    return data['target'] as String;
+    return AuthResult.fromJson(data);
   }
 
   Future<AuthResult> verifyOtp({

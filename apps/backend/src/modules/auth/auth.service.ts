@@ -35,7 +35,7 @@ export class AuthService {
     return role.id;
   }
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, meta: RequestMeta) {
     const emailExists = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (emailExists) throw new ConflictException('Email already registered');
     const phoneExists = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
@@ -48,12 +48,13 @@ export class AuthService {
         phone: dto.phone,
         passwordHash: await argon2.hash(dto.password),
         roleId: await this.customerRoleId(),
+        isEmailVerified: true,
       },
     });
 
-    // Verification is by EMAIL only; the Saudi phone is stored but not OTP-verified.
-    await this.otp.issue(dto.email, OtpPurpose.REGISTRATION, user.id);
-    return { userId: user.id, target: dto.email, message: 'OTP sent for verification' };
+    // OTP verification disabled: sign the user in immediately after signup.
+    const tokens = await this.tokens.issue(user.id, RoleName.CUSTOMER, meta);
+    return { ...tokens, user: this.publicUser({ ...user, role: { name: RoleName.CUSTOMER } }) };
   }
 
   async verifyOtp(dto: VerifyOtpDto, meta: RequestMeta) {

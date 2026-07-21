@@ -30,9 +30,9 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 10, ttl: 60 } })
   @Post('register')
-  @ApiOperation({ summary: 'Register a customer (email or phone) and send OTP' })
-  register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
+  @ApiOperation({ summary: 'Register a customer and sign in immediately (no OTP)' })
+  register(@Body() dto: RegisterDto, @Ip() ip: string, @Req() req: Request) {
+    return this.auth.register(dto, { ip, userAgent: this.ua(req) });
   }
 
   @Public()
