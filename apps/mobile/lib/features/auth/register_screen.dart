@@ -32,16 +32,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  /// Normalizes any accepted Saudi format to E.164 (+9665XXXXXXXX).
+  static String _normalizeSaudi(String v) {
+    var d = v.replaceAll(RegExp(r'[\s-]'), '');
+    d = d.replaceFirst(RegExp(r'^(\+966|00966|966|0)'), '');
+    return '+966$d';
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _busy = true);
     try {
-      final phone = _phone.text.trim();
+      final phone = _normalizeSaudi(_phone.text.trim());
       final email = _email.text.trim();
       final target = await ref.read(authRepositoryProvider).register(
             fullName: _name.text.trim(),
-            phone: phone.isEmpty ? null : phone,
-            email: email.isEmpty ? null : email,
+            phone: phone,
+            email: email,
             password: _password.text,
           );
       if (!mounted) return;
@@ -90,14 +97,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _phone,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
-                    labelText: 'رقم الجوال',
-                    hintText: '+9665XXXXXXXX',
+                    labelText: 'رقم الجوال السعودي',
+                    hintText: '05XXXXXXXX',
                     prefixIcon: Icon(Icons.phone_outlined),
                   ),
                   validator: (v) {
-                    if ((v == null || v.trim().isEmpty) &&
-                        _email.text.trim().isEmpty) {
-                      return 'أدخل الجوال أو البريد';
+                    final d = (v ?? '').replaceAll(RegExp(r'[\s-]'), '');
+                    if (d.isEmpty) return 'أدخل رقم الجوال';
+                    if (!RegExp(r'^(\+966|00966|966|0)?5\d{8}$').hasMatch(d)) {
+                      return 'أدخل رقم جوال سعودي صحيح (05XXXXXXXX)';
                     }
                     return null;
                   },
@@ -107,9 +115,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    labelText: 'البريد الإلكتروني (اختياري)',
+                    labelText: 'البريد الإلكتروني',
+                    hintText: 'name@example.com',
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
+                  validator: (v) {
+                    final s = (v ?? '').trim();
+                    if (s.isEmpty) return 'أدخل البريد الإلكتروني';
+                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(s)) {
+                      return 'أدخل بريداً إلكترونياً صحيحاً';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 14),
                 TextFormField(

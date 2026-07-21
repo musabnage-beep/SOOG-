@@ -17,15 +17,15 @@ export class RegisterDto {
   @MinLength(2)
   fullName!: string;
 
-  @ApiPropertyOptional({ example: 'user@example.com' })
-  @ValidateIf((o) => !o.phone)
+  // Email is required and is the verification channel (OTP is emailed).
+  @ApiProperty({ example: 'user@example.com' })
   @IsEmail()
-  email?: string;
+  email!: string;
 
-  @ApiPropertyOptional({ example: '+966500000001' })
-  @ValidateIf((o) => !o.email)
+  // A valid Saudi mobile number is required (but not OTP-verified).
+  @ApiProperty({ example: '+966500000001' })
   @IsPhoneNumber('SA')
-  phone?: string;
+  phone!: string;
 
   @ApiProperty({ example: 'StrongPass!1', minLength: 8 })
   @IsString()

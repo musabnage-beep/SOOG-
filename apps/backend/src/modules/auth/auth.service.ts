@@ -36,28 +36,24 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
-    if (dto.email) {
-      const exists = await this.prisma.user.findUnique({ where: { email: dto.email } });
-      if (exists) throw new ConflictException('Email already registered');
-    }
-    if (dto.phone) {
-      const exists = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
-      if (exists) throw new ConflictException('Phone already registered');
-    }
+    const emailExists = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (emailExists) throw new ConflictException('Email already registered');
+    const phoneExists = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    if (phoneExists) throw new ConflictException('Phone already registered');
 
     const user = await this.prisma.user.create({
       data: {
         fullName: dto.fullName,
-        email: dto.email ?? null,
-        phone: dto.phone ?? null,
+        email: dto.email,
+        phone: dto.phone,
         passwordHash: await argon2.hash(dto.password),
         roleId: await this.customerRoleId(),
       },
     });
 
-    const target = dto.phone ?? dto.email!;
-    await this.otp.issue(target, OtpPurpose.REGISTRATION, user.id);
-    return { userId: user.id, target, message: 'OTP sent for verification' };
+    // Verification is by EMAIL only; the Saudi phone is stored but not OTP-verified.
+    await this.otp.issue(dto.email, OtpPurpose.REGISTRATION, user.id);
+    return { userId: user.id, target: dto.email, message: 'OTP sent for verification' };
   }
 
   async verifyOtp(dto: VerifyOtpDto, meta: RequestMeta) {
@@ -84,10 +80,9 @@ export class AuthService {
     const valid = await argon2.verify(user.passwordHash, dto.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    // Enforce verification for customers.
-    const verified = dto.email ? user.isEmailVerified : user.isPhoneVerified;
-    if (user.role.name === RoleName.CUSTOMER && !verified) {
-      await this.otp.issue(dto.email ?? dto.phone!, OtpPurpose.LOGIN, user.id);
+    // Enforce email verification for customers (OTP is emailed).
+    if (user.role.name === RoleName.CUSTOMER && !user.isEmailVerified && user.email) {
+      await this.otp.issue(user.email, OtpPurpose.LOGIN, user.id);
       throw new UnauthorizedException('Account not verified. OTP re-sent.');
     }
 
