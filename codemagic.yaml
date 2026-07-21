@@ -48,7 +48,7 @@ workflows:
         script: |
           cd apps/mobile
           flutter build ipa --release \
-            --build-name=1.0.13 \
+            --build-name=1.0.14 \
             --build-number=$PROJECT_BUILD_NUMBER \
             --export-options-plist=$HOME/export_options.plist
 
