@@ -63,7 +63,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 24),
+            // ── Close button — always gives a way back (pop or Home) ─
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4, right: 4),
+                child: IconButton(
+                  onPressed: () =>
+                      context.canPop() ? context.pop() : context.go('/home'),
+                  icon: const Icon(Icons.close, color: Colors.white, size: 26),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
             // ── Pill title ──────────────────────────────────────────
             Center(
               child: Container(

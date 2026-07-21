@@ -427,32 +427,35 @@ class _HeroBanner extends StatelessWidget {
         onTap: () => context.push('/products'),
         child: Container(
           height: 180,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [Color(0xFF0C3A1C), Color(0xFF031608)],
-            ),
+            color: const Color(0xFF08210F),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Stack(
-            clipBehavior: Clip.antiAlias,
             children: [
-              // Basket image — right side
-              Positioned(
-                right: -8,
-                bottom: 0,
-                top: 0,
-                width: 170,
+              // Full-bleed basket scene — its own dark-green background blends
+              // into the banner so there is no visible rectangle/seam.
+              Positioned.fill(
                 child: AppAssetImage(
                   AppAssets.heroBasket,
-                  fit: BoxFit.contain,
-                  fallback: Opacity(
-                    opacity: 0.25,
-                    child: Icon(
-                      Icons.shopping_basket_rounded,
-                      size: 120,
-                      color: Colors.white,
+                  fit: BoxFit.cover,
+                  fallback: const SizedBox.shrink(),
+                ),
+              ),
+              // Left scrim keeps the text readable over the image.
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color(0xF2062A13),
+                        Color(0x99062A13),
+                        Color(0x00062A13),
+                      ],
+                      stops: [0.0, 0.45, 0.8],
                     ),
                   ),
                 ),
