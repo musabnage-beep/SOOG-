@@ -600,18 +600,10 @@ class _CategoryGrid extends StatelessWidget {
                     border: Border.all(color: AppColors.border),
                   ),
                   alignment: Alignment.center,
-                  child: AppAssetImage(
-                    AppAssets.categoryIcon(c.slug),
-                    width: 36,
-                    height: 36,
-                    fit: BoxFit.contain,
-                    fallback: c.icon != null
-                        ? Text(
-                            c.icon!,
-                            style: const TextStyle(fontSize: 26),
-                          )
-                        : const Icon(Icons.category_outlined,
-                            size: 22, color: AppColors.primary),
+                  child: Icon(
+                    categoryIconData(c.slug),
+                    size: 26,
+                    color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 5),

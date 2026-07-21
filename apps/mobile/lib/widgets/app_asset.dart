@@ -1,6 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+/// Maps a backend category `slug` to a built-in Material icon.
+///
+/// Category art is delivered as PNGs progressively; until those land this gives
+/// every category tile a clean, always-visible branded glyph instead of an
+/// empty circle.
+IconData categoryIconData(String slug) {
+  switch (slug) {
+    case 'canned-goods':
+      return Icons.inventory_2_outlined;
+    case 'sweets':
+      return Icons.cake_outlined;
+    case 'chips':
+      return Icons.fastfood_outlined;
+    case 'chocolate':
+      return Icons.cookie_outlined;
+    case 'home-producers':
+      return Icons.shopping_basket_outlined;
+    case 'spices-herbs':
+      return Icons.spa_outlined;
+    case 'tea':
+      return Icons.emoji_food_beverage_outlined;
+    case 'soft-drinks':
+      return Icons.local_drink_outlined;
+    case 'dates':
+      return Icons.park_outlined;
+    case 'dairy-eggs':
+      return Icons.egg_outlined;
+    case 'noodles':
+      return Icons.ramen_dining_outlined;
+    case 'organic':
+      return Icons.eco_outlined;
+    case 'bakery':
+      return Icons.bakery_dining_outlined;
+    case 'frozen':
+      return Icons.ac_unit_outlined;
+    case 'ice-cream':
+      return Icons.icecream_outlined;
+    case 'plastics-cleaning':
+      return Icons.cleaning_services_outlined;
+    case 'rice-grains':
+      return Icons.rice_bowl_outlined;
+    case 'chilled-chicken':
+      return Icons.set_meal_outlined;
+    default:
+      return Icons.category_outlined;
+  }
+}
+
 /// Resilient asset loaders.
 ///
 /// Assets are delivered progressively. Until a file exists these widgets render

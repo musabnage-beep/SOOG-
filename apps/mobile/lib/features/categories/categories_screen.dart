@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/assets/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/catalog_providers.dart';
 import '../../widgets/app_asset.dart';
@@ -60,15 +59,10 @@ class CategoriesScreen extends ConsumerWidget {
                       border: Border.all(color: AppColors.border),
                     ),
                     alignment: Alignment.center,
-                    child: AppAssetImage(
-                      AppAssets.categoryIcon(c.slug),
-                      width: 44,
-                      height: 44,
-                      fit: BoxFit.contain,
-                      fallback: c.icon != null
-                          ? Text(c.icon!, style: const TextStyle(fontSize: 30))
-                          : const Icon(Icons.category_outlined,
-                              size: 28, color: AppColors.primary),
+                    child: Icon(
+                      categoryIconData(c.slug),
+                      size: 30,
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(height: 6),
