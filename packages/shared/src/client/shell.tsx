@@ -3,7 +3,7 @@
 import { useState, type ComponentType, type ReactNode } from 'react';
 import { LogOut, Menu, X, Bell } from 'lucide-react';
 import { cn } from '../ui/cn';
-import { BrandMark } from '../ui/brand-logo';
+import { BrandImage, BrandMark } from '../ui/brand-logo';
 import { useAuth } from './auth';
 import { ROLE_LABEL_AR } from '../constants';
 
@@ -48,13 +48,19 @@ export function DashboardShell({
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gold text-brand-dark">
-          <BrandMark size={26} />
-        </div>
-        <div>
-          <p className="text-base font-bold text-white">{brand}</p>
-          {subtitle && <p className="text-xs text-white/60">{subtitle}</p>}
-        </div>
+        <BrandImage
+          onDark
+          style={{ height: 40, width: 'auto' }}
+          fallback={
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gold text-brand-dark">
+                <BrandMark size={26} />
+              </div>
+              <p className="text-base font-bold text-white">{brand}</p>
+            </div>
+          }
+        />
+        <div>{subtitle && <p className="text-xs text-white/60">{subtitle}</p>}</div>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {nav.map((item) => {

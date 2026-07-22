@@ -1,4 +1,6 @@
-import type { CSSProperties } from 'react';
+'use client';
+
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 
 const GOLD = '#D4AF37';
 
@@ -32,8 +34,49 @@ export function BrandMark({ size = 40, className }: { size?: number; className?:
 }
 
 /**
- * Full brand lockup: the mark above the Arabic logotype "الضيافة" and the
- * latin "ALDIAFAH" sub-wordmark. Use `onDark` on dark backgrounds.
+ * The real logo image (`/logo/logo-white.png` on dark, `/logo/logo-color.png`
+ * on light). Renders `fallback` if the file is missing, so a dashboard without
+ * the asset still shows the vector interpretation. Each app serves the file
+ * from its own `public/logo/` folder.
+ */
+export function BrandImage({
+  onDark = false,
+  fallback,
+  className,
+  style,
+}: {
+  onDark?: boolean;
+  fallback: ReactNode;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const [failed, setFailed] = useState(false);
+  const ref = useRef<HTMLImageElement>(null);
+
+  // Catch a 404 that resolves before hydration attaches the onError handler.
+  useEffect(() => {
+    const img = ref.current;
+    if (img && img.complete && img.naturalWidth === 0) setFailed(true);
+  }, []);
+
+  if (failed) return <>{fallback}</>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      ref={ref}
+      src={onDark ? '/logo/logo-white.png' : '/logo/logo-color.png'}
+      alt="الضيافة"
+      className={className}
+      style={style}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+/**
+ * Full brand lockup: prefers the real logo image; falls back to the mark above
+ * the Arabic logotype "الضيافة" and the latin "ALDIAFAH". Use `onDark` on dark
+ * backgrounds.
  */
 export function BrandLogo({
   size = 120,
@@ -53,7 +96,7 @@ export function BrandLogo({
     letterSpacing: '-0.02em',
     color: onDark ? '#FFFFFF' : '#111827',
   };
-  return (
+  const fallback = (
     <div className={className} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: size * 0.05 }}>
       <BrandMark size={size * 0.55} className={onDark ? 'text-white' : 'text-brand'} />
       <span dir="rtl" style={wordStyle}>
@@ -73,4 +116,5 @@ export function BrandLogo({
       )}
     </div>
   );
+  return <BrandImage onDark={onDark} fallback={fallback} className={className} style={{ width: size, height: 'auto' }} />;
 }
