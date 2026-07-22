@@ -60,8 +60,8 @@ export class OrdersController {
   @RequirePermissions('order.review')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Get('review-queue')
-  reviewQueue() {
-    return this.service.reviewQueue();
+  reviewQueue(@Query() query: QueryOrdersDto) {
+    return this.service.reviewQueue(query);
   }
 
   @Roles(RoleName.ADMIN, RoleName.EMPLOYEE)

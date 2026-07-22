@@ -72,7 +72,12 @@ export function useOrders(q: OrderQuery) {
 }
 export function useReviewQueue(q: OrderQuery) {
   const api = useApi();
-  return useQuery({ queryKey: qk.reviewQueue(q), queryFn: () => api.orders.reviewQueue(q) });
+  return useQuery({
+    queryKey: qk.reviewQueue(q),
+    queryFn: () => api.orders.reviewQueue(q),
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
+  });
 }
 export function useOrder(id: string, options?: Partial<UseQueryOptions>) {
   const api = useApi();

@@ -12,6 +12,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   Prisma,
+  RoleName,
 } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 import { InventoryService } from '@/modules/inventory/inventory.service';
@@ -127,6 +128,7 @@ export class OrdersService {
     });
 
     await this.notifyCustomer(order.userId, NotificationType.ORDER_SUBMITTED, order.orderNumber);
+    await this.notifyStaff(order.orderNumber);
     return order;
   }
 
@@ -142,12 +144,21 @@ export class OrdersService {
   }
 
   /** Orders awaiting staff action (review queue). */
-  reviewQueue() {
-    return this.prisma.order.findMany({
-      where: { status: { in: [OrderStatus.SUBMITTED, OrderStatus.UNDER_REVIEW] } },
-      orderBy: { submittedAt: 'asc' },
-      include: ORDER_INCLUDE,
-    });
+  async reviewQueue(query: QueryOrdersDto) {
+    const where: Prisma.OrderWhereInput = {
+      status: { in: [OrderStatus.SUBMITTED, OrderStatus.UNDER_REVIEW] },
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        orderBy: { submittedAt: 'asc' },
+        skip: query.skip,
+        take: query.limit,
+        include: ORDER_INCLUDE,
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+    return paginate(items, total, query.page, query.limit);
   }
 
   async getForCustomer(userId: string, id: string) {
@@ -402,6 +413,25 @@ export class OrdersService {
       PICKED_UP: NotificationType.ORDER_PICKED_UP,
     };
     return map[status] ?? NotificationType.SYSTEM;
+  }
+
+  /** Alerts every employee/admin that a new order awaits review. */
+  private async notifyStaff(orderNumber: string) {
+    const staff = await this.prisma.user.findMany({
+      where: { isActive: true, role: { name: { in: [RoleName.EMPLOYEE, RoleName.ADMIN] } } },
+      select: { id: true },
+    });
+    await Promise.all(
+      staff.map((s) =>
+        this.notifications.notify({
+          userId: s.id,
+          type: NotificationType.ORDER_SUBMITTED,
+          title: 'طلب جديد',
+          body: `طلب جديد ${orderNumber} بانتظار المراجعة`,
+          payload: { orderNumber },
+        }),
+      ),
+    );
   }
 
   private async notifyCustomer(
