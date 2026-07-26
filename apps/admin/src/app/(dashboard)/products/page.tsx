@@ -149,7 +149,9 @@ export default function ProductsPage() {
                           </div>
                         </TD>
                         <TD className="text-xs" dir="ltr">{p.sku}</TD>
-                        <TD className="font-semibold text-brand">{money(p.discountPrice ?? p.price)}</TD>
+                        <TD className="font-semibold text-brand">
+                          {money(Number(p.discountPrice) > 0 ? p.discountPrice! : p.price)}
+                        </TD>
                         <TD>
                           <Badge tone={p.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}>
                             {p.isActive ? 'نشط' : 'غير نشط'}

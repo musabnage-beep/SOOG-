@@ -66,7 +66,7 @@ export class ProductsService {
   }
 
   async create(dto: CreateProductDto) {
-    const { barcode, sku, nameEn, ...rest } = dto;
+    const { barcode, sku, nameEn, discountPrice, ...rest } = dto;
     // Stock is unlimited: products are always available.
     const product = await this.prisma.product.create({
       data: {
@@ -74,6 +74,7 @@ export class ProductsService {
         nameEn: nameEn?.trim() || rest.nameAr,
         sku: sku?.trim() || `SKU-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.toUpperCase(),
         barcode: barcode?.trim() || null,
+        discountPrice: discountPrice || null,
         stockStatus: StockStatus.IN_STOCK,
       },
     });
@@ -82,10 +83,14 @@ export class ProductsService {
 
   async update(id: string, dto: UpdateProductDto) {
     await this.findOne(id);
-    const { barcode, ...rest } = dto;
+    const { barcode, discountPrice, ...rest } = dto;
     await this.prisma.product.update({
       where: { id },
-      data: { ...rest, ...(barcode !== undefined && { barcode: barcode.trim() || null }) },
+      data: {
+        ...rest,
+        ...(barcode !== undefined && { barcode: barcode.trim() || null }),
+        ...(discountPrice !== undefined && { discountPrice: discountPrice || null }),
+      },
     });
     return this.findOne(id);
   }

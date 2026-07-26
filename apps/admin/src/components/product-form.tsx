@@ -7,14 +7,20 @@ import { useCategories } from '@aldiafa/shared/client';
 import { Card, CardBody, CardHeader, CardTitle, Input, Textarea, Select, Field, Button } from '@aldiafa/shared/ui';
 import type { CreateProductInput, Product } from '@aldiafa/shared';
 
+/** Empty inputs must become undefined — z.coerce.number() would turn '' into 0. */
+const optionalNumber = z.preprocess(
+  (v) => (v === '' || v == null ? undefined : v),
+  z.coerce.number().min(0).optional(),
+);
+
 const schema = z.object({
   nameAr: z.string().min(1, 'الاسم بالعربية مطلوب'),
   descriptionAr: z.string().optional(),
   categoryId: z.string().uuid('اختر تصنيفاً'),
   price: z.coerce.number().min(0, 'السعر غير صالح'),
-  discountPrice: z.coerce.number().min(0).optional().or(z.literal('').transform(() => undefined)),
+  discountPrice: optionalNumber,
   barcode: z.string().optional(),
-  weightGrams: z.coerce.number().min(0).optional().or(z.literal('').transform(() => undefined)),
+  weightGrams: optionalNumber,
   isActive: z.coerce.boolean().optional(),
 });
 
