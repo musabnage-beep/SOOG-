@@ -65,18 +65,6 @@ export class CreateProductDto {
   @Min(0)
   weightGrams?: number;
 
-  @ApiPropertyOptional({ default: 0 })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  quantity?: number;
-
-  @ApiPropertyOptional({ default: 5 })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  lowStockThreshold?: number;
-
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
@@ -100,7 +88,6 @@ export class UpdateProductDto {
   @ApiPropertyOptional() @IsOptional() @IsString() sku?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() barcode?: string;
   @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) weightGrams?: number;
-  @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) lowStockThreshold?: number;
   @ApiPropertyOptional({ type: [String] }) @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isActive?: boolean;
 }

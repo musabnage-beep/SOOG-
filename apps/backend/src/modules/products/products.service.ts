@@ -1,16 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, StockStatus } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
-import { InventoryService } from '@/modules/inventory/inventory.service';
 import { paginate } from '@/common/dto/pagination.dto';
 import { CreateProductDto, QueryProductsDto, UpdateProductDto } from './dto/product.dto';
 
 @Injectable()
 export class ProductsService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly inventory: InventoryService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: QueryProductsDto) {
     const where: Prisma.ProductWhereInput = { isActive: true };
@@ -69,27 +65,18 @@ export class ProductsService {
     return product;
   }
 
-  async create(dto: CreateProductDto, actorId?: string) {
-    const { quantity = 0, barcode, sku, nameEn, ...rest } = dto;
+  async create(dto: CreateProductDto) {
+    const { barcode, sku, nameEn, ...rest } = dto;
+    // Stock is unlimited: products are always available.
     const product = await this.prisma.product.create({
       data: {
         ...rest,
         nameEn: nameEn?.trim() || rest.nameAr,
         sku: sku?.trim() || `SKU-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.toUpperCase(),
         barcode: barcode?.trim() || null,
-        quantity: 0,
-        stockStatus: StockStatus.OUT_OF_STOCK,
+        stockStatus: StockStatus.IN_STOCK,
       },
     });
-    if (quantity > 0) {
-      await this.inventory.adjust({
-        productId: product.id,
-        type: 'STOCK_IN',
-        quantityDelta: quantity,
-        reason: 'Initial stock',
-        actorId,
-      });
-    }
     return this.findOne(product.id);
   }
 

@@ -15,7 +15,6 @@ import {
   RoleName,
 } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
-import { InventoryService } from '@/modules/inventory/inventory.service';
 import { DeliveryService } from '@/modules/delivery/delivery.service';
 import { NotificationsService } from '@/modules/notifications/notifications.service';
 import { paginate } from '@/common/dto/pagination.dto';
@@ -46,7 +45,6 @@ function effectivePrice(price: Prisma.Decimal, discount: Prisma.Decimal | null):
 export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly inventory: InventoryService,
     private readonly delivery: DeliveryService,
     private readonly notifications: NotificationsService,
   ) {}
@@ -188,31 +186,14 @@ export class OrdersService {
     const order = await this.getForStaff(orderId);
     this.assertTransition(order.status, OrderStatus.APPROVED);
 
-    // Decrement stock for all available items atomically.
-    await this.prisma.$transaction(async (tx) => {
-      for (const item of order.items) {
-        if (item.availability === OrderItemAvailability.AVAILABLE) {
-          await this.inventory.adjust(
-            {
-              productId: item.productId,
-              type: 'SOLD',
-              quantityDelta: -item.quantity,
-              reason: `Order ${order.orderNumber}`,
-              actorId: actor.id,
-            },
-            tx,
-          );
-        }
-      }
-      await tx.order.update({
-        where: { id: orderId },
-        data: {
-          status: OrderStatus.APPROVED,
-          reviewedBy: { connect: { id: actor.id } },
-          approvedAt: new Date(),
-          statusHistory: { create: { status: OrderStatus.APPROVED, changedBy: actor.id } },
-        },
-      });
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.APPROVED,
+        reviewedBy: { connect: { id: actor.id } },
+        approvedAt: new Date(),
+        statusHistory: { create: { status: OrderStatus.APPROVED, changedBy: actor.id } },
+      },
     });
 
     await this.notifyCustomer(order.userId, NotificationType.ORDER_APPROVED, order.orderNumber);

@@ -15,8 +15,6 @@ const schema = z.object({
   discountPrice: z.coerce.number().min(0).optional().or(z.literal('').transform(() => undefined)),
   barcode: z.string().optional(),
   weightGrams: z.coerce.number().min(0).optional().or(z.literal('').transform(() => undefined)),
-  quantity: z.coerce.number().min(0).optional(),
-  lowStockThreshold: z.coerce.number().min(0).optional(),
   isActive: z.coerce.boolean().optional(),
 });
 
@@ -49,11 +47,9 @@ export function ProductForm({
           discountPrice: initial.discountPrice ? Number(initial.discountPrice) : undefined,
           barcode: initial.barcode ?? '',
           weightGrams: initial.weightGrams ?? undefined,
-          quantity: initial.quantity,
-          lowStockThreshold: initial.lowStockThreshold ?? 5,
           isActive: initial.isActive,
         }
-      : { isActive: true, quantity: 0, lowStockThreshold: 5 },
+      : { isActive: true },
   });
 
   const submit = handleSubmit((values) => {
@@ -80,7 +76,7 @@ export function ProductForm({
 
         <Card>
           <CardHeader>
-            <CardTitle>التسعير والمخزون</CardTitle>
+            <CardTitle>التسعير</CardTitle>
           </CardHeader>
           <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="السعر (ر.س)" error={errors.price?.message}>
@@ -88,12 +84,6 @@ export function ProductForm({
             </Field>
             <Field label="سعر الخصم (اختياري)" error={errors.discountPrice?.message}>
               <Input type="number" step="0.01" {...register('discountPrice')} />
-            </Field>
-            <Field label="الكمية" error={errors.quantity?.message}>
-              <Input type="number" {...register('quantity')} />
-            </Field>
-            <Field label="حد المخزون المنخفض" error={errors.lowStockThreshold?.message}>
-              <Input type="number" {...register('lowStockThreshold')} />
             </Field>
           </CardBody>
         </Card>

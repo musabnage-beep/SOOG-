@@ -324,8 +324,6 @@ export interface CreateProductInput {
   sku?: string;
   barcode?: string;
   weightGrams?: number;
-  quantity?: number;
-  lowStockThreshold?: number;
   tags?: string[];
   isActive?: boolean;
 }

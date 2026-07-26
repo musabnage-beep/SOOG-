@@ -14,7 +14,6 @@ import { RoleName } from '@prisma/client';
 import { Public } from '@/common/decorators/public.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RequirePermissions } from '@/common/decorators/permissions.decorator';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { PermissionsGuard } from '@/common/guards/permissions.guard';
 import { ProductsService } from './products.service';
@@ -42,8 +41,8 @@ export class ProductsController {
   @RequirePermissions('product.create')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Post()
-  create(@Body() dto: CreateProductDto, @CurrentUser('id') actorId: string) {
-    return this.service.create(dto, actorId);
+  create(@Body() dto: CreateProductDto) {
+    return this.service.create(dto);
   }
 
   @ApiBearerAuth()

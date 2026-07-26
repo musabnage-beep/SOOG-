@@ -24,13 +24,7 @@ import {
   ConfirmDialog,
   useToast,
 } from '@aldiafa/shared/ui';
-import {
-  money,
-  num,
-  STOCK_STATUS_LABEL_AR,
-  STOCK_STATUS_TONE,
-  type Product,
-} from '@aldiafa/shared';
+import { money, type Product } from '@aldiafa/shared';
 import { PageHeader } from '@/components/page-header';
 
 export default function ProductsPage() {
@@ -131,7 +125,6 @@ export default function ProductsPage() {
                     <TH>المنتج</TH>
                     <TH>SKU</TH>
                     <TH>السعر</TH>
-                    <TH>المخزون</TH>
                     <TH>الحالة</TH>
                     <TH></TH>
                   </TR>
@@ -157,10 +150,9 @@ export default function ProductsPage() {
                         </TD>
                         <TD className="text-xs" dir="ltr">{p.sku}</TD>
                         <TD className="font-semibold text-brand">{money(p.discountPrice ?? p.price)}</TD>
-                        <TD>{num(p.quantity)}</TD>
                         <TD>
-                          <Badge tone={STOCK_STATUS_TONE[p.stockStatus]}>
-                            {STOCK_STATUS_LABEL_AR[p.stockStatus]}
+                          <Badge tone={p.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}>
+                            {p.isActive ? 'نشط' : 'غير نشط'}
                           </Badge>
                         </TD>
                         <TD>
