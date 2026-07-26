@@ -70,10 +70,13 @@ export class ProductsService {
   }
 
   async create(dto: CreateProductDto, actorId?: string) {
-    const { quantity = 0, ...rest } = dto;
+    const { quantity = 0, barcode, sku, nameEn, ...rest } = dto;
     const product = await this.prisma.product.create({
       data: {
         ...rest,
+        nameEn: nameEn?.trim() || rest.nameAr,
+        sku: sku?.trim() || `SKU-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.toUpperCase(),
+        barcode: barcode?.trim() || null,
         quantity: 0,
         stockStatus: StockStatus.OUT_OF_STOCK,
       },
@@ -92,7 +95,11 @@ export class ProductsService {
 
   async update(id: string, dto: UpdateProductDto) {
     await this.findOne(id);
-    await this.prisma.product.update({ where: { id }, data: dto });
+    const { barcode, ...rest } = dto;
+    await this.prisma.product.update({
+      where: { id },
+      data: { ...rest, ...(barcode !== undefined && { barcode: barcode.trim() || null }) },
+    });
     return this.findOne(id);
   }
 

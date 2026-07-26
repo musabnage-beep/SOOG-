@@ -9,13 +9,10 @@ import type { CreateProductInput, Product } from '@aldiafa/shared';
 
 const schema = z.object({
   nameAr: z.string().min(1, 'الاسم بالعربية مطلوب'),
-  nameEn: z.string().min(1, 'الاسم بالإنجليزية مطلوب'),
   descriptionAr: z.string().optional(),
-  descriptionEn: z.string().optional(),
   categoryId: z.string().uuid('اختر تصنيفاً'),
   price: z.coerce.number().min(0, 'السعر غير صالح'),
   discountPrice: z.coerce.number().min(0).optional().or(z.literal('').transform(() => undefined)),
-  sku: z.string().min(1, 'SKU مطلوب'),
   barcode: z.string().optional(),
   weightGrams: z.coerce.number().min(0).optional().or(z.literal('').transform(() => undefined)),
   quantity: z.coerce.number().min(0).optional(),
@@ -46,13 +43,10 @@ export function ProductForm({
     defaultValues: initial
       ? {
           nameAr: initial.nameAr,
-          nameEn: initial.nameEn,
           descriptionAr: initial.descriptionAr ?? '',
-          descriptionEn: initial.descriptionEn ?? '',
           categoryId: initial.categoryId ?? initial.category?.id,
           price: Number(initial.price),
           discountPrice: initial.discountPrice ? Number(initial.discountPrice) : undefined,
-          sku: initial.sku,
           barcode: initial.barcode ?? '',
           weightGrams: initial.weightGrams ?? undefined,
           quantity: initial.quantity,
@@ -75,17 +69,11 @@ export function ProductForm({
             <CardTitle>المعلومات الأساسية</CardTitle>
           </CardHeader>
           <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="الاسم (عربي)" error={errors.nameAr?.message}>
+            <Field label="الاسم" error={errors.nameAr?.message} className="sm:col-span-2">
               <Input {...register('nameAr')} />
             </Field>
-            <Field label="الاسم (إنجليزي)" error={errors.nameEn?.message}>
-              <Input dir="ltr" {...register('nameEn')} />
-            </Field>
-            <Field label="الوصف (عربي)" className="sm:col-span-2">
+            <Field label="الوصف" className="sm:col-span-2">
               <Textarea {...register('descriptionAr')} />
-            </Field>
-            <Field label="الوصف (إنجليزي)" className="sm:col-span-2">
-              <Textarea dir="ltr" {...register('descriptionEn')} />
             </Field>
           </CardBody>
         </Card>
@@ -126,9 +114,6 @@ export function ProductForm({
                   </option>
                 ))}
               </Select>
-            </Field>
-            <Field label="SKU" error={errors.sku?.message}>
-              <Input dir="ltr" {...register('sku')} />
             </Field>
             <Field label="الباركود (اختياري)">
               <Input dir="ltr" {...register('barcode')} />

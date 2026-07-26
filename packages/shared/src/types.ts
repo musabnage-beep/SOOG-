@@ -315,13 +315,13 @@ export interface LoginInput {
 
 export interface CreateProductInput {
   nameAr: string;
-  nameEn: string;
+  nameEn?: string;
   descriptionAr?: string;
   descriptionEn?: string;
   categoryId: string;
   price: number;
   discountPrice?: number;
-  sku: string;
+  sku?: string;
   barcode?: string;
   weightGrams?: number;
   quantity?: number;

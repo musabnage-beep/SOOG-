@@ -19,10 +19,10 @@ export class CreateProductDto {
   @MinLength(1)
   nameAr!: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  @MinLength(1)
-  nameEn!: string;
+  nameEn?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -49,9 +49,10 @@ export class CreateProductDto {
   @Min(0)
   discountPrice?: number;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  sku!: string;
+  sku?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
