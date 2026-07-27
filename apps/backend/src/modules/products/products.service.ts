@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, StockStatus } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 import { paginate } from '@/common/dto/pagination.dto';
@@ -65,8 +65,19 @@ export class ProductsService {
     return product;
   }
 
+  /** Carton fields only persist when the product is sold by carton, and require both values. */
+  private normalizeCarton(sellByCarton?: boolean, unitsPerCarton?: number, cartonPrice?: number) {
+    if (!sellByCarton) {
+      return { sellByCarton: false, unitsPerCarton: null, cartonPrice: null };
+    }
+    if (!unitsPerCarton || unitsPerCarton < 1 || !cartonPrice || cartonPrice <= 0) {
+      throw new BadRequestException('يجب إدخال عدد الحبات بالكرتون وسعر الكرتون');
+    }
+    return { sellByCarton: true, unitsPerCarton, cartonPrice };
+  }
+
   async create(dto: CreateProductDto) {
-    const { barcode, sku, nameEn, discountPrice, ...rest } = dto;
+    const { barcode, sku, nameEn, discountPrice, sellByCarton, unitsPerCarton, cartonPrice, ...rest } = dto;
     // Stock is unlimited: products are always available.
     const product = await this.prisma.product.create({
       data: {
@@ -75,6 +86,7 @@ export class ProductsService {
         sku: sku?.trim() || `SKU-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.toUpperCase(),
         barcode: barcode?.trim() || null,
         discountPrice: discountPrice || null,
+        ...this.normalizeCarton(sellByCarton, unitsPerCarton, cartonPrice),
         stockStatus: StockStatus.IN_STOCK,
       },
     });
@@ -82,14 +94,24 @@ export class ProductsService {
   }
 
   async update(id: string, dto: UpdateProductDto) {
-    await this.findOne(id);
-    const { barcode, discountPrice, ...rest } = dto;
+    const existing = await this.findOne(id);
+    const { barcode, discountPrice, sellByCarton, unitsPerCarton, cartonPrice, ...rest } = dto;
+    const cartonTouched =
+      sellByCarton !== undefined || unitsPerCarton !== undefined || cartonPrice !== undefined;
+    const carton = cartonTouched
+      ? this.normalizeCarton(
+          sellByCarton ?? existing.sellByCarton,
+          unitsPerCarton ?? existing.unitsPerCarton ?? undefined,
+          cartonPrice ?? (existing.cartonPrice != null ? Number(existing.cartonPrice) : undefined),
+        )
+      : {};
     await this.prisma.product.update({
       where: { id },
       data: {
         ...rest,
         ...(barcode !== undefined && { barcode: barcode.trim() || null }),
         ...(discountPrice !== undefined && { discountPrice: discountPrice || null }),
+        ...carton,
       },
     });
     return this.findOne(id);

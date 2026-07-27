@@ -11,9 +11,9 @@ class CartRepository {
     return Cart.fromJson(data);
   }
 
-  Future<Cart> add(String productId, int quantity) async {
+  Future<Cart> add(String productId, int quantity, {String unit = 'PIECE'}) async {
     final data = await _api.post<Map<String, dynamic>>('/cart/items',
-        data: {'productId': productId, 'quantity': quantity});
+        data: {'productId': productId, 'quantity': quantity, 'unit': unit});
     return Cart.fromJson(data);
   }
 

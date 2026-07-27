@@ -185,6 +185,26 @@ class _CartTile extends ConsumerWidget {
                     color: AppColors.dark,
                   ),
                 ),
+                if (line.isCarton) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0x1443C46A),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      line.unitsPerCarton != null
+                          ? 'كرتون (${line.unitsPerCarton} حبة)'
+                          : 'كرتون',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 // Stepper + price + delete
                 Row(

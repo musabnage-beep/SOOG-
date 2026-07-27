@@ -13,6 +13,7 @@ import {
   PaymentStatus,
   Prisma,
   RoleName,
+  SaleUnit,
 } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 import { DeliveryService } from '@/modules/delivery/delivery.service';
@@ -84,13 +85,18 @@ export class OrdersService {
     }
 
     const items = cartItems.map((ci) => {
-      const unitPrice = effectivePrice(ci.product.price, ci.product.discountPrice);
+      const unitPrice =
+        ci.unit === SaleUnit.CARTON && ci.product.cartonPrice != null
+          ? Number(ci.product.cartonPrice)
+          : effectivePrice(ci.product.price, ci.product.discountPrice);
       return {
         productId: ci.productId,
         nameAr: ci.product.nameAr,
         nameEn: ci.product.nameEn,
         unitPrice: new Prisma.Decimal(unitPrice),
         quantity: ci.quantity,
+        unit: ci.unit,
+        unitsPerCarton: ci.unit === SaleUnit.CARTON ? ci.product.unitsPerCarton : null,
         lineTotal: new Prisma.Decimal(+(unitPrice * ci.quantity).toFixed(2)),
       };
     });

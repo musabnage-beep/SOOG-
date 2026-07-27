@@ -22,6 +22,7 @@ export type PaymentMethod = 'COD' | 'CARD';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 export type OrderItemAvailability = 'AVAILABLE' | 'UNAVAILABLE';
 export type StockStatus = 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
+export type SaleUnit = 'PIECE' | 'CARTON';
 export type InventoryLogType = 'STOCK_IN' | 'STOCK_OUT' | 'SOLD' | 'ADJUST';
 export type NotificationChannel = 'PUSH' | 'IN_APP' | 'EMAIL';
 export type OtpPurpose = 'REGISTRATION' | 'LOGIN' | 'PASSWORD_RESET';
@@ -100,6 +101,9 @@ export interface Product {
   sku: string;
   barcode: string | null;
   weightGrams?: number | null;
+  sellByCarton?: boolean;
+  unitsPerCarton?: number | null;
+  cartonPrice?: string | number | null;
   quantity: number;
   lowStockThreshold?: number;
   stockStatus: StockStatus;
@@ -137,6 +141,8 @@ export interface OrderItem {
   nameEn: string;
   unitPrice: string | number;
   quantity: number;
+  unit?: SaleUnit;
+  unitsPerCarton?: number | null;
   lineTotal: string | number;
   availability: OrderItemAvailability;
 }
@@ -324,6 +330,9 @@ export interface CreateProductInput {
   sku?: string;
   barcode?: string;
   weightGrams?: number;
+  sellByCarton?: boolean;
+  unitsPerCarton?: number;
+  cartonPrice?: number;
   tags?: string[];
   isActive?: boolean;
 }

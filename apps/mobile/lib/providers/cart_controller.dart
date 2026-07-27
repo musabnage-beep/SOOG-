@@ -51,8 +51,8 @@ class CartController extends StateNotifier<CartState> {
     }
   }
 
-  Future<void> add(String productId, {int quantity = 1}) async {
-    await _mutate(() => _ref.read(cartRepositoryProvider).add(productId, quantity));
+  Future<void> add(String productId, {int quantity = 1, String unit = 'PIECE'}) async {
+    await _mutate(() => _ref.read(cartRepositoryProvider).add(productId, quantity, unit: unit));
   }
 
   Future<void> setQuantity(String itemId, int quantity) async {

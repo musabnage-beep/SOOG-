@@ -65,6 +65,23 @@ export class CreateProductDto {
   @Min(0)
   weightGrams?: number;
 
+  @ApiPropertyOptional({ description: 'Also sold by carton' })
+  @IsOptional()
+  @IsBoolean()
+  sellByCarton?: boolean;
+
+  @ApiPropertyOptional({ example: 12, description: 'Pieces per carton' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  unitsPerCarton?: number;
+
+  @ApiPropertyOptional({ example: 55, description: 'Price per carton' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  cartonPrice?: number;
+
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
@@ -88,6 +105,9 @@ export class UpdateProductDto {
   @ApiPropertyOptional() @IsOptional() @IsString() sku?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() barcode?: string;
   @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) weightGrams?: number;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() sellByCarton?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsInt() @Min(1) unitsPerCarton?: number;
+  @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) cartonPrice?: number;
   @ApiPropertyOptional({ type: [String] }) @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isActive?: boolean;
 }

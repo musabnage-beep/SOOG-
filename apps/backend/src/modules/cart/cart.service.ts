@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { StockStatus } from '@prisma/client';
+import { SaleUnit, StockStatus } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 
 function effectivePrice(price: unknown, discount: unknown): number {
@@ -7,6 +7,11 @@ function effectivePrice(price: unknown, discount: unknown): number {
   const d = discount == null ? null : Number(discount);
   return d != null && d > 0 && d < p ? d : p;
 }
+
+const UNIT_LABEL: Record<SaleUnit, string> = {
+  [SaleUnit.PIECE]: 'حبة',
+  [SaleUnit.CARTON]: 'كرتون',
+};
 
 @Injectable()
 export class CartService {
@@ -25,7 +30,10 @@ export class CartService {
     });
 
     const lines = items.map((item) => {
-      const unitPrice = effectivePrice(item.product.price, item.product.discountPrice);
+      const unitPrice =
+        item.unit === SaleUnit.CARTON && item.product.cartonPrice != null
+          ? Number(item.product.cartonPrice)
+          : effectivePrice(item.product.price, item.product.discountPrice);
       return {
         id: item.id,
         productId: item.productId,
@@ -34,6 +42,9 @@ export class CartService {
         image: item.product.images[0]?.url ?? null,
         unitPrice,
         quantity: item.quantity,
+        unit: item.unit,
+        unitLabel: UNIT_LABEL[item.unit],
+        unitsPerCarton: item.unit === SaleUnit.CARTON ? item.product.unitsPerCarton : null,
         lineTotal: +(unitPrice * item.quantity).toFixed(2),
         stockStatus: item.product.stockStatus,
       };
@@ -42,16 +53,19 @@ export class CartService {
     return { items: lines, subtotal, itemCount: lines.length };
   }
 
-  async add(userId: string, productId: string, quantity: number) {
+  async add(userId: string, productId: string, quantity: number, unit: SaleUnit = SaleUnit.PIECE) {
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
     if (!product || !product.isActive) throw new NotFoundException('Product not found');
     if (product.stockStatus === StockStatus.OUT_OF_STOCK) {
       throw new BadRequestException('Product is out of stock');
     }
+    if (unit === SaleUnit.CARTON && !(product.sellByCarton && product.cartonPrice != null)) {
+      throw new BadRequestException('هذا المنتج لا يُباع بالكرتون');
+    }
     await this.prisma.cartItem.upsert({
-      where: { userId_productId: { userId, productId } },
+      where: { userId_productId_unit: { userId, productId, unit } },
       update: { quantity: { increment: quantity } },
-      create: { userId, productId, quantity },
+      create: { userId, productId, quantity, unit },
     });
     return this.getCart(userId);
   }

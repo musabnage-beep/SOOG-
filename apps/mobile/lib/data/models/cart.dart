@@ -12,6 +12,9 @@ class CartLine {
     required this.quantity,
     required this.lineTotal,
     this.stockStatus = StockStatus.unknown,
+    this.unit = 'PIECE',
+    this.unitLabel,
+    this.unitsPerCarton,
   });
 
   final String id;
@@ -23,6 +26,11 @@ class CartLine {
   final int quantity;
   final double lineTotal;
   final StockStatus stockStatus;
+  final String unit;
+  final String? unitLabel;
+  final int? unitsPerCarton;
+
+  bool get isCarton => unit == 'CARTON';
 
   factory CartLine.fromJson(Map<String, dynamic> json) => CartLine(
         id: asString(json['id']),
@@ -34,6 +42,9 @@ class CartLine {
         quantity: asInt(json['quantity']),
         lineTotal: asDouble(json['lineTotal']),
         stockStatus: stockStatusFrom(json['stockStatus']),
+        unit: json['unit'] == null ? 'PIECE' : asString(json['unit']),
+        unitLabel: json['unitLabel'] as String?,
+        unitsPerCarton: json['unitsPerCarton'] == null ? null : asInt(json['unitsPerCarton']),
       );
 }
 

@@ -45,6 +45,9 @@ class Product {
     this.categoryNameAr,
     this.stockStatus = StockStatus.unknown,
     this.quantity = 0,
+    this.sellByCarton = false,
+    this.unitsPerCarton,
+    this.cartonPrice,
   });
 
   final String id;
@@ -61,10 +64,14 @@ class Product {
   final String? categoryNameAr;
   final StockStatus stockStatus;
   final int quantity;
+  final bool sellByCarton;
+  final int? unitsPerCarton;
+  final double? cartonPrice;
 
   bool get hasDiscount => discountPrice != null && discountPrice! > 0 && discountPrice! < price;
   double get effectivePrice => hasDiscount ? discountPrice! : price;
   bool get isOutOfStock => stockStatus == StockStatus.outOfStock;
+  bool get hasCarton => sellByCarton && cartonPrice != null && cartonPrice! > 0;
 
   int get discountPercent =>
       hasDiscount ? (((price - discountPrice!) / price) * 100).round() : 0;
@@ -94,6 +101,9 @@ class Product {
       categoryNameAr: category is Map ? asString(category['nameAr']) : null,
       stockStatus: stockStatusFrom(json['stockStatus']),
       quantity: asInt(json['quantity']),
+      sellByCarton: asBool(json['sellByCarton']),
+      unitsPerCarton: json['unitsPerCarton'] == null ? null : asInt(json['unitsPerCarton']),
+      cartonPrice: json['cartonPrice'] == null ? null : asDouble(json['cartonPrice']),
     );
   }
 }

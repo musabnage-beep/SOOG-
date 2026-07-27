@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsUUID, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SaleUnit } from '@prisma/client';
+import { IsEnum, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
 
 export class AddToCartDto {
   @ApiProperty()
@@ -10,6 +11,11 @@ export class AddToCartDto {
   @IsInt()
   @Min(1)
   quantity!: number;
+
+  @ApiPropertyOptional({ enum: SaleUnit, default: SaleUnit.PIECE })
+  @IsOptional()
+  @IsEnum(SaleUnit)
+  unit?: SaleUnit;
 }
 
 export class UpdateCartItemDto {

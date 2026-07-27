@@ -17,7 +17,7 @@ export class CartController {
 
   @Post('items')
   add(@CurrentUser('id') userId: string, @Body() dto: AddToCartDto) {
-    return this.service.add(userId, dto.productId, dto.quantity);
+    return this.service.add(userId, dto.productId, dto.quantity, dto.unit);
   }
 
   @Patch('items/:itemId')

@@ -27,6 +27,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _imageIndex = 0;
   bool _expanded = false;
   bool _busy = false;
+  bool _carton = false;
 
   @override
   Widget build(BuildContext context) {
@@ -114,8 +115,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     ),
                   ),
                 const SizedBox(height: 16),
+                // Unit selector (piece / carton)
+                if (product.hasCarton) ...[
+                  _UnitSelector(
+                    carton: _carton,
+                    unitsPerCarton: product.unitsPerCarton,
+                    onChanged: (v) => setState(() => _carton = v),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 // Price row
-                _PriceRow(product: product),
+                _PriceRow(product: product, isCarton: _carton),
                 const SizedBox(height: 24),
                 // Description
                 if (desc.isNotEmpty) _DescriptionSection(desc: desc, expanded: _expanded, onToggle: () => setState(() => _expanded = !_expanded)),
@@ -135,7 +145,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     }
     setState(() => _busy = true);
     try {
-      await ref.read(cartControllerProvider.notifier).add(product.id, quantity: _qty);
+      await ref
+          .read(cartControllerProvider.notifier)
+          .add(product.id, quantity: _qty, unit: _carton ? 'CARTON' : 'PIECE');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -294,14 +306,74 @@ class _ImageSection extends StatelessWidget {
   }
 }
 
-// ── Price row ─────────────────────────────────────────────────────────────────
-class _PriceRow extends StatelessWidget {
-  const _PriceRow({required this.product});
+// ── Unit selector ─────────────────────────────────────────────────────────────
+class _UnitSelector extends StatelessWidget {
+  const _UnitSelector({
+    required this.carton,
+    required this.unitsPerCarton,
+    required this.onChanged,
+  });
 
-  final Product product;
+  final bool carton;
+  final int? unitsPerCarton;
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F2F2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _seg(label: 'حبة', selected: !carton, onTap: () => onChanged(false)),
+          _seg(
+            label: unitsPerCarton != null ? 'كرتون ($unitsPerCarton حبة)' : 'كرتون',
+            selected: carton,
+            onTap: () => onChanged(true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _seg({required String label, required bool selected, required VoidCallback onTap}) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : AppColors.dark,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Price row ─────────────────────────────────────────────────────────────────
+class _PriceRow extends StatelessWidget {
+  const _PriceRow({required this.product, this.isCarton = false});
+
+  final Product product;
+  final bool isCarton;
+
+  @override
+  Widget build(BuildContext context) {
+    final price = isCarton ? (product.cartonPrice ?? 0) : product.effectivePrice;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -309,16 +381,26 @@ class _PriceRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              Formatters.money(product.effectivePrice),
+              Formatters.money(price),
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
                 color: AppColors.dark,
               ),
             ),
+            if (isCarton && product.unitsPerCarton != null) ...[
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '/ كرتون (${product.unitsPerCarton} حبة)',
+                  style: const TextStyle(fontSize: 13, color: AppColors.muted),
+                ),
+              ),
+            ],
           ],
         ),
-        if (product.hasDiscount) ...[
+        if (!isCarton && product.hasDiscount) ...[
           const SizedBox(height: 6),
           Row(
             children: [

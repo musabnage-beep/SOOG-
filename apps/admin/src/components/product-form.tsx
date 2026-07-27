@@ -13,16 +13,30 @@ const optionalNumber = z.preprocess(
   z.coerce.number().min(0).optional(),
 );
 
-const schema = z.object({
-  nameAr: z.string().min(1, 'الاسم بالعربية مطلوب'),
-  descriptionAr: z.string().optional(),
-  categoryId: z.string().uuid('اختر تصنيفاً'),
-  price: z.coerce.number().min(0, 'السعر غير صالح'),
-  discountPrice: optionalNumber,
-  barcode: z.string().optional(),
-  weightGrams: optionalNumber,
-  isActive: z.coerce.boolean().optional(),
-});
+const schema = z
+  .object({
+    nameAr: z.string().min(1, 'الاسم بالعربية مطلوب'),
+    descriptionAr: z.string().optional(),
+    categoryId: z.string().uuid('اختر تصنيفاً'),
+    price: z.coerce.number().min(0, 'السعر غير صالح'),
+    discountPrice: optionalNumber,
+    barcode: z.string().optional(),
+    weightGrams: optionalNumber,
+    sellByCarton: z.coerce.boolean().optional(),
+    unitsPerCarton: optionalNumber,
+    cartonPrice: optionalNumber,
+    isActive: z.coerce.boolean().optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.sellByCarton) {
+      if (!val.unitsPerCarton || val.unitsPerCarton < 1) {
+        ctx.addIssue({ code: 'custom', path: ['unitsPerCarton'], message: 'عدد الحبات مطلوب' });
+      }
+      if (!val.cartonPrice || val.cartonPrice <= 0) {
+        ctx.addIssue({ code: 'custom', path: ['cartonPrice'], message: 'سعر الكرتون مطلوب' });
+      }
+    }
+  });
 
 type FormValues = z.input<typeof schema>;
 
@@ -41,6 +55,7 @@ export function ProductForm({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -53,10 +68,15 @@ export function ProductForm({
           discountPrice: initial.discountPrice ? Number(initial.discountPrice) : undefined,
           barcode: initial.barcode ?? '',
           weightGrams: initial.weightGrams ?? undefined,
+          sellByCarton: initial.sellByCarton ?? false,
+          unitsPerCarton: initial.unitsPerCarton ?? undefined,
+          cartonPrice: initial.cartonPrice != null ? Number(initial.cartonPrice) : undefined,
           isActive: initial.isActive,
         }
       : { isActive: true },
   });
+
+  const sellByCarton = watch('sellByCarton');
 
   const submit = handleSubmit((values) => {
     const parsed = schema.parse(values);
@@ -91,6 +111,28 @@ export function ProductForm({
             <Field label="سعر الخصم (اختياري)" error={errors.discountPrice?.message}>
               <Input type="number" step="0.01" {...register('discountPrice')} />
             </Field>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>البيع بالجملة</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-4">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" {...register('sellByCarton')} />
+              يُباع بالكرتون أيضاً
+            </label>
+            {sellByCarton && (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="عدد الحبات بالكرتون" error={errors.unitsPerCarton?.message}>
+                  <Input type="number" step="1" min="1" {...register('unitsPerCarton')} />
+                </Field>
+                <Field label="سعر الكرتون (ر.س)" error={errors.cartonPrice?.message}>
+                  <Input type="number" step="0.01" {...register('cartonPrice')} />
+                </Field>
+              </div>
+            )}
           </CardBody>
         </Card>
       </div>
