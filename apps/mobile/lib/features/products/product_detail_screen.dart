@@ -268,13 +268,39 @@ class _ImageSection extends StatelessWidget {
                 PageView.builder(
                   itemCount: images.length,
                   onPageChanged: onPageChanged,
-                  itemBuilder: (_, i) => Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: CachedNetworkImage(
-                      imageUrl: images[i],
-                      fit: BoxFit.contain,
-                      errorWidget: (_, _, _) =>
-                          const Icon(Icons.broken_image_outlined, size: 60, color: AppColors.muted),
+                  itemBuilder: (context, i) => GestureDetector(
+                    onTap: () => _openViewer(context, i),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: CachedNetworkImage(
+                        imageUrl: images[i],
+                        fit: BoxFit.contain,
+                        errorWidget: (_, _, _) =>
+                            const Icon(Icons.broken_image_outlined, size: 60, color: AppColors.muted),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 12,
+                  left: 12,
+                  child: GestureDetector(
+                    onTap: () => _openViewer(context, index),
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.zoom_out_map_rounded, size: 18, color: AppColors.dark),
                     ),
                   ),
                 ),
@@ -302,6 +328,134 @@ class _ImageSection extends StatelessWidget {
                   ),
               ],
             ),
+    );
+  }
+
+  void _openViewer(BuildContext context, int initialIndex) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _ImageViewerScreen(images: images, initialIndex: initialIndex),
+      ),
+    );
+  }
+}
+
+// ── Fullscreen zoomable image viewer ──────────────────────────────────────────
+class _ImageViewerScreen extends StatefulWidget {
+  const _ImageViewerScreen({required this.images, required this.initialIndex});
+
+  final List<String> images;
+  final int initialIndex;
+
+  @override
+  State<_ImageViewerScreen> createState() => _ImageViewerScreenState();
+}
+
+class _ImageViewerScreenState extends State<_ImageViewerScreen> {
+  late final PageController _controller = PageController(initialPage: widget.initialIndex);
+  late int _index = widget.initialIndex;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _controller,
+              itemCount: widget.images.length,
+              onPageChanged: (i) => setState(() => _index = i),
+              itemBuilder: (_, i) => _ZoomableImage(url: widget.images[i]),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: _CircleBtn(icon: Icons.close_rounded, onTap: () => Navigator.pop(context)),
+            ),
+            if (widget.images.length > 1)
+              Positioned(
+                bottom: 16,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${_index + 1} / ${widget.images.length}',
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ZoomableImage extends StatefulWidget {
+  const _ZoomableImage({required this.url});
+
+  final String url;
+
+  @override
+  State<_ZoomableImage> createState() => _ZoomableImageState();
+}
+
+class _ZoomableImageState extends State<_ZoomableImage> {
+  final _transform = TransformationController();
+  TapDownDetails? _doubleTapAt;
+
+  @override
+  void dispose() {
+    _transform.dispose();
+    super.dispose();
+  }
+
+  void _handleDoubleTap() {
+    if (_transform.value != Matrix4.identity()) {
+      _transform.value = Matrix4.identity();
+      return;
+    }
+    final position = _doubleTapAt?.localPosition;
+    if (position == null) return;
+    const scale = 2.5;
+    _transform.value = Matrix4.identity()
+      ..translateByDouble(-position.dx * (scale - 1), -position.dy * (scale - 1), 0, 1)
+      ..scaleByDouble(scale, scale, scale, 1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onDoubleTapDown: (d) => _doubleTapAt = d,
+      onDoubleTap: _handleDoubleTap,
+      child: InteractiveViewer(
+        transformationController: _transform,
+        minScale: 1,
+        maxScale: 5,
+        child: Center(
+          child: CachedNetworkImage(
+            imageUrl: widget.url,
+            fit: BoxFit.contain,
+            errorWidget: (_, _, _) =>
+                const Icon(Icons.broken_image_outlined, size: 60, color: AppColors.muted),
+          ),
+        ),
+      ),
     );
   }
 }
