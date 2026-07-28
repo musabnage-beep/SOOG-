@@ -39,3 +39,37 @@ export class UpsertDeliveryZoneDto {
   @IsBoolean()
   isActive?: boolean;
 }
+
+export class UpsertDeliveryProviderDto {
+  @ApiProperty({ example: 'SMSA Express' })
+  @IsString()
+  name!: string;
+
+  @ApiProperty({ description: 'Fee (SAR)' })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  deliveryFee!: number;
+
+  @ApiPropertyOptional({ default: 2, description: 'Estimated delivery time in days' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  estimatedDays?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  website?: string;
+
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}

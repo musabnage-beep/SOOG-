@@ -19,6 +19,7 @@ import type {
   UpdateCategoryInput,
   UpdateProductInput,
   UpdateSettingsInput,
+  UpsertDeliveryProviderInput,
   UpsertDeliveryZoneInput,
 } from '../types';
 
@@ -38,6 +39,7 @@ export const qk = {
   customers: (q: PageQuery) => ['users', 'customers', q] as const,
   employees: (q: PageQuery) => ['users', 'employees', q] as const,
   zones: ['delivery', 'zones'] as const,
+  deliveryProviders: (all: boolean) => ['delivery', 'providers', all] as const,
   settings: ['settings'] as const,
   audit: (q: PageQuery) => ['audit', q] as const,
   notifications: ['notifications'] as const,
@@ -261,6 +263,40 @@ export function useZoneMutations() {
     }),
     remove: useMutation({
       mutationFn: (id: string) => api.delivery.deleteZone(id),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+/** Third-party shipping companies. `all` includes inactive ones (admin only). */
+export function useDeliveryProviders(all = false) {
+  const api = useApi();
+  return useQuery({
+    queryKey: qk.deliveryProviders(all),
+    queryFn: () => (all ? api.delivery.allProviders() : api.delivery.providers()),
+  });
+}
+export function useDeliveryProviderMutations() {
+  const api = useApi();
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['delivery', 'providers'] });
+  return {
+    create: useMutation({
+      mutationFn: (input: UpsertDeliveryProviderInput) => api.delivery.createProvider(input),
+      onSuccess: invalidate,
+    }),
+    update: useMutation({
+      mutationFn: (vars: { id: string; input: UpsertDeliveryProviderInput }) =>
+        api.delivery.updateProvider(vars.id, vars.input),
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api.delivery.deleteProvider(id),
+      onSuccess: invalidate,
+    }),
+    uploadLogo: useMutation({
+      mutationFn: (vars: { id: string; file: File }) =>
+        api.delivery.uploadProviderLogo(vars.id, vars.file),
       onSuccess: invalidate,
     }),
   };

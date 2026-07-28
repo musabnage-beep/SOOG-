@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { PrismaService } from '@/prisma/prisma.service';
 import { SettingsService } from '@/modules/settings/settings.service';
 import { MAPS_PROVIDER, MapsProvider } from '@/integrations/maps/maps.interface';
+import { STORAGE_PROVIDER } from '@/integrations/storage/storage.interface';
 import { DeliveryService } from './delivery.service';
 
 const SETTINGS = {
@@ -28,6 +29,7 @@ describe('DeliveryService', () => {
         { provide: PrismaService, useValue: { deliveryZone: { findFirst: zoneFindFirst } } },
         { provide: SettingsService, useValue: { get: jest.fn().mockResolvedValue(SETTINGS) } },
         { provide: MAPS_PROVIDER, useValue: maps },
+        { provide: STORAGE_PROVIDER, useValue: { upload: jest.fn(), delete: jest.fn() } },
       ],
     }).compile();
     service = moduleRef.get(DeliveryService);

@@ -10,11 +10,13 @@ class OrderRepository {
   Future<Order> checkout({
     required FulfillmentType fulfillmentType,
     String? addressId,
+    String? deliveryProviderId,
     String? customerNote,
   }) async {
     final data = await _api.post<Map<String, dynamic>>('/orders/checkout', data: {
       'fulfillmentType': fulfillmentType == FulfillmentType.pickup ? 'PICKUP' : 'DELIVERY',
       'addressId': ?addressId,
+      'deliveryProviderId': ?deliveryProviderId,
       if (customerNote != null && customerNote.isNotEmpty) 'customerNote': customerNote,
     });
     return Order.fromJson(data);

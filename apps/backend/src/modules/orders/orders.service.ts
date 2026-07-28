@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  DeliveryMethod,
   FulfillmentType,
   NotificationType,
   OrderItemAvailability,
@@ -32,6 +33,7 @@ import {
 const ORDER_INCLUDE = {
   items: true,
   address: true,
+  deliveryProvider: true,
   statusHistory: { orderBy: { createdAt: 'asc' } },
   user: { select: { id: true, fullName: true, phone: true, email: true } },
 } satisfies Prisma.OrderInclude;
@@ -68,6 +70,8 @@ export class OrdersService {
     let distanceMeters: number | null = null;
     let etaMinutes: number | null = null;
     let addressId: string | null = null;
+    let deliveryMethod: DeliveryMethod = DeliveryMethod.STORE;
+    let deliveryProviderId: string | null = null;
 
     if (dto.fulfillmentType === FulfillmentType.DELIVERY) {
       const address = await this.prisma.address.findFirst({
@@ -75,10 +79,29 @@ export class OrdersService {
       });
       if (!address) throw new BadRequestException('Delivery address not found');
       const quote = await this.delivery.quote(address.latitude, address.longitude);
-      if (!quote.withinRange) {
-        throw new BadRequestException('Delivery address is outside the delivery range');
+
+      // A shipping company is only used outside the free-delivery area. Inside
+      // it the store delivers for free and any selection is ignored.
+      const wantsProvider = Boolean(dto.deliveryProviderId) && !quote.freeDelivery;
+      const provider = wantsProvider
+        ? await this.prisma.deliveryProvider.findFirst({
+            where: { id: dto.deliveryProviderId, isActive: true },
+          })
+        : null;
+      if (wantsProvider && !provider) {
+        throw new BadRequestException('شركة التوصيل غير متاحة');
       }
-      deliveryFee = quote.fee;
+
+      if (provider) {
+        deliveryMethod = DeliveryMethod.THIRD_PARTY;
+        deliveryProviderId = provider.id;
+        deliveryFee = Number(provider.deliveryFee);
+      } else {
+        if (!quote.withinRange) {
+          throw new BadRequestException('Delivery address is outside the delivery range');
+        }
+        deliveryFee = quote.fee;
+      }
       distanceMeters = quote.distanceMeters;
       etaMinutes = quote.etaMinutes;
       addressId = address.id;
@@ -119,6 +142,8 @@ export class OrdersService {
           total: new Prisma.Decimal(total),
           distanceMeters,
           etaMinutes,
+          deliveryMethod,
+          deliveryProviderId,
           customerNote: dto.customerNote,
           items: { create: items },
           statusHistory: {
@@ -266,12 +291,19 @@ export class OrdersService {
     const allowed: OrderStatus[] = [
       OrderStatus.PREPARING,
       OrderStatus.READY,
+      OrderStatus.WAITING_FOR_COURIER,
       OrderStatus.OUT_FOR_DELIVERY,
       OrderStatus.DELIVERED,
       OrderStatus.PICKED_UP,
     ];
     if (!allowed.includes(dto.status)) {
       throw new BadRequestException('Use the dedicated endpoint for this status');
+    }
+    if (
+      dto.status === OrderStatus.WAITING_FOR_COURIER &&
+      order.deliveryMethod !== DeliveryMethod.THIRD_PARTY
+    ) {
+      throw new BadRequestException('الطلب ليس شحناً عبر شركة توصيل');
     }
     if (dto.status === OrderStatus.OUT_FOR_DELIVERY && order.fulfillmentType !== FulfillmentType.DELIVERY) {
       throw new BadRequestException('Order is pickup, not delivery');
@@ -395,6 +427,7 @@ export class OrdersService {
     const map: Partial<Record<OrderStatus, NotificationType>> = {
       PREPARING: NotificationType.ORDER_PREPARING,
       READY: NotificationType.ORDER_READY,
+      WAITING_FOR_COURIER: NotificationType.ORDER_WAITING_FOR_COURIER,
       OUT_FOR_DELIVERY: NotificationType.ORDER_OUT_FOR_DELIVERY,
       DELIVERED: NotificationType.ORDER_DELIVERED,
       PICKED_UP: NotificationType.ORDER_PICKED_UP,
@@ -435,6 +468,7 @@ export class OrdersService {
       ORDER_REJECTED: 'Order rejected',
       ORDER_PREPARING: 'Preparing your order',
       ORDER_READY: 'Order ready',
+      ORDER_WAITING_FOR_COURIER: 'Pickup requested',
       ORDER_OUT_FOR_DELIVERY: 'Out for delivery',
       ORDER_DELIVERED: 'Order delivered',
       ORDER_PICKED_UP: 'Order picked up',

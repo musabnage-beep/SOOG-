@@ -22,6 +22,13 @@ export class CheckoutDto {
   @IsUUID()
   addressId?: string;
 
+  @ApiPropertyOptional({
+    description: 'Shipping company chosen outside the free-delivery area',
+  })
+  @IsOptional()
+  @IsUUID()
+  deliveryProviderId?: string;
+
   @ApiPropertyOptional({ enum: PaymentMethod, default: PaymentMethod.COD })
   @IsOptional()
   @IsEnum(PaymentMethod)

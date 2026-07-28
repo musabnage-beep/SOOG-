@@ -1,6 +1,7 @@
 import type {
   OrderStatus,
   StockStatus,
+  DeliveryMethod,
   FulfillmentType,
   PaymentMethod,
   PaymentStatus,
@@ -16,6 +17,7 @@ export const ORDER_STATUS_LABEL_AR: Record<OrderStatus, string> = {
   APPROVED: 'تمت الموافقة',
   PREPARING: 'قيد التجهيز',
   READY: 'جاهز',
+  WAITING_FOR_COURIER: 'بانتظار المندوب',
   OUT_FOR_DELIVERY: 'قيد التوصيل',
   DELIVERED: 'تم التوصيل',
   PICKED_UP: 'تم الاستلام',
@@ -31,6 +33,7 @@ export const ORDER_STATUS_TONE: Record<OrderStatus, string> = {
   APPROVED: 'bg-emerald-100 text-emerald-800',
   PREPARING: 'bg-indigo-100 text-indigo-800',
   READY: 'bg-cyan-100 text-cyan-800',
+  WAITING_FOR_COURIER: 'bg-teal-100 text-teal-800',
   OUT_FOR_DELIVERY: 'bg-violet-100 text-violet-800',
   DELIVERED: 'bg-green-100 text-green-800',
   PICKED_UP: 'bg-green-100 text-green-800',
@@ -99,6 +102,7 @@ export const ROLE_LABEL_AR: Record<RoleName, string> = {
 export const ADVANCEABLE_STATUSES: OrderStatus[] = [
   'PREPARING',
   'READY',
+  'WAITING_FOR_COURIER',
   'OUT_FOR_DELIVERY',
   'DELIVERED',
   'PICKED_UP',
@@ -118,7 +122,8 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   CONFIRMATION_REQUIRED: ['UNDER_REVIEW', 'CANCELLED'],
   APPROVED: ['PREPARING'],
   PREPARING: ['READY'],
-  READY: ['OUT_FOR_DELIVERY', 'PICKED_UP'],
+  READY: ['OUT_FOR_DELIVERY', 'PICKED_UP', 'WAITING_FOR_COURIER'],
+  WAITING_FOR_COURIER: ['OUT_FOR_DELIVERY'],
   OUT_FOR_DELIVERY: ['DELIVERED'],
   DELIVERED: [],
   PICKED_UP: [],
@@ -126,9 +131,22 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   CANCELLED: [],
 };
 
-/** Forward statuses reachable via the /orders/:id/status endpoint only. */
-export function advanceTargets(status: OrderStatus): OrderStatus[] {
-  return ORDER_TRANSITIONS[status].filter((s) => ADVANCEABLE_STATUSES.includes(s));
+/**
+ * Forward statuses reachable via the /orders/:id/status endpoint only.
+ * `method` hides the third-party hop on store-delivered orders (and vice versa).
+ */
+export function advanceTargets(
+  status: OrderStatus,
+  method: DeliveryMethod = 'STORE',
+): OrderStatus[] {
+  return ORDER_TRANSITIONS[status]
+    .filter((s) => ADVANCEABLE_STATUSES.includes(s))
+    .filter((s) => {
+      if (s === 'WAITING_FOR_COURIER') return method === 'THIRD_PARTY';
+      // Third-party orders must pass through WAITING_FOR_COURIER first.
+      if (s === 'OUT_FOR_DELIVERY' && status === 'READY') return method !== 'THIRD_PARTY';
+      return true;
+    });
 }
 
 export const BRAND = {
