@@ -22,6 +22,14 @@ abstract class Formatters {
     return '${(meters / 1000).toStringAsFixed(1)} كم';
   }
 
+  /// Arabic-correct delivery duration; a single day means same-day delivery.
+  static String deliveryDays(int days) {
+    if (days <= 1) return 'توصيل في نفس اليوم';
+    if (days == 2) return 'خلال يومين';
+    if (days <= 10) return 'خلال $days أيام';
+    return 'خلال $days يوماً';
+  }
+
   static String eta(int minutes) {
     if (minutes < 60) return '$minutes دقيقة';
     final h = minutes ~/ 60;

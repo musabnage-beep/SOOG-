@@ -149,6 +149,14 @@ export function advanceTargets(
     });
 }
 
+/** Arabic-correct delivery duration; a single day means same-day delivery. */
+export function deliveryDaysLabel(days: number): string {
+  if (days <= 1) return 'نفس اليوم';
+  if (days === 2) return 'يومان';
+  if (days <= 10) return `${days} أيام`;
+  return `${days} يوماً`;
+}
+
 export const BRAND = {
   primary: '#166534',
   secondary: '#22C55E',

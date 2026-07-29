@@ -44,6 +44,7 @@ import {
   PAYMENT_STATUS_LABEL_AR,
   PAYMENT_STATUS_TONE,
   advanceTargets,
+  deliveryDaysLabel,
   type OrderStatus,
 } from '@aldiafa/shared';
 import { PageHeader } from '@/components/page-header';
@@ -310,7 +311,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   <div>
                     <p className="font-semibold text-gray-900">{provider.name}</p>
                     <p className="text-xs text-gray-500">
-                      {money(provider.deliveryFee)} · خلال {provider.estimatedDays} أيام
+                      {money(provider.deliveryFee)} · {deliveryDaysLabel(provider.estimatedDays)}
                     </p>
                   </div>
                 </div>

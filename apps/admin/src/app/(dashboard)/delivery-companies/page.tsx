@@ -23,7 +23,12 @@ import {
   ConfirmDialog,
   useToast,
 } from '@aldiafa/shared/ui';
-import { money, type DeliveryProvider, type UpsertDeliveryProviderInput } from '@aldiafa/shared';
+import {
+  money,
+  deliveryDaysLabel,
+  type DeliveryProvider,
+  type UpsertDeliveryProviderInput,
+} from '@aldiafa/shared';
 import { PageHeader } from '@/components/page-header';
 
 const empty: UpsertDeliveryProviderInput = {
@@ -171,7 +176,7 @@ export default function DeliveryCompaniesPage() {
                     </TD>
                     <TD className="font-medium text-gray-900">{p.name}</TD>
                     <TD className="font-semibold text-brand">{money(p.deliveryFee)}</TD>
-                    <TD>{p.estimatedDays} أيام</TD>
+                    <TD>{deliveryDaysLabel(p.estimatedDays)}</TD>
                     <TD dir="ltr" className="text-start">
                       {p.phone || '—'}
                     </TD>

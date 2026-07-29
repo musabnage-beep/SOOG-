@@ -589,7 +589,7 @@ class _ShippingCompanyCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${Formatters.money(provider.deliveryFee)} · خلال ${provider.estimatedDays} أيام',
+                  '${Formatters.money(provider.deliveryFee)} · ${Formatters.deliveryDays(provider.estimatedDays)}',
                   style: const TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
               ],

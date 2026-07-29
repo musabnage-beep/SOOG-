@@ -240,7 +240,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     const Icon(Icons.local_shipping_outlined, color: AppColors.muted),
               ),
         title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text('${Formatters.money(c.deliveryFee)} · خلال ${c.estimatedDays} أيام'),
+        subtitle: Text(
+          '${Formatters.money(c.deliveryFee)} · ${Formatters.deliveryDays(c.estimatedDays)}',
+        ),
       ),
     );
   }
