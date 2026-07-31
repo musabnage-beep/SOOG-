@@ -149,44 +149,47 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         const SizedBox(height: 20),
         // ── Scrollable content ───────────────────────────────────────
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: [
-              // Map placeholder
-              _MapPlaceholder(order: order),
-              const SizedBox(height: 16),
-              // Shipping company card replaces the driver card on third-party
-              // deliveries; store deliveries keep the existing driver card.
-              if (order.isThirdParty && order.deliveryProvider != null) ...[
-                _ShippingCompanyCard(provider: order.deliveryProvider!),
+          child: RefreshIndicator(
+            onRefresh: () async => ref.invalidate(orderDetailProvider(widget.orderId)),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                // Map placeholder
+                _MapPlaceholder(order: order),
                 const SizedBox(height: 16),
-              ] else if (order.isDelivery &&
-                  (order.status == OrderStatus.outForDelivery ||
-                      order.status == OrderStatus.delivered)) ...[
-                const _DriverCard(),
+                // Shipping company card replaces the driver card on third-party
+                // deliveries; store deliveries keep the existing driver card.
+                if (order.isThirdParty && order.deliveryProvider != null) ...[
+                  _ShippingCompanyCard(provider: order.deliveryProvider!),
+                  const SizedBox(height: 16),
+                ] else if (order.isDelivery &&
+                    (order.status == OrderStatus.outForDelivery ||
+                        order.status == OrderStatus.delivered)) ...[
+                  const _DriverCard(),
+                  const SizedBox(height: 16),
+                ],
+                // Banners
+                if (order.status == OrderStatus.rejected && order.rejectionReason != null) ...[
+                  _banner(Icons.cancel, AppColors.danger, 'سبب الرفض: ${order.rejectionReason}'),
+                  const SizedBox(height: 12),
+                ],
+                if (order.needsConfirmation) ...[
+                  _banner(Icons.info_outline, AppColors.warning,
+                      'بعض المنتجات غير متوفرة. راجع الطلب وأكّد المتابعة أو ألغِ الطلب.'),
+                  const SizedBox(height: 12),
+                ],
+                // Items
+                const _SectionTitle('المنتجات'),
+                const SizedBox(height: 8),
+                ...order.items.map(_itemRow),
                 const SizedBox(height: 16),
+                // Payment summary
+                const _SectionTitle('ملخّص الدفع'),
+                const SizedBox(height: 8),
+                _summaryCard(order),
+                const SizedBox(height: 24),
               ],
-              // Banners
-              if (order.status == OrderStatus.rejected && order.rejectionReason != null) ...[
-                _banner(Icons.cancel, AppColors.danger, 'سبب الرفض: ${order.rejectionReason}'),
-                const SizedBox(height: 12),
-              ],
-              if (order.needsConfirmation) ...[
-                _banner(Icons.info_outline, AppColors.warning,
-                    'بعض المنتجات غير متوفرة. راجع الطلب وأكّد المتابعة أو ألغِ الطلب.'),
-                const SizedBox(height: 12),
-              ],
-              // Items
-              const _SectionTitle('المنتجات'),
-              const SizedBox(height: 8),
-              ...order.items.map(_itemRow),
-              const SizedBox(height: 16),
-              // Payment summary
-              const _SectionTitle('ملخّص الدفع'),
-              const SizedBox(height: 8),
-              _summaryCard(order),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ],
