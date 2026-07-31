@@ -7,9 +7,12 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { RoleName } from '@prisma/client';
 import { Public } from '@/common/decorators/public.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -61,5 +64,17 @@ export class CategoriesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.service.remove(id);
+  }
+
+  @ApiBearerAuth()
+  @Roles(RoleName.ADMIN, RoleName.EMPLOYEE)
+  @RequirePermissions('category.manage')
+  @UseGuards(RolesGuard, PermissionsGuard)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @Post(':id/image')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadIcon(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    return this.service.uploadIcon(id, file);
   }
 }

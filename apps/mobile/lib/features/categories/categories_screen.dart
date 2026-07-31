@@ -59,11 +59,7 @@ class CategoriesScreen extends ConsumerWidget {
                       border: Border.all(color: AppColors.border),
                     ),
                     alignment: Alignment.center,
-                    child: Icon(
-                      categoryIconData(c.slug),
-                      size: 30,
-                      color: AppColors.primary,
-                    ),
+                    child: CategoryArt(slug: c.slug, icon: c.icon, size: 30),
                   ),
                   const SizedBox(height: 6),
                   Text(

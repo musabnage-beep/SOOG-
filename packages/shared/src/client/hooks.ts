@@ -187,6 +187,11 @@ export function useCategoryMutations() {
       mutationFn: (id: string) => api.categories.remove(id),
       onSuccess: invalidate,
     }),
+    uploadImage: useMutation({
+      mutationFn: (vars: { id: string; file: File }) =>
+        api.categories.uploadImage(vars.id, vars.file),
+      onSuccess: invalidate,
+    }),
   };
 }
 

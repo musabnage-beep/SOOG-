@@ -219,6 +219,14 @@ export function createApiClient(opts: ApiClientOptions) {
       update: (id: string, input: UpdateCategoryInput) =>
         patch<Category>(`/categories/${id}`, input),
       remove: (id: string) => del<{ ok: boolean }>(`/categories/${id}`),
+      uploadImage: async (id: string, file: File) => {
+        const form = new FormData();
+        form.append('file', file);
+        const res = await http.post(`/categories/${id}/image`, form, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return unwrap<Category>(res.data);
+      },
     },
     // ── inventory ─────────────────────────────────────────────────────────
     inventory: {

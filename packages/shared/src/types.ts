@@ -78,7 +78,9 @@ export interface Category {
   nameAr: string;
   nameEn: string;
   slug: string;
+  /** Emoji/glyph, or the URL of the uploaded category photo. */
   icon: string | null;
+  iconKey?: string | null;
   sortOrder: number;
   isActive: boolean;
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Plus, Pencil, Trash2, Upload } from 'lucide-react';
 import { useCategories, useCategoryMutations } from '@aldiafa/shared/client';
 import {
   Card,
@@ -37,13 +37,34 @@ const empty: CreateCategoryInput = {
 
 export default function CategoriesPage() {
   const { data, isLoading, isError, refetch } = useCategories();
-  const { create, update, remove } = useCategoryMutations();
+  const { create, update, remove, uploadImage } = useCategoryMutations();
   const toast = useToast();
 
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState<CreateCategoryInput>(empty);
   const [open, setOpen] = useState(false);
   const [toDelete, setToDelete] = useState<Category | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+
+  const pickImage = (id: string) => {
+    setUploadingId(id);
+    fileRef.current?.click();
+  };
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !uploadingId) return;
+    try {
+      await uploadImage.mutateAsync({ id: uploadingId, file });
+      toast.success('تم رفع صورة التصنيف');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'فشل رفع الصورة');
+    } finally {
+      setUploadingId(null);
+    }
+  };
 
   const openNew = () => {
     setEditing(null);
@@ -102,6 +123,14 @@ export default function CategoriesPage() {
         }
       />
 
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={onFile}
+      />
+
       <Card>
         <CardBody className="p-0">
           {isLoading ? (
@@ -125,7 +154,18 @@ export default function CategoriesPage() {
               <TBody>
                 {data.map((c) => (
                   <TR key={c.id}>
-                    <TD className="text-xl">{c.icon || '🏷️'}</TD>
+                    <TD>
+                      {c.icon?.startsWith('http') ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={c.icon}
+                          alt={c.nameAr}
+                          className="h-12 w-12 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <span className="text-xl">{c.icon || '🏷️'}</span>
+                      )}
+                    </TD>
                     <TD className="font-medium text-gray-900">
                       {c.nameAr}
                       <span className="block text-xs text-gray-400" dir="ltr">
@@ -141,6 +181,15 @@ export default function CategoriesPage() {
                     </TD>
                     <TD>
                       <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="رفع صورة"
+                          loading={uploadImage.isPending && uploadingId === c.id}
+                          onClick={() => pickImage(c.id)}
+                        >
+                          <Upload className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -192,7 +241,7 @@ export default function CategoriesPage() {
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="الأيقونة (إيموجي)">
+            <Field label="الأيقونة (إيموجي أو رابط صورة)">
               <Input value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
             </Field>
             <Field label="الترتيب">

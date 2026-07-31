@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../core/theme/app_colors.dart';
+
 /// Maps a backend category `slug` to a built-in Material icon.
 ///
 /// Category art is delivered as PNGs progressively; until those land this gives
@@ -47,6 +49,39 @@ IconData categoryIconData(String slug) {
     default:
       return Icons.category_outlined;
   }
+}
+
+/// Category art: the real photo uploaded from the admin dashboard, falling back
+/// to the built-in glyph while a category has none (or the photo fails to load).
+///
+/// [icon] carries either an image URL or an emoji, matching `Category.icon`.
+class CategoryArt extends StatelessWidget {
+  const CategoryArt({super.key, required this.slug, this.icon, this.size = 26});
+
+  final String slug;
+  final String? icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = icon;
+    if (url != null && url.startsWith('http')) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, _, _) => _glyph(),
+      );
+    }
+    return _glyph();
+  }
+
+  Widget _glyph() => Icon(
+        categoryIconData(slug),
+        size: size,
+        color: AppColors.primary,
+      );
 }
 
 /// Resilient asset loaders.

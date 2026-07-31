@@ -603,11 +603,7 @@ class _CategoryGrid extends StatelessWidget {
                     border: Border.all(color: AppColors.border),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(
-                    categoryIconData(c.slug),
-                    size: 26,
-                    color: AppColors.primary,
-                  ),
+                  child: CategoryArt(slug: c.slug, icon: c.icon, size: 26),
                 ),
                 const SizedBox(height: 5),
                 Text(

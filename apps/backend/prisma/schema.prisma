@@ -270,7 +270,9 @@ model Category {
   nameAr    String
   nameEn    String
   slug      String    @unique
+  // Either an emoji/glyph or, once a photo is uploaded, its public URL.
   icon      String?
+  iconKey   String?
   sortOrder Int       @default(0)
   isActive  Boolean   @default(true)
   createdAt DateTime  @default(now())
