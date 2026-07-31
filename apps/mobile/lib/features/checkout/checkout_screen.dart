@@ -9,6 +9,7 @@ import '../../data/models/address.dart';
 import '../../data/models/delivery_provider.dart';
 import '../../data/models/order.dart';
 import '../../providers/address_controller.dart';
+import '../../providers/auth_controller.dart';
 import '../../providers/cart_controller.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/orders_providers.dart';
@@ -23,6 +24,7 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _note = TextEditingController();
+  final _phone = TextEditingController();
   FulfillmentType _type = FulfillmentType.delivery;
   String? _addressId;
   String? _providerId;
@@ -41,7 +43,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   void dispose() {
     _note.dispose();
+    _phone.dispose();
     super.dispose();
+  }
+
+  /// Saudi mobile in any local format → +9665XXXXXXXX.
+  static String _normalizeSaudi(String v) {
+    var d = v.replaceAll(RegExp(r'[\s-]'), '');
+    d = d.replaceFirst(RegExp(r'^(\+966|00966|966|0)'), '');
+    return '+966$d';
   }
 
   Address? get _selectedAddress {
@@ -56,6 +66,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Widget build(BuildContext context) {
     final cart = ref.watch(cartControllerProvider);
     final addresses = ref.watch(addressControllerProvider);
+    // Accounts created before the mobile number became mandatory have none.
+    final needsPhone = (ref.watch(authControllerProvider).user?.phone ?? '').isEmpty;
 
     // Shipping companies only apply to deliveries outside the free area.
     final address = _selectedAddress;
@@ -138,6 +150,24 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
               const SizedBox(height: 22),
             ],
+          ],
+          if (needsPhone) ...[
+            const _SectionTitle('رقم الجوال'),
+            const SizedBox(height: 4),
+            const Text(
+              'نحتاج رقم جوالك للتواصل معك عند تجهيز الطلب وتوصيله.',
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _phone,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                hintText: '05XXXXXXXX',
+                prefixIcon: Icon(Icons.phone_outlined),
+              ),
+            ),
+            const SizedBox(height: 22),
           ],
           const _SectionTitle('ملاحظات (اختياري)'),
           const SizedBox(height: 10),
@@ -294,8 +324,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       _show('اختر عنوان التوصيل');
       return;
     }
+    final needsPhone = (ref.read(authControllerProvider).user?.phone ?? '').isEmpty;
+    final typed = _phone.text.replaceAll(RegExp(r'[\s-]'), '');
+    if (needsPhone && !RegExp(r'^(\+966|00966|966|0)?5\d{8}$').hasMatch(typed)) {
+      _show('أدخل رقم جوال سعودي صحيح');
+      return;
+    }
     setState(() => _placing = true);
     try {
+      if (needsPhone) {
+        final user = await ref
+            .read(authRepositoryProvider)
+            .updateProfile(phone: _normalizeSaudi(typed));
+        ref.read(authControllerProvider.notifier).setUser(user);
+      }
       final order = await ref.read(orderRepositoryProvider).checkout(
             fulfillmentType: _type,
             addressId: _type == FulfillmentType.delivery ? _addressId : null,

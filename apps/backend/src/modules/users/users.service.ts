@@ -43,6 +43,12 @@ export class UsersService {
       });
       if (exists) throw new ConflictException('Email already in use');
     }
+    if (dto.phone) {
+      const exists = await this.prisma.user.findFirst({
+        where: { phone: dto.phone, id: { not: userId } },
+      });
+      if (exists) throw new ConflictException('رقم الجوال مستخدم بالفعل');
+    }
     return this.prisma.user.update({
       where: { id: userId },
       data: dto,

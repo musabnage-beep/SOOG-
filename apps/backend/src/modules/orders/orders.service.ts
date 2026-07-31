@@ -54,6 +54,13 @@ export class OrdersService {
 
   // ── Checkout ────────────────────────────────────────────────────────────
   async checkout(userId: string, dto: CheckoutDto) {
+    // The courier / shipping company must be able to reach the customer.
+    const customer = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { phone: true },
+    });
+    if (!customer.phone) throw new BadRequestException('أضف رقم جوالك قبل إتمام الطلب');
+
     const cartItems = await this.prisma.cartItem.findMany({
       where: { userId },
       include: { product: true },

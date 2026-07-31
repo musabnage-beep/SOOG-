@@ -19,6 +19,11 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsEmail()
   email?: string;
+
+  @ApiPropertyOptional({ example: '+966500000001' })
+  @IsOptional()
+  @IsPhoneNumber('SA')
+  phone?: string;
 }
 
 export class ChangePasswordDto {
