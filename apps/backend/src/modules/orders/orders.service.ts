@@ -21,6 +21,7 @@ import { DeliveryService } from '@/modules/delivery/delivery.service';
 import { NotificationsService } from '@/modules/notifications/notifications.service';
 import { paginate } from '@/common/dto/pagination.dto';
 import { AuthUser } from '@/common/decorators/current-user.decorator';
+import { unitPriceOf } from '@/common/sale-unit';
 import { canTransition } from './order-state-machine';
 import {
   AdvanceStatusDto,
@@ -37,12 +38,6 @@ const ORDER_INCLUDE = {
   statusHistory: { orderBy: { createdAt: 'asc' } },
   user: { select: { id: true, fullName: true, phone: true, email: true } },
 } satisfies Prisma.OrderInclude;
-
-function effectivePrice(price: Prisma.Decimal, discount: Prisma.Decimal | null): number {
-  const p = Number(price);
-  const d = discount == null ? null : Number(discount);
-  return d != null && d > 0 && d < p ? d : p;
-}
 
 @Injectable()
 export class OrdersService {
@@ -115,10 +110,7 @@ export class OrdersService {
     }
 
     const items = cartItems.map((ci) => {
-      const unitPrice =
-        ci.unit === SaleUnit.CARTON && ci.product.cartonPrice != null
-          ? Number(ci.product.cartonPrice)
-          : effectivePrice(ci.product.price, ci.product.discountPrice);
+      const unitPrice = unitPriceOf(ci.product, ci.unit) ?? unitPriceOf(ci.product, SaleUnit.PIECE)!;
       return {
         productId: ci.productId,
         nameAr: ci.product.nameAr,

@@ -27,7 +27,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _imageIndex = 0;
   bool _expanded = false;
   bool _busy = false;
-  bool _carton = false;
+  int _unitIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +76,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   Widget _scrollBody(Product product) {
     final images = product.images.map((e) => e.url).toList();
     final desc = product.descriptionAr ?? '';
+    final options = product.saleOptions;
+    final index = _unitIndex.clamp(0, options.length - 1);
 
     return SingleChildScrollView(
       child: Column(
@@ -115,17 +117,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     ),
                   ),
                 const SizedBox(height: 16),
-                // Unit selector (piece / carton)
-                if (product.hasCarton) ...[
+                // Unit selector (base unit / نص كيلو / كيلو / carton)
+                if (options.length > 1) ...[
                   _UnitSelector(
-                    carton: _carton,
-                    unitsPerCarton: product.unitsPerCarton,
-                    onChanged: (v) => setState(() => _carton = v),
+                    options: options,
+                    selected: index,
+                    onChanged: (i) => setState(() => _unitIndex = i),
                   ),
                   const SizedBox(height: 16),
                 ],
                 // Price row
-                _PriceRow(product: product, isCarton: _carton),
+                _PriceRow(product: product, option: options[index]),
                 const SizedBox(height: 24),
                 // Description
                 if (desc.isNotEmpty) _DescriptionSection(desc: desc, expanded: _expanded, onToggle: () => setState(() => _expanded = !_expanded)),
@@ -143,11 +145,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       _promptSignIn();
       return;
     }
+    final options = product.saleOptions;
+    final unit = options[_unitIndex.clamp(0, options.length - 1)].unit;
     setState(() => _busy = true);
     try {
       await ref
           .read(cartControllerProvider.notifier)
-          .add(product.id, quantity: _qty, unit: _carton ? 'CARTON' : 'PIECE');
+          .add(product.id, quantity: _qty, unit: unit);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -463,14 +467,14 @@ class _ZoomableImageState extends State<_ZoomableImage> {
 // ── Unit selector ─────────────────────────────────────────────────────────────
 class _UnitSelector extends StatelessWidget {
   const _UnitSelector({
-    required this.carton,
-    required this.unitsPerCarton,
+    required this.options,
+    required this.selected,
     required this.onChanged,
   });
 
-  final bool carton;
-  final int? unitsPerCarton;
-  final ValueChanged<bool> onChanged;
+  final List<SaleOption> options;
+  final int selected;
+  final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -482,12 +486,8 @@ class _UnitSelector extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _seg(label: 'حبة', selected: !carton, onTap: () => onChanged(false)),
-          _seg(
-            label: unitsPerCarton != null ? 'كرتون ($unitsPerCarton حبة)' : 'كرتون',
-            selected: carton,
-            onTap: () => onChanged(true),
-          ),
+          for (var i = 0; i < options.length; i++)
+            _seg(label: options[i].label, selected: i == selected, onTap: () => onChanged(i)),
         ],
       ),
     );
@@ -498,7 +498,7 @@ class _UnitSelector extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected ? AppColors.primary : Colors.transparent,
@@ -506,6 +506,9 @@ class _UnitSelector extends StatelessWidget {
           ),
           child: Text(
             label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: selected ? Colors.white : AppColors.dark,
               fontWeight: FontWeight.w700,
@@ -520,14 +523,14 @@ class _UnitSelector extends StatelessWidget {
 
 // ── Price row ─────────────────────────────────────────────────────────────────
 class _PriceRow extends StatelessWidget {
-  const _PriceRow({required this.product, this.isCarton = false});
+  const _PriceRow({required this.product, required this.option});
 
   final Product product;
-  final bool isCarton;
+  final SaleOption option;
 
   @override
   Widget build(BuildContext context) {
-    final price = isCarton ? (product.cartonPrice ?? 0) : product.effectivePrice;
+    final isBaseUnit = option.unit == 'PIECE';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -535,26 +538,24 @@ class _PriceRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              Formatters.money(price),
+              Formatters.money(option.price),
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
                 color: AppColors.dark,
               ),
             ),
-            if (isCarton && product.unitsPerCarton != null) ...[
-              const SizedBox(width: 8),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  '/ كرتون (${product.unitsPerCarton} حبة)',
-                  style: const TextStyle(fontSize: 13, color: AppColors.muted),
-                ),
+            const SizedBox(width: 8),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                '/ ${option.label}',
+                style: const TextStyle(fontSize: 13, color: AppColors.muted),
               ),
-            ],
+            ),
           ],
         ),
-        if (!isCarton && product.hasDiscount) ...[
+        if (isBaseUnit && product.hasDiscount) ...[
           const SizedBox(height: 6),
           Row(
             children: [

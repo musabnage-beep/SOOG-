@@ -1,17 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { SaleUnit, StockStatus } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
-
-function effectivePrice(price: unknown, discount: unknown): number {
-  const p = Number(price);
-  const d = discount == null ? null : Number(discount);
-  return d != null && d > 0 && d < p ? d : p;
-}
-
-const UNIT_LABEL: Record<SaleUnit, string> = {
-  [SaleUnit.PIECE]: 'حبة',
-  [SaleUnit.CARTON]: 'كرتون',
-};
+import { unitLabelOf, unitPriceOf } from '@/common/sale-unit';
 
 @Injectable()
 export class CartService {
@@ -30,10 +20,10 @@ export class CartService {
     });
 
     const lines = items.map((item) => {
+      // Fall back to the piece price if the unit was retired after the line was
+      // added, so an old cart line still renders instead of blowing up.
       const unitPrice =
-        item.unit === SaleUnit.CARTON && item.product.cartonPrice != null
-          ? Number(item.product.cartonPrice)
-          : effectivePrice(item.product.price, item.product.discountPrice);
+        unitPriceOf(item.product, item.unit) ?? unitPriceOf(item.product, SaleUnit.PIECE)!;
       return {
         id: item.id,
         productId: item.productId,
@@ -43,7 +33,7 @@ export class CartService {
         unitPrice,
         quantity: item.quantity,
         unit: item.unit,
-        unitLabel: UNIT_LABEL[item.unit],
+        unitLabel: unitLabelOf(item.product, item.unit),
         unitsPerCarton: item.unit === SaleUnit.CARTON ? item.product.unitsPerCarton : null,
         lineTotal: +(unitPrice * item.quantity).toFixed(2),
         stockStatus: item.product.stockStatus,
@@ -59,8 +49,8 @@ export class CartService {
     if (product.stockStatus === StockStatus.OUT_OF_STOCK) {
       throw new BadRequestException('Product is out of stock');
     }
-    if (unit === SaleUnit.CARTON && !(product.sellByCarton && product.cartonPrice != null)) {
-      throw new BadRequestException('هذا المنتج لا يُباع بالكرتون');
+    if (unitPriceOf(product, unit) == null) {
+      throw new BadRequestException(`هذا المنتج لا يُباع بوحدة «${unitLabelOf(product, unit)}»`);
     }
     await this.prisma.cartItem.upsert({
       where: { userId_productId_unit: { userId, productId, unit } },

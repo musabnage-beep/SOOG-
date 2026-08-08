@@ -24,7 +24,7 @@ export type PaymentMethod = 'COD' | 'CARD';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 export type OrderItemAvailability = 'AVAILABLE' | 'UNAVAILABLE';
 export type StockStatus = 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
-export type SaleUnit = 'PIECE' | 'CARTON';
+export type SaleUnit = 'PIECE' | 'CARTON' | 'HALF_KG' | 'KG';
 export type InventoryLogType = 'STOCK_IN' | 'STOCK_OUT' | 'SOLD' | 'ADJUST';
 export type NotificationChannel = 'PUSH' | 'IN_APP' | 'EMAIL';
 export type OtpPurpose = 'REGISTRATION' | 'LOGIN' | 'PASSWORD_RESET';
@@ -108,6 +108,9 @@ export interface Product {
   sellByCarton?: boolean;
   unitsPerCarton?: number | null;
   cartonPrice?: string | number | null;
+  halfKgPrice?: string | number | null;
+  kgPrice?: string | number | null;
+  pieceLabel?: string | null;
   quantity: number;
   lowStockThreshold?: number;
   stockStatus: StockStatus;
@@ -355,6 +358,9 @@ export interface CreateProductInput {
   sellByCarton?: boolean;
   unitsPerCarton?: number;
   cartonPrice?: number;
+  halfKgPrice?: number;
+  kgPrice?: number;
+  pieceLabel?: string;
   tags?: string[];
   isActive?: boolean;
 }

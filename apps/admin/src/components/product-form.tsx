@@ -25,6 +25,9 @@ const schema = z
     sellByCarton: z.coerce.boolean().optional(),
     unitsPerCarton: optionalNumber,
     cartonPrice: optionalNumber,
+    halfKgPrice: optionalNumber,
+    kgPrice: optionalNumber,
+    pieceLabel: z.string().optional(),
     isActive: z.coerce.boolean().optional(),
   })
   .superRefine((val, ctx) => {
@@ -71,6 +74,9 @@ export function ProductForm({
           sellByCarton: initial.sellByCarton ?? false,
           unitsPerCarton: initial.unitsPerCarton ?? undefined,
           cartonPrice: initial.cartonPrice != null ? Number(initial.cartonPrice) : undefined,
+          halfKgPrice: initial.halfKgPrice != null ? Number(initial.halfKgPrice) : undefined,
+          kgPrice: initial.kgPrice != null ? Number(initial.kgPrice) : undefined,
+          pieceLabel: initial.pieceLabel ?? '',
           isActive: initial.isActive,
         }
       : { isActive: true },
@@ -111,6 +117,28 @@ export function ProductForm({
             <Field label="سعر الخصم (اختياري)" error={errors.discountPrice?.message}>
               <Input type="number" step="0.01" {...register('discountPrice')} />
             </Field>
+            <Field label="اسم الوحدة الأساسية" className="sm:col-span-2">
+              <Input placeholder="حبة" {...register('pieceLabel')} />
+            </Field>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>البيع بالوزن</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-4">
+            <p className="text-sm text-gray-500">
+              اترك الحقل فارغاً إذا كان المنتج لا يُباع بهذا الوزن.
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="سعر نص كيلو (ر.س)" error={errors.halfKgPrice?.message}>
+                <Input type="number" step="0.01" {...register('halfKgPrice')} />
+              </Field>
+              <Field label="سعر الكيلو (ر.س)" error={errors.kgPrice?.message}>
+                <Input type="number" step="0.01" {...register('kgPrice')} />
+              </Field>
+            </div>
           </CardBody>
         </Card>
 

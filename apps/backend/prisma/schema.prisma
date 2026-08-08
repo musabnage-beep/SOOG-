@@ -29,6 +29,8 @@ enum StockStatus {
 enum SaleUnit {
   PIECE
   CARTON
+  HALF_KG
+  KG
 }
 
 enum OrderStatus {
@@ -299,6 +301,12 @@ model Product {
   sellByCarton   Boolean    @default(false)
   unitsPerCarton Int?
   cartonPrice    Decimal?   @db.Decimal(10, 2)
+  // Optional weight units (nuts, sweets sold by the kilo). A price makes the
+  // unit purchasable; null means the product is not sold that way.
+  halfKgPrice    Decimal?   @db.Decimal(10, 2)
+  kgPrice        Decimal?   @db.Decimal(10, 2)
+  // Label of the base unit shown to the customer (حبة / علبة / كيس …).
+  pieceLabel     String?
   quantity      Int         @default(0)
   stockStatus   StockStatus @default(IN_STOCK)
   lowStockThreshold Int     @default(5)

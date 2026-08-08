@@ -185,7 +185,7 @@ class _CartTile extends ConsumerWidget {
                     color: AppColors.dark,
                   ),
                 ),
-                if (line.isCarton) ...[
+                if (line.unit != 'PIECE') ...[
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -194,9 +194,9 @@ class _CartTile extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      line.unitsPerCarton != null
+                      line.isCarton && line.unitsPerCarton != null
                           ? 'كرتون (${line.unitsPerCarton} حبة)'
-                          : 'كرتون',
+                          : line.unitLabel ?? '',
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontSize: 11,

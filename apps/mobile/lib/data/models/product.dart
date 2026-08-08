@@ -48,6 +48,9 @@ class Product {
     this.sellByCarton = false,
     this.unitsPerCarton,
     this.cartonPrice,
+    this.halfKgPrice,
+    this.kgPrice,
+    this.pieceLabel,
   });
 
   final String id;
@@ -67,11 +70,34 @@ class Product {
   final bool sellByCarton;
   final int? unitsPerCarton;
   final double? cartonPrice;
+  final double? halfKgPrice;
+  final double? kgPrice;
+  final String? pieceLabel;
 
   bool get hasDiscount => discountPrice != null && discountPrice! > 0 && discountPrice! < price;
   double get effectivePrice => hasDiscount ? discountPrice! : price;
   bool get isOutOfStock => stockStatus == StockStatus.outOfStock;
   bool get hasCarton => sellByCarton && cartonPrice != null && cartonPrice! > 0;
+
+  /// Every way this product can be bought. The base unit is always available;
+  /// the rest appear only when the admin priced them.
+  List<SaleOption> get saleOptions => [
+        SaleOption(
+          unit: 'PIECE',
+          label: (pieceLabel?.trim().isNotEmpty ?? false) ? pieceLabel!.trim() : 'حبة',
+          price: effectivePrice,
+        ),
+        if (halfKgPrice != null && halfKgPrice! > 0)
+          SaleOption(unit: 'HALF_KG', label: 'نص كيلو', price: halfKgPrice!),
+        if (kgPrice != null && kgPrice! > 0)
+          SaleOption(unit: 'KG', label: 'كيلو', price: kgPrice!),
+        if (hasCarton)
+          SaleOption(
+            unit: 'CARTON',
+            label: unitsPerCarton != null ? 'كرتون ($unitsPerCarton حبة)' : 'كرتون',
+            price: cartonPrice!,
+          ),
+      ];
 
   int get discountPercent =>
       hasDiscount ? (((price - discountPrice!) / price) * 100).round() : 0;
@@ -104,6 +130,19 @@ class Product {
       sellByCarton: asBool(json['sellByCarton']),
       unitsPerCarton: json['unitsPerCarton'] == null ? null : asInt(json['unitsPerCarton']),
       cartonPrice: json['cartonPrice'] == null ? null : asDouble(json['cartonPrice']),
+      halfKgPrice: json['halfKgPrice'] == null ? null : asDouble(json['halfKgPrice']),
+      kgPrice: json['kgPrice'] == null ? null : asDouble(json['kgPrice']),
+      pieceLabel: json['pieceLabel'] as String?,
     );
   }
+}
+
+/// One purchasable unit of a product (base unit, half kilo, kilo, carton).
+class SaleOption {
+  const SaleOption({required this.unit, required this.label, required this.price});
+
+  /// API `SaleUnit` value sent with the add-to-cart request.
+  final String unit;
+  final String label;
+  final double price;
 }

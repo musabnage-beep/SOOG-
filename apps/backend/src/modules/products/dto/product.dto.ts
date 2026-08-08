@@ -82,6 +82,23 @@ export class CreateProductDto {
   @Min(0)
   cartonPrice?: number;
 
+  @ApiPropertyOptional({ example: 30, description: 'Price per half kilo; omit if not sold by weight' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  halfKgPrice?: number;
+
+  @ApiPropertyOptional({ example: 55, description: 'Price per kilo; omit if not sold by weight' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  kgPrice?: number;
+
+  @ApiPropertyOptional({ example: 'علبة', description: 'Label of the base unit' })
+  @IsOptional()
+  @IsString()
+  pieceLabel?: string;
+
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
@@ -108,6 +125,9 @@ export class UpdateProductDto {
   @ApiPropertyOptional() @IsOptional() @IsBoolean() sellByCarton?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsInt() @Min(1) unitsPerCarton?: number;
   @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) cartonPrice?: number;
+  @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) halfKgPrice?: number;
+  @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) kgPrice?: number;
+  @ApiPropertyOptional() @IsOptional() @IsString() pieceLabel?: string;
   @ApiPropertyOptional({ type: [String] }) @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isActive?: boolean;
 }
