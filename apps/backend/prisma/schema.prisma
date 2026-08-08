@@ -541,6 +541,8 @@ model Settings {
   freeDeliveryRadiusM Int     @default(3000)
   deliveryRadiusM    Int      @default(15000)
   baseDeliveryFee    Decimal  @default(15) @db.Decimal(10, 2)
+  // Admin kill-switch: when false the store only accepts pickup orders.
+  deliveryEnabled    Boolean  @default(true)
   currency           String   @default("SAR")
   avgSpeedKmh        Int      @default(30) // for ETA fallback
   updatedAt          DateTime @updatedAt

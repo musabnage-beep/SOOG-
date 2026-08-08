@@ -81,6 +81,9 @@ export class OrdersService {
       });
       if (!address) throw new BadRequestException('Delivery address not found');
       const quote = await this.delivery.quote(address.latitude, address.longitude);
+      if (!quote.deliveryEnabled) {
+        throw new BadRequestException('التوصيل متوقف مؤقتاً — يمكنك الاستلام من المتجر');
+      }
 
       // A shipping company is only used outside the free-delivery area. Inside
       // it the store delivers for free and any selection is ignored.

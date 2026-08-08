@@ -1,5 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsLatitude, IsLongitude, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class UpdateSettingsDto {
   @ApiPropertyOptional()
@@ -34,6 +43,11 @@ export class UpdateSettingsDto {
   @IsNumber()
   @Min(0)
   baseDeliveryFee?: number;
+
+  @ApiPropertyOptional({ description: 'Accept delivery orders; false = pickup only' })
+  @IsOptional()
+  @IsBoolean()
+  deliveryEnabled?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

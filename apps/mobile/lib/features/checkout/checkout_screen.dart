@@ -54,6 +54,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     return '+966$d';
   }
 
+  /// The store can pause delivery from the admin dashboard.
+  bool get _deliveryOn =>
+      ref.read(storeSettingsProvider).valueOrNull?.deliveryEnabled ?? true;
+
+  /// Falls back to pickup while delivery is paused, whatever the user picked.
+  FulfillmentType get _effectiveType => _deliveryOn ? _type : FulfillmentType.pickup;
+
   Address? get _selectedAddress {
     final list = ref.read(addressControllerProvider).items;
     for (final a in list) {
@@ -68,6 +75,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final addresses = ref.watch(addressControllerProvider);
     // Accounts created before the mobile number became mandatory have none.
     final needsPhone = (ref.watch(authControllerProvider).user?.phone ?? '').isEmpty;
+    // Rebuild once the store settings land so the pause banner shows up.
+    ref.watch(storeSettingsProvider);
+    final type = _effectiveType;
 
     // Shipping companies only apply to deliveries outside the free area.
     final address = _selectedAddress;
@@ -78,7 +88,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               DeliveryQuoteArgs(latitude: address.latitude, longitude: address.longitude),
             ))
             .valueOrNull;
-    final companies = _type == FulfillmentType.delivery
+    final companies = type == FulfillmentType.delivery
         ? (ref.watch(deliveryProvidersProvider).valueOrNull ?? const <DeliveryProvider>[])
         : const <DeliveryProvider>[];
     final needsCompany = quote != null && !quote.freeDelivery && companies.isNotEmpty;
@@ -93,6 +103,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         children: [
           const _SectionTitle('طريقة الاستلام'),
           const SizedBox(height: 10),
+          if (!_deliveryOn) ...[
+            const _PausedDeliveryBanner(),
+            const SizedBox(height: 10),
+          ],
           Row(
             children: [
               _typeCard(FulfillmentType.delivery, Icons.delivery_dining, 'توصيل'),
@@ -101,7 +115,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ],
           ),
           const SizedBox(height: 22),
-          if (_type == FulfillmentType.delivery) ...[
+          if (type == FulfillmentType.delivery) ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -182,7 +196,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           _OrderSummary(
             subtotal: cart.subtotal,
             address: address,
-            type: _type,
+            type: type,
             company: selectedCompany,
           ),
         ],
@@ -192,30 +206,36 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Widget _typeCard(FulfillmentType type, IconData icon, String label) {
-    final active = _type == type;
+    final disabled = type == FulfillmentType.delivery && !_deliveryOn;
+    final active = !disabled && _effectiveType == type;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _type = type),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          decoration: BoxDecoration(
-            color: active ? AppColors.primary : AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: active ? AppColors.primary : AppColors.border),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: active ? Colors.white : AppColors.primary, size: 28),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: active ? Colors.white : AppColors.dark,
-                  fontWeight: FontWeight.w700,
+        onTap: disabled
+            ? () => _show('التوصيل متوقف مؤقتاً')
+            : () => setState(() => _type = type),
+        child: Opacity(
+          opacity: disabled ? 0.45 : 1,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            decoration: BoxDecoration(
+              color: active ? AppColors.primary : AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: active ? AppColors.primary : AppColors.border),
+            ),
+            child: Column(
+              children: [
+                Icon(icon, color: active ? Colors.white : AppColors.primary, size: 28),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: active ? Colors.white : AppColors.dark,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -320,7 +340,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _placeOrder() async {
-    if (_type == FulfillmentType.delivery && _addressId == null) {
+    final type = _effectiveType;
+    if (type == FulfillmentType.delivery && _addressId == null) {
       _show('اختر عنوان التوصيل');
       return;
     }
@@ -339,9 +360,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         ref.read(authControllerProvider.notifier).setUser(user);
       }
       final order = await ref.read(orderRepositoryProvider).checkout(
-            fulfillmentType: _type,
-            addressId: _type == FulfillmentType.delivery ? _addressId : null,
-            deliveryProviderId: _type == FulfillmentType.delivery ? _providerId : null,
+            fulfillmentType: type,
+            addressId: type == FulfillmentType.delivery ? _addressId : null,
+            deliveryProviderId: type == FulfillmentType.delivery ? _providerId : null,
             customerNote: _note.text.trim(),
           );
       await ref.read(cartControllerProvider.notifier).load();
@@ -372,6 +393,33 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800));
+}
+
+class _PausedDeliveryBanner extends StatelessWidget {
+  const _PausedDeliveryBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.danger.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.pause_circle_outline, color: AppColors.danger),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'التوصيل متوقف مؤقتاً — يمكنك الاستلام من المتجر.',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _DeliveryQuoteCard extends ConsumerWidget {

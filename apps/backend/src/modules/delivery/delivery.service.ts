@@ -11,6 +11,8 @@ const LOGO_MIME = ['image/jpeg', 'image/png', 'image/webp'];
 const LOGO_MAX_BYTES = 4 * 1024 * 1024;
 
 export interface DeliveryQuote {
+  /** False when the admin paused delivery — only pickup orders are accepted. */
+  deliveryEnabled: boolean;
   withinRange: boolean;
   freeDelivery: boolean;
   distanceMeters: number;
@@ -61,6 +63,7 @@ export class DeliveryService {
     }
 
     return {
+      deliveryEnabled: settings.deliveryEnabled,
       withinRange,
       freeDelivery,
       distanceMeters,

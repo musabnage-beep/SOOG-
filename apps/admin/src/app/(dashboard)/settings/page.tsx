@@ -32,6 +32,7 @@ export default function SettingsPage() {
         freeDeliveryRadiusM: data.freeDeliveryRadiusM,
         deliveryRadiusM: data.deliveryRadiusM,
         baseDeliveryFee: Number(data.baseDeliveryFee),
+        deliveryEnabled: data.deliveryEnabled,
         currency: data.currency,
         avgSpeedKmh: data.avgSpeedKmh,
       });
@@ -83,6 +84,21 @@ export default function SettingsPage() {
             <CardTitle>إعدادات التوصيل</CardTitle>
           </CardHeader>
           <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={form.deliveryEnabled ?? true}
+                  onChange={(e) => set('deliveryEnabled', e.target.checked)}
+                />
+                التوصيل متاح
+              </label>
+              <p className="mt-1 text-sm text-gray-500">
+                {form.deliveryEnabled ?? true
+                  ? 'العملاء يستطيعون طلب التوصيل حالياً.'
+                  : 'التوصيل متوقف مؤقتاً — لن يتمكّن العملاء إلا من الاستلام من المتجر.'}
+              </p>
+            </div>
             <Field label="نطاق التوصيل المجاني (متر)">
               <Input type="number" value={form.freeDeliveryRadiusM ?? ''} onChange={(e) => set('freeDeliveryRadiusM', Number(e.target.value))} />
             </Field>

@@ -7,6 +7,7 @@ class StoreSettings {
     required this.freeDeliveryRadiusM,
     required this.deliveryRadiusM,
     required this.baseDeliveryFee,
+    this.deliveryEnabled = true,
     this.currency = 'SAR',
     this.storeName,
     this.storePhone,
@@ -17,6 +18,9 @@ class StoreSettings {
   final int freeDeliveryRadiusM;
   final int deliveryRadiusM;
   final double baseDeliveryFee;
+
+  /// False when the store paused delivery — only pickup orders are accepted.
+  final bool deliveryEnabled;
   final String currency;
   final String? storeName;
   final String? storePhone;
@@ -27,6 +31,7 @@ class StoreSettings {
         freeDeliveryRadiusM: asInt(json['freeDeliveryRadiusM'], 3000),
         deliveryRadiusM: asInt(json['deliveryRadiusM'], 15000),
         baseDeliveryFee: asDouble(json['baseDeliveryFee'], 15),
+        deliveryEnabled: json['deliveryEnabled'] != false,
         currency: asString(json['currency'], 'SAR'),
         storeName: json['storeName'] as String?,
         storePhone: json['storePhone'] as String?,

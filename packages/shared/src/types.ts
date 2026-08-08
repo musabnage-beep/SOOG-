@@ -255,6 +255,8 @@ export interface StoreSettings {
   freeDeliveryRadiusM: number;
   deliveryRadiusM: number;
   baseDeliveryFee: string | number;
+  /** False = delivery paused by the admin; only pickup orders are accepted. */
+  deliveryEnabled: boolean;
   currency: string;
   avgSpeedKmh: number;
   updatedAt: string;
@@ -415,6 +417,7 @@ export interface UpdateSettingsInput {
   freeDeliveryRadiusM?: number;
   deliveryRadiusM?: number;
   baseDeliveryFee?: number;
+  deliveryEnabled?: boolean;
   currency?: string;
   avgSpeedKmh?: number;
 }

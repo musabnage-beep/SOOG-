@@ -12,6 +12,7 @@ const SETTINGS = {
   freeDeliveryRadiusM: 3000,
   deliveryRadiusM: 15000,
   baseDeliveryFee: 15,
+  deliveryEnabled: true,
   currency: 'SAR',
 };
 
@@ -19,15 +20,17 @@ describe('DeliveryService', () => {
   let service: DeliveryService;
   let maps: jest.Mocked<MapsProvider>;
   let zoneFindFirst: jest.Mock;
+  let settingsGet: jest.Mock;
 
   beforeEach(async () => {
     maps = { distance: jest.fn() };
     zoneFindFirst = jest.fn();
+    settingsGet = jest.fn().mockResolvedValue(SETTINGS);
     const moduleRef = await Test.createTestingModule({
       providers: [
         DeliveryService,
         { provide: PrismaService, useValue: { deliveryZone: { findFirst: zoneFindFirst } } },
-        { provide: SettingsService, useValue: { get: jest.fn().mockResolvedValue(SETTINGS) } },
+        { provide: SettingsService, useValue: { get: settingsGet } },
         { provide: MAPS_PROVIDER, useValue: maps },
         { provide: STORAGE_PROVIDER, useValue: { upload: jest.fn(), delete: jest.fn() } },
       ],
@@ -72,6 +75,14 @@ describe('DeliveryService', () => {
     expect(quote.withinRange).toBe(false);
     expect(quote.fee).toBe(0);
     expect(zoneFindFirst).not.toHaveBeenCalled();
+  });
+
+  it('surfaces the admin delivery kill-switch in the quote', async () => {
+    maps.distance.mockResolvedValue({ distanceMeters: 1500, durationSeconds: 300 });
+    expect((await service.quote(24.72, 46.68)).deliveryEnabled).toBe(true);
+
+    settingsGet.mockResolvedValue({ ...SETTINGS, deliveryEnabled: false });
+    expect((await service.quote(24.72, 46.68)).deliveryEnabled).toBe(false);
   });
 
   it('clamps ETA to at least one minute', async () => {
