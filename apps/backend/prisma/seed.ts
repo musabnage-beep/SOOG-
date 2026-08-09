@@ -129,11 +129,20 @@ async function main() {
   });
 
   // 5) Categories
+  //    The emoji is only a placeholder: once a real photo is uploaded from the
+  //    dashboard `icon` holds its URL and `iconKey` its storage key, so re-seeding
+  //    must not write the emoji back over it.
   for (let i = 0; i < CATEGORIES.length; i++) {
     const c = CATEGORIES[i];
+    const existing = await prisma.category.findUnique({ where: { slug: c.slug } });
     await prisma.category.upsert({
       where: { slug: c.slug },
-      update: { nameAr: c.nameAr, nameEn: c.nameEn, icon: c.icon, sortOrder: i },
+      update: {
+        nameAr: c.nameAr,
+        nameEn: c.nameEn,
+        sortOrder: i,
+        ...(existing?.iconKey ? {} : { icon: c.icon }),
+      },
       create: { ...c, sortOrder: i },
     });
   }
