@@ -11,6 +11,7 @@ export type OrderStatus =
   | 'APPROVED'
   | 'PREPARING'
   | 'READY'
+  /** Retired with third-party shipping; only legacy orders can still hold it. */
   | 'WAITING_FOR_COURIER'
   | 'OUT_FOR_DELIVERY'
   | 'DELIVERED'
@@ -19,7 +20,6 @@ export type OrderStatus =
   | 'CANCELLED';
 
 export type FulfillmentType = 'DELIVERY' | 'PICKUP';
-export type DeliveryMethod = 'STORE' | 'THIRD_PARTY';
 export type PaymentMethod = 'COD' | 'CARD';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 export type OrderItemAvailability = 'AVAILABLE' | 'UNAVAILABLE';
@@ -181,9 +181,6 @@ export interface Order {
   total: string | number;
   distanceMeters: number | null;
   etaMinutes: number | null;
-  deliveryMethod?: DeliveryMethod;
-  deliveryProviderId?: string | null;
-  deliveryProvider?: DeliveryProvider | null;
   customerNote: string | null;
   rejectionReason: string | null;
   reviewedById: string | null;
@@ -219,21 +216,6 @@ export interface InventoryLog {
   reason: string | null;
   actor?: { id: string; fullName: string } | null;
   createdAt: string;
-}
-
-/** External shipping company used when the store does not deliver itself. */
-export interface DeliveryProvider {
-  id: string;
-  name: string;
-  logo: string | null;
-  logoKey?: string | null;
-  phone: string | null;
-  website: string | null;
-  deliveryFee: string | number;
-  estimatedDays: number;
-  isActive: boolean;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface DeliveryZone {
@@ -398,15 +380,6 @@ export interface UpsertDeliveryZoneInput {
   minRadiusM: number;
   maxRadiusM: number;
   fee: number;
-  isActive?: boolean;
-}
-
-export interface UpsertDeliveryProviderInput {
-  name: string;
-  deliveryFee: number;
-  estimatedDays?: number;
-  phone?: string;
-  website?: string;
   isActive?: boolean;
 }
 

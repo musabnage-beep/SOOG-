@@ -14,7 +14,6 @@ import type {
   CreateEmployeeInput,
   CreateProductInput,
   DailySalesPoint,
-  DeliveryProvider,
   DeliveryZone,
   EmployeeDashboard,
   InventoryLog,
@@ -35,7 +34,6 @@ import type {
   UpdateCategoryInput,
   UpdateProductInput,
   UpdateSettingsInput,
-  UpsertDeliveryProviderInput,
   UpsertDeliveryZoneInput,
   UserAccount,
 } from './types';
@@ -254,21 +252,6 @@ export function createApiClient(opts: ApiClientOptions) {
       updateZone: (id: string, input: UpsertDeliveryZoneInput) =>
         put<DeliveryZone>(`/delivery/zones/${id}`, input),
       deleteZone: (id: string) => del<{ ok: boolean }>(`/delivery/zones/${id}`),
-      providers: () => get<DeliveryProvider[]>('/delivery/providers'),
-      allProviders: () => get<DeliveryProvider[]>('/delivery/providers/all'),
-      createProvider: (input: UpsertDeliveryProviderInput) =>
-        post<DeliveryProvider>('/delivery/providers', input),
-      updateProvider: (id: string, input: UpsertDeliveryProviderInput) =>
-        put<DeliveryProvider>(`/delivery/providers/${id}`, input),
-      deleteProvider: (id: string) => del<{ ok: boolean }>(`/delivery/providers/${id}`),
-      uploadProviderLogo: async (id: string, file: File) => {
-        const form = new FormData();
-        form.append('file', file);
-        const res = await http.post(`/delivery/providers/${id}/logo`, form, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return unwrap<DeliveryProvider>(res.data);
-      },
     },
     // ── settings ──────────────────────────────────────────────────────────
     settings: {

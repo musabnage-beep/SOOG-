@@ -7,9 +7,6 @@ import { OrderStatus } from '@prisma/client';
  *                          ↘ REJECTED                              ↘ PICKED_UP (pickup)
  *                          ↘ CONFIRMATION_REQUIRED → UNDER_REVIEW (customer continues)
  *                                                  ↘ CANCELLED   (customer cancels)
- *
- * Third-party shipping adds one optional hop after READY:
- * READY → WAITING_FOR_COURIER → OUT_FOR_DELIVERY → DELIVERED
  */
 export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   SUBMITTED: [OrderStatus.UNDER_REVIEW, OrderStatus.CANCELLED],
@@ -17,11 +14,8 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   CONFIRMATION_REQUIRED: [OrderStatus.UNDER_REVIEW, OrderStatus.CANCELLED],
   APPROVED: [OrderStatus.PREPARING],
   PREPARING: [OrderStatus.READY],
-  READY: [
-    OrderStatus.OUT_FOR_DELIVERY,
-    OrderStatus.PICKED_UP,
-    OrderStatus.WAITING_FOR_COURIER,
-  ],
+  READY: [OrderStatus.OUT_FOR_DELIVERY, OrderStatus.PICKED_UP],
+  /** Retired with third-party shipping; kept so legacy orders can still finish. */
   WAITING_FOR_COURIER: [OrderStatus.OUT_FOR_DELIVERY],
   OUT_FOR_DELIVERY: [OrderStatus.DELIVERED],
   DELIVERED: [],

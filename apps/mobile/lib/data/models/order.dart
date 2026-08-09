@@ -1,6 +1,5 @@
 import '../../core/utils/json.dart';
 import 'address.dart';
-import 'delivery_provider.dart';
 
 enum OrderStatus {
   submitted,
@@ -153,9 +152,6 @@ class OrderStatusEvent {
 
 enum FulfillmentType { delivery, pickup }
 
-/// Who physically delivers: the store's own courier, or a shipping company.
-enum DeliveryMethodType { store, thirdParty }
-
 enum PaymentMethod { cod, card }
 
 PaymentMethod paymentMethodFrom(dynamic v) =>
@@ -215,8 +211,6 @@ class Order {
     required this.total,
     this.distanceMeters,
     this.etaMinutes,
-    this.deliveryMethod = DeliveryMethodType.store,
-    this.deliveryProvider,
     this.customerNote,
     this.rejectionReason,
     this.items = const [],
@@ -236,8 +230,6 @@ class Order {
   final double total;
   final int? distanceMeters;
   final int? etaMinutes;
-  final DeliveryMethodType deliveryMethod;
-  final DeliveryProvider? deliveryProvider;
   final String? customerNote;
   final String? rejectionReason;
   final List<OrderItem> items;
@@ -246,7 +238,6 @@ class Order {
   final DateTime? createdAt;
 
   bool get isDelivery => fulfillmentType == FulfillmentType.delivery;
-  bool get isThirdParty => deliveryMethod == DeliveryMethodType.thirdParty;
   bool get needsConfirmation => status == OrderStatus.confirmationRequired;
   bool get isCard => paymentMethod == PaymentMethod.card;
   bool get awaitingPayment => isCard && !paymentStatus.isPaid;
@@ -266,12 +257,6 @@ class Order {
         total: asDouble(json['total']),
         distanceMeters: json['distanceMeters'] == null ? null : asInt(json['distanceMeters']),
         etaMinutes: json['etaMinutes'] == null ? null : asInt(json['etaMinutes']),
-        deliveryMethod: json['deliveryMethod'] == 'THIRD_PARTY'
-            ? DeliveryMethodType.thirdParty
-            : DeliveryMethodType.store,
-        deliveryProvider: json['deliveryProvider'] == null
-            ? null
-            : DeliveryProvider.fromJson(json['deliveryProvider'] as Map<String, dynamic>),
         customerNote: json['customerNote'] as String?,
         rejectionReason: json['rejectionReason'] as String?,
         items: ((json['items'] as List?) ?? const [])

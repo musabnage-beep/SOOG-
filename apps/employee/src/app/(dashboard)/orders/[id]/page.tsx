@@ -11,8 +11,6 @@ import {
   MapPin,
   User,
   Phone,
-  Building2,
-  Globe,
 } from 'lucide-react';
 import { useOrder, useOrderActions } from '@aldiafa/shared/client';
 import {
@@ -44,7 +42,6 @@ import {
   PAYMENT_STATUS_LABEL_AR,
   PAYMENT_STATUS_TONE,
   advanceTargets,
-  deliveryDaysLabel,
   type OrderStatus,
 } from '@aldiafa/shared';
 import { PageHeader } from '@/components/page-header';
@@ -66,8 +63,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   if (isError || !order) return <ErrorState onRetry={() => refetch()} />;
 
   const status = order.status;
-  const nextTargets = advanceTargets(status, order.deliveryMethod);
-  const provider = order.deliveryMethod === 'THIRD_PARTY' ? order.deliveryProvider : null;
+  const nextTargets = advanceTargets(status);
 
   const run = async (fn: () => Promise<unknown>, msg: string) => {
     try {
@@ -286,94 +282,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     المسافة: {(order.distanceMeters / 1000).toFixed(1)} كم
                     {order.etaMinutes != null && ` · ~${order.etaMinutes} دقيقة`}
                   </p>
-                )}
-              </CardBody>
-            </Card>
-          )}
-
-          {provider && (
-            <Card>
-              <CardHeader>
-                <CardTitle>الشحن عبر شركة توصيل</CardTitle>
-              </CardHeader>
-              <CardBody className="space-y-3 text-sm text-gray-700">
-                <div className="flex items-center gap-3">
-                  {provider.logo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={provider.logo}
-                      alt={provider.name}
-                      className="h-10 w-10 rounded object-contain"
-                    />
-                  ) : (
-                    <Building2 className="h-8 w-8 text-gray-400" />
-                  )}
-                  <div>
-                    <p className="font-semibold text-gray-900">{provider.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {money(provider.deliveryFee)} · {deliveryDaysLabel(provider.estimatedDays)}
-                    </p>
-                  </div>
-                </div>
-
-                {provider.phone && (
-                  <a
-                    href={`tel:${provider.phone}`}
-                    className="flex items-center gap-2 text-brand hover:underline"
-                    dir="ltr"
-                  >
-                    <Phone className="h-4 w-4" />
-                    {provider.phone}
-                  </a>
-                )}
-                {provider.website && (
-                  <a
-                    href={provider.website}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-brand hover:underline"
-                    dir="ltr"
-                  >
-                    <Globe className="h-4 w-4" />
-                    {provider.website}
-                  </a>
-                )}
-
-                <div className="space-y-1 border-t border-gray-100 pt-3">
-                  <p className="text-xs font-medium text-gray-500">بيانات الشحنة للشركة</p>
-                  <p className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-400" />
-                    {order.user?.fullName ?? '—'}
-                  </p>
-                  {order.user?.phone && (
-                    <p className="flex items-center gap-2" dir="ltr">
-                      <Phone className="h-4 w-4 text-gray-400" />
-                      {order.user.phone}
-                    </p>
-                  )}
-                  {order.address && (
-                    <p className="flex items-start gap-2">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                      <span>
-                        {order.address.city}، {order.address.district}
-                        <br />
-                        {order.address.street}
-                      </span>
-                    </p>
-                  )}
-                </div>
-
-                {order.address && (
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${order.address.latitude},${order.address.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Button variant="outline" className="w-full">
-                      <MapPin className="h-4 w-4" />
-                      فتح في خرائط جوجل
-                    </Button>
-                  </a>
                 )}
               </CardBody>
             </Card>

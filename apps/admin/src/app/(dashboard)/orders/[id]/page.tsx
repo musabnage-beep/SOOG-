@@ -63,7 +63,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   if (isError || !order) return <ErrorState onRetry={() => refetch()} />;
 
   const status = order.status;
-  const nextTargets = advanceTargets(status, order.deliveryMethod);
+  const nextTargets = advanceTargets(status);
 
   const run = async (fn: () => Promise<unknown>, msg: string) => {
     try {

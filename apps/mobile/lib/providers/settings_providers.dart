@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models/delivery_provider.dart';
 import '../data/models/delivery_quote.dart';
 import '../data/models/store_settings.dart';
 import 'core_providers.dart';
@@ -8,11 +7,6 @@ import 'core_providers.dart';
 /// Public store settings (coordinates, delivery radius, fees).
 final storeSettingsProvider = FutureProvider<StoreSettings>((ref) async {
   return ref.watch(deliveryRepositoryProvider).settings();
-});
-
-/// Active third-party shipping companies (empty when none configured).
-final deliveryProvidersProvider = FutureProvider<List<DeliveryProvider>>((ref) async {
-  return ref.watch(deliveryRepositoryProvider).providers();
 });
 
 class DeliveryQuoteArgs {

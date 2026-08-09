@@ -6,7 +6,6 @@ import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/address.dart';
-import '../../data/models/delivery_provider.dart';
 import '../../data/models/order.dart';
 import '../../providers/address_controller.dart';
 import '../../providers/auth_controller.dart';
@@ -27,7 +26,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _phone = TextEditingController();
   FulfillmentType _type = FulfillmentType.delivery;
   String? _addressId;
-  String? _providerId;
   bool _placing = false;
 
   @override
@@ -79,22 +77,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     ref.watch(storeSettingsProvider);
     final type = _effectiveType;
 
-    // Shipping companies only apply to deliveries outside the free area.
     final address = _selectedAddress;
-    final quote = address == null
-        ? null
-        : ref
-            .watch(deliveryQuoteProvider(
-              DeliveryQuoteArgs(latitude: address.latitude, longitude: address.longitude),
-            ))
-            .valueOrNull;
-    final companies = type == FulfillmentType.delivery
-        ? (ref.watch(deliveryProvidersProvider).valueOrNull ?? const <DeliveryProvider>[])
-        : const <DeliveryProvider>[];
-    final needsCompany = quote != null && !quote.freeDelivery && companies.isNotEmpty;
-    final selectedCompany = needsCompany
-        ? companies.where((c) => c.id == _providerId).firstOrNull
-        : null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('إتمام الطلب')),
@@ -147,23 +130,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 child: Column(children: addresses.items.map(_addressTile).toList()),
               ),
             const SizedBox(height: 22),
-            _DeliveryQuoteCard(address: address, hasCompanies: companies.isNotEmpty),
+            _DeliveryQuoteCard(address: address),
             const SizedBox(height: 22),
-            if (needsCompany) ...[
-              const _SectionTitle('شركة الشحن'),
-              const SizedBox(height: 4),
-              const Text(
-                'موقعك خارج نطاق التوصيل المجاني — اختر شركة شحن لإيصال طلبك.',
-                style: TextStyle(color: AppColors.muted, fontSize: 13),
-              ),
-              const SizedBox(height: 10),
-              RadioGroup<String>(
-                groupValue: _providerId,
-                onChanged: (v) => setState(() => _providerId = v),
-                child: Column(children: companies.map(_companyTile).toList()),
-              ),
-              const SizedBox(height: 22),
-            ],
           ],
           if (needsPhone) ...[
             const _SectionTitle('رقم الجوال'),
@@ -193,12 +161,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ),
           ),
           const SizedBox(height: 22),
-          _OrderSummary(
-            subtotal: cart.subtotal,
-            address: address,
-            type: type,
-            company: selectedCompany,
-          ),
+          _OrderSummary(subtotal: cart.subtotal, address: address, type: type),
         ],
       ),
       bottomNavigationBar: _bottom(cart.subtotal),
@@ -260,39 +223,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         title: Text(a.label ?? a.city,
             style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text(a.summary),
-      ),
-    );
-  }
-
-  Widget _companyTile(DeliveryProvider c) {
-    final selected = c.id == _providerId;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: selected ? AppColors.primary : AppColors.border,
-          width: selected ? 1.6 : 1,
-        ),
-      ),
-      child: RadioListTile<String>(
-        value: c.id,
-        activeColor: AppColors.primary,
-        secondary: c.logo == null
-            ? const Icon(Icons.local_shipping_outlined, color: AppColors.muted)
-            : Image.network(
-                c.logo!,
-                width: 36,
-                height: 36,
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) =>
-                    const Icon(Icons.local_shipping_outlined, color: AppColors.muted),
-              ),
-        title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(
-          '${Formatters.money(c.deliveryFee)} · ${Formatters.deliveryDays(c.estimatedDays)}',
-        ),
       ),
     );
   }
@@ -362,7 +292,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       final order = await ref.read(orderRepositoryProvider).checkout(
             fulfillmentType: type,
             addressId: type == FulfillmentType.delivery ? _addressId : null,
-            deliveryProviderId: type == FulfillmentType.delivery ? _providerId : null,
             customerNote: _note.text.trim(),
           );
       await ref.read(cartControllerProvider.notifier).load();
@@ -423,12 +352,9 @@ class _PausedDeliveryBanner extends StatelessWidget {
 }
 
 class _DeliveryQuoteCard extends ConsumerWidget {
-  const _DeliveryQuoteCard({required this.address, required this.hasCompanies});
+  const _DeliveryQuoteCard({required this.address});
 
   final Address? address;
-
-  /// When shipping companies exist, out-of-range addresses are still servable.
-  final bool hasCompanies;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -443,7 +369,7 @@ class _DeliveryQuoteCard extends ConsumerWidget {
       ),
       error: (e, _) => Text(e.toString(), style: const TextStyle(color: AppColors.danger)),
       data: (q) {
-        if (!q.withinRange && !hasCompanies) {
+        if (!q.withinRange) {
           return Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -471,12 +397,8 @@ class _DeliveryQuoteCard extends ConsumerWidget {
               const SizedBox(height: 6),
               _row('الوقت المتوقّع', Formatters.eta(q.etaMinutes)),
               const SizedBox(height: 6),
-              // Outside the free area with companies available the fee comes
-              // from the chosen shipping company instead.
-              if (q.freeDelivery)
-                _row('رسوم التوصيل', 'مجاني')
-              else if (!hasCompanies)
-                _row('رسوم التوصيل', Formatters.money(q.fee)),
+              _row('رسوم التوصيل',
+                  q.freeDelivery ? 'مجاني' : Formatters.money(q.fee)),
             ],
           ),
         );
@@ -498,13 +420,11 @@ class _OrderSummary extends ConsumerWidget {
     required this.subtotal,
     required this.address,
     required this.type,
-    this.company,
   });
 
   final double subtotal;
   final Address? address;
   final FulfillmentType type;
-  final DeliveryProvider? company;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -514,7 +434,7 @@ class _OrderSummary extends ConsumerWidget {
         DeliveryQuoteArgs(latitude: address!.latitude, longitude: address!.longitude),
       ));
       fee = quote.maybeWhen(
-        data: (q) => q.freeDelivery ? 0 : (company?.deliveryFee ?? q.fee),
+        data: (q) => q.freeDelivery ? 0 : q.fee,
         orElse: () => 0,
       );
     }

@@ -1,14 +1,8 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import sharp from 'sharp';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { SettingsService } from '@/modules/settings/settings.service';
 import { MAPS_PROVIDER, MapsProvider } from '@/integrations/maps/maps.interface';
 import { isValidCoordinate } from '@/integrations/maps/geo.util';
-import { STORAGE_PROVIDER, StorageProvider } from '@/integrations/storage/storage.interface';
-import { UpsertDeliveryProviderDto } from './dto/delivery.dto';
-
-const LOGO_MIME = ['image/jpeg', 'image/png', 'image/webp'];
-const LOGO_MAX_BYTES = 4 * 1024 * 1024;
 
 export interface DeliveryQuote {
   /** False when the admin paused delivery — only pickup orders are accepted. */
@@ -27,7 +21,6 @@ export class DeliveryService {
     private readonly prisma: PrismaService,
     private readonly settings: SettingsService,
     @Inject(MAPS_PROVIDER) private readonly maps: MapsProvider,
-    @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
   ) {}
 
   /**
@@ -71,68 +64,5 @@ export class DeliveryService {
       fee,
       currency: settings.currency,
     };
-  }
-
-  // ── Third-party delivery providers ────────────────────────────────────────
-
-  listProviders(activeOnly: boolean) {
-    return this.prisma.deliveryProvider.findMany({
-      where: activeOnly ? { isActive: true } : undefined,
-      orderBy: [{ deliveryFee: 'asc' }, { name: 'asc' }],
-    });
-  }
-
-  createProvider(dto: UpsertDeliveryProviderDto) {
-    return this.prisma.deliveryProvider.create({ data: dto });
-  }
-
-  async updateProvider(id: string, dto: UpsertDeliveryProviderDto) {
-    await this.getProvider(id);
-    return this.prisma.deliveryProvider.update({ where: { id }, data: dto });
-  }
-
-  async deleteProvider(id: string) {
-    const provider = await this.getProvider(id);
-    const linked = await this.prisma.order.count({ where: { deliveryProviderId: id } });
-    if (linked > 0) {
-      throw new BadRequestException(
-        'لا يمكن حذف شركة مرتبطة بطلبات — قم بتعطيلها بدلاً من حذفها',
-      );
-    }
-    if (provider.logoKey) await this.storage.delete(provider.logoKey);
-    await this.prisma.deliveryProvider.delete({ where: { id } });
-    return { ok: true };
-  }
-
-  async uploadProviderLogo(id: string, file?: Express.Multer.File) {
-    const provider = await this.getProvider(id);
-    if (!file) throw new BadRequestException('No file provided');
-    if (!LOGO_MIME.includes(file.mimetype)) {
-      throw new BadRequestException(`Unsupported type: ${file.mimetype}`);
-    }
-    if (file.size > LOGO_MAX_BYTES) throw new BadRequestException('File too large (max 4MB)');
-
-    const webp = await sharp(file.buffer)
-      .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 88 })
-      .toBuffer();
-
-    const stored = await this.storage.upload({
-      buffer: webp,
-      contentType: 'image/webp',
-      key: `delivery-providers/${id}/${Date.now()}.webp`,
-    });
-
-    if (provider.logoKey) await this.storage.delete(provider.logoKey);
-    return this.prisma.deliveryProvider.update({
-      where: { id },
-      data: { logo: stored.url, logoKey: stored.key },
-    });
-  }
-
-  private async getProvider(id: string) {
-    const provider = await this.prisma.deliveryProvider.findUnique({ where: { id } });
-    if (!provider) throw new NotFoundException('Delivery provider not found');
-    return provider;
   }
 }

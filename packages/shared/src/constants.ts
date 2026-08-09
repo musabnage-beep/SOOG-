@@ -1,7 +1,6 @@
 import type {
   OrderStatus,
   StockStatus,
-  DeliveryMethod,
   FulfillmentType,
   PaymentMethod,
   PaymentStatus,
@@ -102,7 +101,6 @@ export const ROLE_LABEL_AR: Record<RoleName, string> = {
 export const ADVANCEABLE_STATUSES: OrderStatus[] = [
   'PREPARING',
   'READY',
-  'WAITING_FOR_COURIER',
   'OUT_FOR_DELIVERY',
   'DELIVERED',
   'PICKED_UP',
@@ -122,7 +120,8 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   CONFIRMATION_REQUIRED: ['UNDER_REVIEW', 'CANCELLED'],
   APPROVED: ['PREPARING'],
   PREPARING: ['READY'],
-  READY: ['OUT_FOR_DELIVERY', 'PICKED_UP', 'WAITING_FOR_COURIER'],
+  READY: ['OUT_FOR_DELIVERY', 'PICKED_UP'],
+  /** Retired with third-party shipping; kept so legacy orders can still finish. */
   WAITING_FOR_COURIER: ['OUT_FOR_DELIVERY'],
   OUT_FOR_DELIVERY: ['DELIVERED'],
   DELIVERED: [],
@@ -131,30 +130,9 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   CANCELLED: [],
 };
 
-/**
- * Forward statuses reachable via the /orders/:id/status endpoint only.
- * `method` hides the third-party hop on store-delivered orders (and vice versa).
- */
-export function advanceTargets(
-  status: OrderStatus,
-  method: DeliveryMethod = 'STORE',
-): OrderStatus[] {
-  return ORDER_TRANSITIONS[status]
-    .filter((s) => ADVANCEABLE_STATUSES.includes(s))
-    .filter((s) => {
-      if (s === 'WAITING_FOR_COURIER') return method === 'THIRD_PARTY';
-      // Third-party orders must pass through WAITING_FOR_COURIER first.
-      if (s === 'OUT_FOR_DELIVERY' && status === 'READY') return method !== 'THIRD_PARTY';
-      return true;
-    });
-}
-
-/** Arabic-correct delivery duration; a single day means same-day delivery. */
-export function deliveryDaysLabel(days: number): string {
-  if (days <= 1) return 'نفس اليوم';
-  if (days === 2) return 'يومان';
-  if (days <= 10) return `${days} أيام`;
-  return `${days} يوماً`;
+/** Forward statuses reachable via the /orders/:id/status endpoint only. */
+export function advanceTargets(status: OrderStatus): OrderStatus[] {
+  return ORDER_TRANSITIONS[status].filter((s) => ADVANCEABLE_STATUSES.includes(s));
 }
 
 export const BRAND = {

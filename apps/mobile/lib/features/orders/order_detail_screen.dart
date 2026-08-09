@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
-import '../../data/models/delivery_provider.dart';
 import '../../data/models/order.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/orders_providers.dart';
@@ -157,12 +156,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 // Map placeholder
                 _MapPlaceholder(order: order),
                 const SizedBox(height: 16),
-                // Shipping company card replaces the driver card on third-party
-                // deliveries; store deliveries keep the existing driver card.
-                if (order.isThirdParty && order.deliveryProvider != null) ...[
-                  _ShippingCompanyCard(provider: order.deliveryProvider!),
-                  const SizedBox(height: 16),
-                ] else if (order.isDelivery &&
+                if (order.isDelivery &&
                     (order.status == OrderStatus.outForDelivery ||
                         order.status == OrderStatus.delivered)) ...[
                   const _DriverCard(),
@@ -548,62 +542,6 @@ class _MapGridPainter extends CustomPainter {
 }
 
 // ── Driver card ────────────────────────────────────────────────────────────────
-class _ShippingCompanyCard extends StatelessWidget {
-  const _ShippingCompanyCard({required this.provider});
-
-  final DeliveryProvider provider;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: provider.logo == null
-                ? const Icon(Icons.local_shipping_outlined,
-                    color: AppColors.primary, size: 28)
-                : Image.network(
-                    provider.logo!,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => const Icon(
-                        Icons.local_shipping_outlined,
-                        color: AppColors.primary,
-                        size: 28),
-                  ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  provider.name,
-                  style: const TextStyle(
-                    color: AppColors.dark,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                  ),
-                ),
-                Text(
-                  '${Formatters.money(provider.deliveryFee)} · ${Formatters.deliveryDays(provider.estimatedDays)}',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DriverCard extends StatelessWidget {
   const _DriverCard();
 
