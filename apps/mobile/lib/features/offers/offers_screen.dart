@@ -6,90 +6,99 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../providers/catalog_providers.dart';
+import '../../widgets/ambient_background.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/state_views.dart';
-
-const _kBg = Color(0xFF0A1A0C);
 
 class OffersScreen extends ConsumerWidget {
   const OffersScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final products = ref.watch(productsControllerProvider(const ProductQuery()));
+    final products = ref.watch(
+      productsControllerProvider(const ProductQuery()),
+    );
 
     return Scaffold(
-      backgroundColor: _kBg,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // ── Title pill ──────────────────────────────────────────
-            const SliverToBoxAdapter(child: _TitlePill()),
+      backgroundColor: AppColors.background,
+      body: AmbientBackground(
+        intensity: 0.8,
+        child: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              // ── Title pill ──────────────────────────────────────────
+              const SliverToBoxAdapter(child: _TitlePill()),
 
-            // ── Hero banner ─────────────────────────────────────────
-            const SliverToBoxAdapter(child: _HeroBanner()),
+              // ── Hero banner ─────────────────────────────────────────
+              const SliverToBoxAdapter(child: _HeroBanner()),
 
-            // ── Deal cards ──────────────────────────────────────────
-            const SliverToBoxAdapter(child: _DealCardsRow()),
+              // ── Deal cards ──────────────────────────────────────────
+              const SliverToBoxAdapter(child: _DealCardsRow()),
 
-            // ── Section heading ─────────────────────────────────────
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 20, 16, 12),
-                child: Text(
-                  'جميع المنتجات',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+              // ── Section heading ─────────────────────────────────────
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(16, 20, 16, 12),
+                  child: Text(
+                    'جميع المنتجات',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: AppColors.dark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // ── Products grid ────────────────────────────────────────
-            if (products.isLoading)
-              const SliverFillRemaining(child: Center(child: AppLoader()))
-            else if (products.error != null && products.items.isEmpty)
-              SliverFillRemaining(
-                child: ErrorView(
-                  message: products.error!,
-                  onRetry: () => ref
-                      .read(productsControllerProvider(const ProductQuery()).notifier)
-                      .refresh(),
-                ),
-              )
-            else if (products.items.isEmpty)
-              const SliverFillRemaining(
-                child: EmptyView(
-                  icon: Icons.local_offer_outlined,
-                  title: 'لا توجد عروض حالياً',
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) {
+              // ── Products grid ────────────────────────────────────────
+              if (products.isLoading)
+                const SliverFillRemaining(child: Center(child: AppLoader()))
+              else if (products.error != null && products.items.isEmpty)
+                SliverFillRemaining(
+                  child: ErrorView(
+                    message: products.error!,
+                    onRetry: () => ref
+                        .read(
+                          productsControllerProvider(
+                            const ProductQuery(),
+                          ).notifier,
+                        )
+                        .refresh(),
+                  ),
+                )
+              else if (products.items.isEmpty)
+                const SliverFillRemaining(
+                  child: EmptyView(
+                    icon: Icons.local_offer_outlined,
+                    title: 'لا توجد عروض حالياً',
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate((context, i) {
                       final p = products.items[i];
-                      return ProductCard(
-                        product: p,
-                        onTap: () => context.push('/product/${p.id}'),
+                      return FadeSlideIn(
+                        index: i,
+                        child: ProductCard(
+                          product: p,
+                          onTap: () => context.push('/product/${p.id}'),
+                        ),
                       );
-                    },
-                    childCount: products.items.length,
-                  ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.66,
+                    }, childCount: products.items.length),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.66,
+                        ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -111,13 +120,14 @@ class _TitlePill extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.primary,
+            gradient: AppColors.primaryGradient,
             borderRadius: BorderRadius.circular(30),
+            boxShadow: AppColors.glowGreen(intensity: 0.6),
           ),
           child: const Text(
             'العروض',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.onPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w800,
             ),
@@ -141,12 +151,10 @@ class _HeroBanner extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       height: 160,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0C3A1C), Color(0xFF1F6E3D)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+        borderRadius: BorderRadius.circular(22),
+        gradient: AppColors.heroGradient,
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+        boxShadow: AppColors.glowGreen(intensity: 0.4),
       ),
       child: Stack(
         children: [
@@ -159,7 +167,7 @@ class _HeroBanner extends StatelessWidget {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.05),
+                color: AppColors.primary.withValues(alpha: 0.06),
               ),
             ),
           ),
@@ -171,7 +179,7 @@ class _HeroBanner extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.04),
+                color: AppColors.gold.withValues(alpha: 0.05),
               ),
             ),
           ),
@@ -185,12 +193,15 @@ class _HeroBanner extends StatelessWidget {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    color: AppColors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: AppColors.gold.withValues(alpha: 0.28),
+                    ),
                   ),
                   child: const Icon(
                     Icons.local_offer_rounded,
-                    color: Color(0xFFCFA347),
+                    color: AppColors.gold,
                     size: 40,
                   ),
                 ),
@@ -203,15 +214,18 @@ class _HeroBanner extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFCFA347),
+                          gradient: AppColors.goldGradient,
                           borderRadius: BorderRadius.circular(20),
+                          boxShadow: AppColors.glowGold(intensity: 0.5),
                         ),
                         child: const Text(
                           'حصري',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.onPrimary,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
@@ -222,7 +236,7 @@ class _HeroBanner extends StatelessWidget {
                         'عروض حصرية',
                         textAlign: TextAlign.right,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.white,
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
                         ),
@@ -231,25 +245,25 @@ class _HeroBanner extends StatelessWidget {
                       const Text(
                         'خصومات تصل إلى ٥٠٪',
                         textAlign: TextAlign.right,
-                        style: TextStyle(
-                          color: Color(0xFFA3C9A3),
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: AppColors.muted, fontSize: 13),
                       ),
                       const SizedBox(height: 12),
                       Align(
                         alignment: Alignment.centerRight,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 7),
+                            horizontal: 16,
+                            vertical: 7,
+                          ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            gradient: AppColors.primaryGradient,
                             borderRadius: BorderRadius.circular(20),
+                            boxShadow: AppColors.glowGreen(intensity: 0.5),
                           ),
                           child: const Text(
                             'تسوق الآن',
                             style: TextStyle(
-                              color: Color(0xFF0C3A1C),
+                              color: AppColors.onPrimary,
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                             ),
@@ -289,15 +303,15 @@ class _DealCardsRow extends StatelessWidget {
                 _SimpleDealCard(
                   label: 'عروض الأسبوع',
                   icon: Icons.calendar_view_week_rounded,
-                  color: Color(0xFF1A3A5C),
+                  color: AppColors.surface,
                   accent: Color(0xFF4A9EE0),
                 ),
                 SizedBox(height: 10),
                 _SimpleDealCard(
                   label: 'عروض الشهر',
                   icon: Icons.calendar_month_rounded,
-                  color: Color(0xFF3A1A2E),
-                  accent: Color(0xFFCFA347),
+                  color: AppColors.surface,
+                  accent: AppColors.gold,
                 ),
               ],
             ),
@@ -354,9 +368,10 @@ class _CountdownDealCardState extends State<_CountdownDealCard> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2E1A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.4)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -367,7 +382,7 @@ class _CountdownDealCardState extends State<_CountdownDealCard> {
               const Text(
                 'عرض اليوم',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.dark,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -376,12 +391,12 @@ class _CountdownDealCardState extends State<_CountdownDealCard> {
               Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.bolt_rounded,
-                  color: Color(0xFFCFA347),
+                  color: AppColors.gold,
                   size: 14,
                 ),
               ),
@@ -403,24 +418,22 @@ class _CountdownDealCardState extends State<_CountdownDealCard> {
           const Text(
             'ينتهي العرض قريباً',
             textAlign: TextAlign.right,
-            style: TextStyle(
-              color: Color(0xFFA3C9A3),
-              fontSize: 11,
-            ),
+            style: TextStyle(color: AppColors.muted, fontSize: 11),
           ),
           const SizedBox(height: 10),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 7),
             decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(10),
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: AppColors.glowGreen(intensity: 0.4),
             ),
             child: const Text(
               'احصل عليه',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.onPrimary,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -444,13 +457,14 @@ class _TimeBox extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFF0A1A0C),
-            borderRadius: BorderRadius.circular(8),
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.border),
           ),
           child: Text(
             value,
             style: const TextStyle(
-              color: Color(0xFFCFA347),
+              color: AppColors.gold,
               fontSize: 16,
               fontWeight: FontWeight.w800,
               fontFeatures: [FontFeature.tabularFigures()],
@@ -458,10 +472,7 @@ class _TimeBox extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          unit,
-          style: const TextStyle(color: Color(0xFFA3C9A3), fontSize: 9),
-        ),
+        Text(unit, style: const TextStyle(color: AppColors.muted, fontSize: 9)),
       ],
     );
   }
@@ -477,7 +488,7 @@ class _TimeSep extends StatelessWidget {
       child: Text(
         ':',
         style: TextStyle(
-          color: Color(0xFFCFA347),
+          color: AppColors.gold,
           fontSize: 16,
           fontWeight: FontWeight.w700,
         ),
@@ -510,7 +521,9 @@ class _SimpleDealCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -518,7 +531,7 @@ class _SimpleDealCard extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.dark,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),

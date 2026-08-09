@@ -9,6 +9,7 @@ import '../../providers/cart_controller.dart';
 import '../../providers/catalog_providers.dart';
 import '../../providers/delivery_location_provider.dart';
 import '../../providers/notifications_controller.dart';
+import '../../widgets/ambient_background.dart';
 import '../../widgets/app_asset.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/product_card.dart';
@@ -22,145 +23,187 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoriesProvider);
-    final products = ref.watch(productsControllerProvider(const ProductQuery()));
+    final products = ref.watch(
+      productsControllerProvider(const ProductQuery()),
+    );
     final cartCount = ref.watch(cartControllerProvider).count;
     final unread = ref.watch(notificationsControllerProvider).unreadCount;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.primary,
-          onRefresh: () async {
-            ref.invalidate(categoriesProvider);
-            await ref
-                .read(productsControllerProvider(const ProductQuery()).notifier)
-                .refresh();
-          },
-          child: CustomScrollView(
-            slivers: [
-              // ── Top bar ─────────────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: _TopBar(cartCount: cartCount, unread: unread),
-              ),
-              // ── Delivery location ────────────────────────────────────────
-              const SliverToBoxAdapter(child: _DeliveryRow()),
-              // ── Search bar ───────────────────────────────────────────────
-              const SliverToBoxAdapter(child: _SearchBar()),
-              // ── Hero banner ──────────────────────────────────────────────
-              const SliverToBoxAdapter(child: _HeroBanner()),
-              // ── Categories section ───────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.go('/categories'),
-                        child: const Text(
-                          'عرض الكل',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const Text(
-                        'الأقسام',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: categories.when(
-                  loading: () => const SizedBox(
-                    height: 80,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                  error: (_, _) => const SizedBox.shrink(),
-                  data: (items) => _CategoryGrid(items: items),
-                ),
-              ),
-              // ── Products section ─────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.push('/products'),
-                        child: const Text(
-                          'عرض الكل',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const Text(
-                        'الأطعمة المصنّعة',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (products.isLoading)
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 100, child: Center(child: AppLoader())),
-                )
-              else if (products.error != null && products.items.isEmpty)
+      body: AmbientBackground(
+        intensity: 0.7,
+        showGold: false,
+        child: SafeArea(
+          child: RefreshIndicator(
+            color: AppColors.primary,
+            backgroundColor: AppColors.surface,
+            onRefresh: () async {
+              ref.invalidate(categoriesProvider);
+              await ref
+                  .read(
+                    productsControllerProvider(const ProductQuery()).notifier,
+                  )
+                  .refresh();
+            },
+            child: CustomScrollView(
+              slivers: [
+                // ── Top bar ───────────────────────────────────────────────
                 SliverToBoxAdapter(
-                  child: ErrorView(
-                    message: products.error!,
-                    onRetry: () => ref
-                        .read(productsControllerProvider(const ProductQuery()).notifier)
-                        .refresh(),
-                  ),
-                )
-              else if (products.items.isEmpty)
-                const SliverToBoxAdapter(
-                  child: EmptyView(
-                    icon: Icons.inventory_2_outlined,
-                    title: 'لا توجد منتجات بعد',
-                  ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                  sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.66,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) {
-                        final p = products.items[i];
-                        return ProductCard(
-                          product: p,
-                          onTap: () => context.push('/product/${p.id}'),
-                        );
-                      },
-                      childCount: products.items.length,
-                    ),
+                  child: _TopBar(cartCount: cartCount, unread: unread),
+                ),
+                // ── Delivery location ──────────────────────────────────────
+                const SliverToBoxAdapter(child: _DeliveryRow()),
+                // ── Search bar ─────────────────────────────────────────────
+                const SliverToBoxAdapter(child: _SearchBar()),
+                // ── Hero banner ────────────────────────────────────────────
+                const SliverToBoxAdapter(child: _HeroBanner()),
+                // ── Categories section ─────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    title: 'الأقسام',
+                    onSeeAll: () => context.go('/categories'),
                   ),
                 ),
-            ],
+                SliverToBoxAdapter(
+                  child: categories.when(
+                    loading: () => const SizedBox(
+                      height: 80,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    error: (_, _) => const SizedBox.shrink(),
+                    data: (items) => _CategoryGrid(items: items),
+                  ),
+                ),
+                // ── Products section ───────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    title: 'الأطعمة المصنّعة',
+                    onSeeAll: () => context.push('/products'),
+                  ),
+                ),
+                if (products.isLoading)
+                  const SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 100,
+                      child: Center(child: AppLoader()),
+                    ),
+                  )
+                else if (products.error != null && products.items.isEmpty)
+                  SliverToBoxAdapter(
+                    child: ErrorView(
+                      message: products.error!,
+                      onRetry: () => ref
+                          .read(
+                            productsControllerProvider(
+                              const ProductQuery(),
+                            ).notifier,
+                          )
+                          .refresh(),
+                    ),
+                  )
+                else if (products.items.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: EmptyView(
+                      icon: Icons.inventory_2_outlined,
+                      title: 'لا توجد منتجات بعد',
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.66,
+                          ),
+                      delegate: SliverChildBuilderDelegate((context, i) {
+                        final p = products.items[i];
+                        return FadeSlideIn(
+                          index: i,
+                          child: ProductCard(
+                            product: p,
+                            onTap: () => context.push('/product/${p.id}'),
+                          ),
+                        );
+                      }, childCount: products.items.length),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Section title with a green accent bar, plus a "see all" link on the far side.
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.onSeeAll});
+
+  final String title;
+  final VoidCallback onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: onSeeAll,
+            behavior: HitTestBehavior.opaque,
+            child: const Row(
+              children: [
+                Text(
+                  'عرض الكل',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(width: 2),
+                Icon(
+                  Icons.chevron_left_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.dark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 4,
+                height: 18,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -182,7 +225,11 @@ class _TopBar extends ConsumerWidget {
         children: [
           // Location icon (visual left) — opens the delivery-location picker
           _IconBox(
-            child: const Icon(Icons.location_on_outlined, size: 18, color: AppColors.primary),
+            child: const Icon(
+              Icons.location_on_outlined,
+              size: 18,
+              color: AppColors.primary,
+            ),
             onTap: () => pickDeliveryLocation(context, ref),
           ),
           const Spacer(),
@@ -211,14 +258,15 @@ class _IconBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressableScale(
       onTap: onTap,
       child: Container(
-        width: 40,
-        height: 40,
+        width: 42,
+        height: 42,
         decoration: BoxDecoration(
-          color: AppColors.cream,
-          borderRadius: BorderRadius.circular(12),
+          color: AppColors.surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
         ),
         alignment: Alignment.center,
         child: child,
@@ -239,7 +287,11 @@ class _NotifBox extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          const Icon(Icons.notifications_outlined, size: 20, color: AppColors.dark),
+          const Icon(
+            Icons.notifications_outlined,
+            size: 20,
+            color: AppColors.dark,
+          ),
           if (unread > 0)
             Positioned(
               top: -2,
@@ -266,26 +318,34 @@ class _CartBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressableScale(
       onTap: () => context.go('/cart'),
       child: Container(
-        width: 40,
-        height: 40,
+        width: 42,
+        height: 42,
         decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(12),
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: AppColors.glowGreen(intensity: 0.5),
         ),
         alignment: Alignment.center,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            const Icon(Icons.shopping_bag_outlined, size: 20, color: Colors.white),
+            const Icon(
+              Icons.shopping_bag_outlined,
+              size: 20,
+              color: AppColors.onPrimary,
+            ),
             if (count > 0)
               Positioned(
                 top: -6,
                 right: -8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   constraints: const BoxConstraints(minWidth: 16),
                   decoration: BoxDecoration(
                     color: AppColors.danger,
@@ -325,10 +385,13 @@ Future<void> pickDeliveryLocation(BuildContext context, WidgetRef ref) async {
           ),
   );
   if (result == null) return;
-  final label = [result.district, result.city]
-      .where((e) => e.isNotEmpty)
-      .join(' - ');
-  await ref.read(deliveryLocationProvider.notifier).set(
+  final label = [
+    result.district,
+    result.city,
+  ].where((e) => e.isNotEmpty).join(' - ');
+  await ref
+      .read(deliveryLocationProvider.notifier)
+      .set(
         DeliveryLocation(
           label: label.isEmpty ? 'موقعي الحالي' : label,
           latitude: result.latitude,
@@ -352,7 +415,11 @@ class _DeliveryRow extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            const Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.primary),
+            const Icon(
+              Icons.keyboard_arrow_down,
+              size: 18,
+              color: AppColors.primary,
+            ),
             const SizedBox(width: 2),
             Flexible(
               child: Text(
@@ -372,7 +439,11 @@ class _DeliveryRow extends ConsumerWidget {
               style: TextStyle(fontSize: 13, color: AppColors.muted),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
+            const Icon(
+              Icons.location_on_outlined,
+              size: 16,
+              color: AppColors.primary,
+            ),
           ],
         ),
       ),
@@ -389,18 +460,20 @@ class _SearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: GestureDetector(
+      child: PressableScale(
+        scale: 0.985,
         onTap: () => context.push('/search'),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(14),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
+            boxShadow: AppColors.cardShadow,
           ),
           child: const Row(
             children: [
-              Icon(Icons.search, color: AppColors.muted, size: 20),
+              Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
               SizedBox(width: 10),
               Text(
                 'ابحث عن منتج...',
@@ -423,14 +496,19 @@ class _HeroBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: GestureDetector(
+      child: PressableScale(
+        scale: 0.985,
         onTap: () => context.push('/products'),
         child: Container(
           height: 180,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: const Color(0xFF08210F),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.18),
+            ),
+            boxShadow: AppColors.glowGreen(intensity: 0.45),
           ),
           child: Stack(
             children: [
@@ -470,12 +548,16 @@ class _HeroBanner extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.gold.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
-                        border:
-                            Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+                        border: Border.all(
+                          color: AppColors.gold.withValues(alpha: 0.5),
+                        ),
                       ),
                       child: const Text(
                         'عروض خاصة',
@@ -499,8 +581,10 @@ class _HeroBanner extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
@@ -580,40 +664,51 @@ class _CategoryGrid extends StatelessWidget {
         itemCount: visible.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 5,
-          childAspectRatio: 0.82,
+          childAspectRatio: 0.74,
           crossAxisSpacing: 6,
           mainAxisSpacing: 12,
         ),
         itemBuilder: (context, i) {
           final c = visible[i];
-          return GestureDetector(
-            onTap: () => context.push(
-              '/products',
-              extra: ProductsArgs(categorySlug: c.slug, title: c.nameAr),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: AppColors.cream,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
+          return FadeSlideIn(
+            index: i,
+            offset: 12,
+            child: PressableScale(
+              onTap: () => context.push(
+                '/products',
+                extra: ProductsArgs(categorySlug: c.slug, title: c.nameAr),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceAlt,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.18),
+                      ),
+                      boxShadow: AppColors.cardShadow,
+                    ),
+                    alignment: Alignment.center,
+                    child: CategoryArt(slug: c.slug, icon: c.icon, size: 28),
                   ),
-                  alignment: Alignment.center,
-                  child: CategoryArt(slug: c.slug, icon: c.icon, size: 26),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  c.nameAr,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    c.nameAr,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },

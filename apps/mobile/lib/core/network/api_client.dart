@@ -10,9 +10,12 @@ import 'api_exception.dart';
 ///  - transparently refreshes an expired access token once,
 ///  - maps failures to [ApiException].
 class ApiClient {
-  ApiClient({required TokenStorage tokenStorage, Dio? dio, this.onSessionExpired})
-      : _tokens = tokenStorage,
-        _dio = dio ?? Dio() {
+  ApiClient({
+    required TokenStorage tokenStorage,
+    Dio? dio,
+    this.onSessionExpired,
+  }) : _tokens = tokenStorage,
+       _dio = dio ?? Dio() {
     _dio.options
       ..baseUrl = Env.apiBaseUrl
       ..connectTimeout = Env.connectTimeout
@@ -21,40 +24,45 @@ class ApiClient {
       ..validateStatus = (status) => status != null && status < 400;
 
     // Separate client for refresh calls to avoid interceptor recursion.
-    _refreshDio = Dio(BaseOptions(
-      baseUrl: Env.apiBaseUrl,
-      connectTimeout: Env.connectTimeout,
-      receiveTimeout: Env.receiveTimeout,
-      headers: {'Content-Type': 'application/json'},
-    ));
+    _refreshDio = Dio(
+      BaseOptions(
+        baseUrl: Env.apiBaseUrl,
+        connectTimeout: Env.connectTimeout,
+        receiveTimeout: Env.receiveTimeout,
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
 
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await _tokens.accessToken;
-        if (token != null) options.headers['Authorization'] = 'Bearer $token';
-        handler.next(options);
-      },
-      onError: (error, handler) async {
-        final shouldRetry = error.response?.statusCode == 401 &&
-            error.requestOptions.extra['retried'] != true;
-        if (shouldRetry && await _refresh()) {
-          try {
-            final opts = error.requestOptions..extra['retried'] = true;
-            final token = await _tokens.accessToken;
-            opts.headers['Authorization'] = 'Bearer $token';
-            final clone = await _dio.fetch<dynamic>(opts);
-            return handler.resolve(clone);
-          } catch (_) {
-            // fall through to error
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await _tokens.accessToken;
+          if (token != null) options.headers['Authorization'] = 'Bearer $token';
+          handler.next(options);
+        },
+        onError: (error, handler) async {
+          final shouldRetry =
+              error.response?.statusCode == 401 &&
+              error.requestOptions.extra['retried'] != true;
+          if (shouldRetry && await _refresh()) {
+            try {
+              final opts = error.requestOptions..extra['retried'] = true;
+              final token = await _tokens.accessToken;
+              opts.headers['Authorization'] = 'Bearer $token';
+              final clone = await _dio.fetch<dynamic>(opts);
+              return handler.resolve(clone);
+            } catch (_) {
+              // fall through to error
+            }
           }
-        }
-        if (error.response?.statusCode == 401) {
-          await _tokens.clear();
-          onSessionExpired?.call();
-        }
-        handler.next(error);
-      },
-    ));
+          if (error.response?.statusCode == 401) {
+            await _tokens.clear();
+            onSessionExpired?.call();
+          }
+          handler.next(error);
+        },
+      ),
+    );
   }
 
   final Dio _dio;
@@ -73,7 +81,10 @@ class ApiClient {
     try {
       final refresh = await _tokens.refreshToken;
       if (refresh == null) return false;
-      final res = await _refreshDio.post<dynamic>('/auth/refresh', data: {'refreshToken': refresh});
+      final res = await _refreshDio.post<dynamic>(
+        '/auth/refresh',
+        data: {'refreshToken': refresh},
+      );
       final data = (res.data as Map)['data'] as Map;
       await _tokens.save(
         access: data['accessToken'] as String,

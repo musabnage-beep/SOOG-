@@ -5,6 +5,7 @@ import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_controller.dart';
 import '../../providers/core_providers.dart';
+import '../../widgets/ambient_background.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -44,7 +45,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     try {
       final phone = _normalizeSaudi(_phone.text.trim());
       final email = _email.text.trim();
-      final result = await ref.read(authRepositoryProvider).register(
+      final result = await ref
+          .read(authRepositoryProvider)
+          .register(
             fullName: _name.text.trim(),
             phone: phone,
             email: email,
@@ -52,7 +55,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
       if (!mounted) return;
       // No OTP — sign the user in immediately. Router redirects to /home.
-      await ref.read(authControllerProvider.notifier).completeWithTokens(result);
+      await ref
+          .read(authControllerProvider.notifier)
+          .completeWithTokens(result);
     } on ApiException catch (e) {
       _show(e.message);
     } catch (_) {
@@ -72,90 +77,104 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('إنشاء حساب')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _name,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'الاسم الكامل',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
-                  validator: (v) => (v == null || v.trim().length < 3)
-                      ? 'أدخل اسماً صحيحاً'
-                      : null,
-                ),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _phone,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'رقم الجوال السعودي',
-                    hintText: '05XXXXXXXX',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
-                  validator: (v) {
-                    final d = (v ?? '').replaceAll(RegExp(r'[\s-]'), '');
-                    if (d.isEmpty) return 'أدخل رقم الجوال';
-                    if (!RegExp(r'^(\+966|00966|966|0)?5\d{8}$').hasMatch(d)) {
-                      return 'أدخل رقم جوال سعودي صحيح (05XXXXXXXX)';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'البريد الإلكتروني',
-                    hintText: 'name@example.com',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  validator: (v) {
-                    final s = (v ?? '').trim();
-                    if (s.isEmpty) return 'أدخل البريد الإلكتروني';
-                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(s)) {
-                      return 'أدخل بريداً إلكترونياً صحيحاً';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _password,
-                  obscureText: _obscure,
-                  decoration: InputDecoration(
-                    labelText: 'كلمة المرور',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+      body: AmbientBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Form(
+              key: _formKey,
+              child: GlassCard(
+                padding: const EdgeInsets.all(20),
+                radius: 24,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      controller: _name,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: 'الاسم الكامل',
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
+                      validator: (v) => (v == null || v.trim().length < 3)
+                          ? 'أدخل اسماً صحيحاً'
+                          : null,
                     ),
-                  ),
-                  validator: (v) => (v == null || v.length < 8)
-                      ? 'كلمة المرور 8 أحرف على الأقل'
-                      : null,
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _phone,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'رقم الجوال السعودي',
+                        hintText: '05XXXXXXXX',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                      validator: (v) {
+                        final d = (v ?? '').replaceAll(RegExp(r'[\s-]'), '');
+                        if (d.isEmpty) return 'أدخل رقم الجوال';
+                        if (!RegExp(
+                          r'^(\+966|00966|966|0)?5\d{8}$',
+                        ).hasMatch(d)) {
+                          return 'أدخل رقم جوال سعودي صحيح (05XXXXXXXX)';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'البريد الإلكتروني',
+                        hintText: 'name@example.com',
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                      validator: (v) {
+                        final s = (v ?? '').trim();
+                        if (s.isEmpty) return 'أدخل البريد الإلكتروني';
+                        if (!RegExp(
+                          r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                        ).hasMatch(s)) {
+                          return 'أدخل بريداً إلكترونياً صحيحاً';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _password,
+                      obscureText: _obscure,
+                      decoration: InputDecoration(
+                        labelText: 'كلمة المرور',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                          icon: Icon(
+                            _obscure ? Icons.visibility_off : Icons.visibility,
+                          ),
+                        ),
+                      ),
+                      validator: (v) => (v == null || v.length < 8)
+                          ? 'كلمة المرور 8 أحرف على الأقل'
+                          : null,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _busy ? null : _submit,
+                      child: _busy
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.onPrimary,
+                              ),
+                            )
+                          : const Text('متابعة'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _busy ? null : _submit,
-                  child: _busy
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('متابعة'),
-                ),
-              ],
+              ),
             ),
           ),
         ),

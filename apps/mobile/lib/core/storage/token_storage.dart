@@ -3,10 +3,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// Securely persists the JWT access/refresh token pair.
 class TokenStorage {
   TokenStorage([FlutterSecureStorage? storage])
-      : _storage = storage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            );
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          );
 
   final FlutterSecureStorage _storage;
 

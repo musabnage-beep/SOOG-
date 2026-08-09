@@ -19,7 +19,8 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
   final String productId;
 
   @override
-  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  ConsumerState<ProductDetailScreen> createState() =>
+      _ProductDetailScreenState();
 }
 
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
@@ -43,7 +44,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         ),
       ),
       data: (product) {
-        final isFav = ref.watch(favoritesControllerProvider).contains(product.id);
+        final isFav = ref
+            .watch(favoritesControllerProvider)
+            .contains(product.id);
         return Scaffold(
           backgroundColor: AppColors.background,
           body: SafeArea(
@@ -51,8 +54,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               children: [
                 _TopBar(
                   isFav: isFav,
-                  onToggleFav: () =>
-                      ref.read(favoritesControllerProvider.notifier).toggle(product),
+                  onToggleFav: () => ref
+                      .read(favoritesControllerProvider.notifier)
+                      .toggle(product),
                 ),
                 Expanded(child: _scrollBody(product)),
               ],
@@ -130,7 +134,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 _PriceRow(product: product, option: options[index]),
                 const SizedBox(height: 24),
                 // Description
-                if (desc.isNotEmpty) _DescriptionSection(desc: desc, expanded: _expanded, onToggle: () => setState(() => _expanded = !_expanded)),
+                if (desc.isNotEmpty)
+                  _DescriptionSection(
+                    desc: desc,
+                    expanded: _expanded,
+                    onToggle: () => setState(() => _expanded = !_expanded),
+                  ),
                 const SizedBox(height: 20),
               ],
             ),
@@ -156,14 +165,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('تمت الإضافة إلى السلة'),
-            action: SnackBarAction(label: 'عرض السلة', onPressed: () => context.go('/cart')),
+            action: SnackBarAction(
+              label: 'عرض السلة',
+              onPressed: () => context.go('/cart'),
+            ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.danger),
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.danger,
+          ),
         );
       }
     } finally {
@@ -177,9 +192,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('يتطلب حساب'),
         content: const Text(
-            'يمكنك تصفّح المنتجات بحرية، لكن لإتمام الطلب يجب تسجيل الدخول أو إنشاء حساب.'),
+          'يمكنك تصفّح المنتجات بحرية، لكن لإتمام الطلب يجب تسجيل الدخول أو إنشاء حساب.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('لاحقاً')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('لاحقاً'),
+          ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -211,14 +230,11 @@ class _TopBar extends StatelessWidget {
             onTap: () => context.pop(),
           ),
           const Spacer(),
-          _CircleBtn(
-            icon: Icons.share_outlined,
-            onTap: () {},
-          ),
+          _CircleBtn(icon: Icons.share_outlined, onTap: () {}),
           const SizedBox(width: 8),
           _CircleBtn(
             icon: isFav ? Icons.favorite : Icons.favorite_border,
-            color: isFav ? AppColors.danger : AppColors.dark,
+            color: isFav ? AppColors.danger : Colors.white,
             onTap: onToggleFav,
           ),
         ],
@@ -242,11 +258,11 @@ class _CircleBtn extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.black.withValues(alpha: 0.45),
           shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2))],
+          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
         ),
-        child: Icon(icon, size: 18, color: color ?? AppColors.dark),
+        child: Icon(icon, size: 18, color: color ?? Colors.white),
       ),
     );
   }
@@ -254,7 +270,11 @@ class _CircleBtn extends StatelessWidget {
 
 // ── Image section ─────────────────────────────────────────────────────────────
 class _ImageSection extends StatelessWidget {
-  const _ImageSection({required this.images, required this.index, required this.onPageChanged});
+  const _ImageSection({
+    required this.images,
+    required this.index,
+    required this.onPageChanged,
+  });
 
   final List<String> images;
   final int index;
@@ -266,7 +286,13 @@ class _ImageSection extends StatelessWidget {
       height: 280,
       color: const Color(0xFFF8F8F8),
       child: images.isEmpty
-          ? const Center(child: Icon(Icons.shopping_bag_outlined, size: 80, color: AppColors.muted))
+          ? const Center(
+              child: Icon(
+                Icons.shopping_bag_outlined,
+                size: 80,
+                color: AppColors.muted,
+              ),
+            )
           : Stack(
               children: [
                 PageView.builder(
@@ -279,8 +305,11 @@ class _ImageSection extends StatelessWidget {
                       child: CachedNetworkImage(
                         imageUrl: images[i],
                         fit: BoxFit.contain,
-                        errorWidget: (_, _, _) =>
-                            const Icon(Icons.broken_image_outlined, size: 60, color: AppColors.muted),
+                        errorWidget: (_, _, _) => const Icon(
+                          Icons.broken_image_outlined,
+                          size: 60,
+                          color: AppColors.muted,
+                        ),
                       ),
                     ),
                   ),
@@ -294,17 +323,17 @@ class _ImageSection extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Colors.black.withValues(alpha: 0.45),
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.18),
+                        ),
                       ),
-                      child: const Icon(Icons.zoom_out_map_rounded, size: 18, color: AppColors.dark),
+                      child: const Icon(
+                        Icons.zoom_out_map_rounded,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -323,7 +352,9 @@ class _ImageSection extends StatelessWidget {
                           width: i == index ? 18 : 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: i == index ? AppColors.primary : AppColors.muted,
+                            color: i == index
+                                ? AppColors.primary
+                                : AppColors.muted,
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
@@ -339,7 +370,8 @@ class _ImageSection extends StatelessWidget {
     Navigator.of(context).push<void>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => _ImageViewerScreen(images: images, initialIndex: initialIndex),
+        builder: (_) =>
+            _ImageViewerScreen(images: images, initialIndex: initialIndex),
       ),
     );
   }
@@ -357,7 +389,9 @@ class _ImageViewerScreen extends StatefulWidget {
 }
 
 class _ImageViewerScreenState extends State<_ImageViewerScreen> {
-  late final PageController _controller = PageController(initialPage: widget.initialIndex);
+  late final PageController _controller = PageController(
+    initialPage: widget.initialIndex,
+  );
   late int _index = widget.initialIndex;
 
   @override
@@ -382,7 +416,10 @@ class _ImageViewerScreenState extends State<_ImageViewerScreen> {
             Positioned(
               top: 8,
               right: 8,
-              child: _CircleBtn(icon: Icons.close_rounded, onTap: () => Navigator.pop(context)),
+              child: _CircleBtn(
+                icon: Icons.close_rounded,
+                onTap: () => Navigator.pop(context),
+              ),
             ),
             if (widget.images.length > 1)
               Positioned(
@@ -391,7 +428,10 @@ class _ImageViewerScreenState extends State<_ImageViewerScreen> {
                 right: 0,
                 child: Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white24,
                       borderRadius: BorderRadius.circular(20),
@@ -438,7 +478,12 @@ class _ZoomableImageState extends State<_ZoomableImage> {
     if (position == null) return;
     const scale = 2.5;
     _transform.value = Matrix4.identity()
-      ..translateByDouble(-position.dx * (scale - 1), -position.dy * (scale - 1), 0, 1)
+      ..translateByDouble(
+        -position.dx * (scale - 1),
+        -position.dy * (scale - 1),
+        0,
+        1,
+      )
       ..scaleByDouble(scale, scale, scale, 1);
   }
 
@@ -455,8 +500,11 @@ class _ZoomableImageState extends State<_ZoomableImage> {
           child: CachedNetworkImage(
             imageUrl: widget.url,
             fit: BoxFit.contain,
-            errorWidget: (_, _, _) =>
-                const Icon(Icons.broken_image_outlined, size: 60, color: AppColors.muted),
+            errorWidget: (_, _, _) => const Icon(
+              Icons.broken_image_outlined,
+              size: 60,
+              color: AppColors.muted,
+            ),
           ),
         ),
       ),
@@ -481,19 +529,28 @@ class _UnitSelector extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F2),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
           for (var i = 0; i < options.length; i++)
-            _seg(label: options[i].label, selected: i == selected, onTap: () => onChanged(i)),
+            _seg(
+              label: options[i].label,
+              selected: i == selected,
+              onTap: () => onChanged(i),
+            ),
         ],
       ),
     );
   }
 
-  Widget _seg({required String label, required bool selected, required VoidCallback onTap}) {
+  Widget _seg({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -510,7 +567,7 @@ class _UnitSelector extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: selected ? Colors.white : AppColors.dark,
+              color: selected ? AppColors.onPrimary : AppColors.muted,
               fontWeight: FontWeight.w700,
               fontSize: 14,
             ),
@@ -569,7 +626,10 @@ class _PriceRow extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.danger,
                   borderRadius: BorderRadius.circular(20),
@@ -613,7 +673,11 @@ class _DescriptionSection extends StatelessWidget {
       children: [
         const Text(
           'وصف المنتج',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.dark),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: AppColors.dark,
+          ),
         ),
         const SizedBox(height: 10),
         Text(
@@ -673,8 +737,15 @@ class _BottomBar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
         decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: AppColors.border)),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x99000000),
+              blurRadius: 24,
+              offset: Offset(0, -6),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -704,19 +775,29 @@ class _BottomBar extends StatelessWidget {
                       onPressed: disabled ? null : onAddToCart,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
-                        disabledBackgroundColor: AppColors.muted.withOpacity(0.3),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        disabledBackgroundColor: AppColors.surfaceAlt,
+                        disabledForegroundColor: AppColors.muted,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       child: busy
                           ? const SizedBox(
                               width: 22,
                               height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: AppColors.muted,
+                              ),
                             )
                           : Text(
-                              product.isOutOfStock ? 'نفذت الكمية' : 'أضف إلى السلة',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              product.isOutOfStock
+                                  ? 'نفذت الكمية'
+                                  : 'أضف إلى السلة',
+                              style: TextStyle(
+                                color: disabled
+                                    ? AppColors.muted
+                                    : AppColors.onPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -731,9 +812,9 @@ class _BottomBar extends StatelessWidget {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surfaceAlt,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFEEEEEE), width: 1.5),
+                      border: Border.all(color: AppColors.border, width: 1.5),
                     ),
                     child: Icon(
                       isFav ? Icons.favorite : Icons.favorite_border,

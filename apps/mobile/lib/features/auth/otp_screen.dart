@@ -63,12 +63,16 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     }
     setState(() => _busy = true);
     try {
-      final result = await ref.read(authRepositoryProvider).verifyOtp(
+      final result = await ref
+          .read(authRepositoryProvider)
+          .verifyOtp(
             target: widget.args.target,
             code: _code.text.trim(),
             purpose: widget.args.purpose,
           );
-      await ref.read(authControllerProvider.notifier).completeWithTokens(result);
+      await ref
+          .read(authControllerProvider.notifier)
+          .completeWithTokens(result);
       // Router redirects to /home.
     } on ApiException catch (e) {
       _show(e.message);
@@ -112,8 +116,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 16),
-              const Icon(Icons.mark_email_read_outlined,
-                  size: 64, color: AppColors.primary),
+              const Icon(
+                Icons.mark_email_read_outlined,
+                size: 64,
+                color: AppColors.primary,
+              ),
               const SizedBox(height: 20),
               const Text(
                 'أدخل رمز التحقق',
@@ -151,15 +158,19 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                         height: 22,
                         width: 22,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: AppColors.onPrimary,
+                        ),
                       )
                     : const Text('تأكيد'),
               ),
               const SizedBox(height: 16),
               Center(
                 child: _seconds > 0
-                    ? Text('إعادة الإرسال خلال $_seconds ثانية',
-                        style: const TextStyle(color: AppColors.muted))
+                    ? Text(
+                        'إعادة الإرسال خلال $_seconds ثانية',
+                        style: const TextStyle(color: AppColors.muted),
+                      )
                     : TextButton(
                         onPressed: _resend,
                         child: const Text('إعادة إرسال الرمز'),

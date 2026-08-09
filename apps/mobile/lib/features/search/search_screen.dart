@@ -19,8 +19,8 @@ const _kMaxHistory = 10;
 
 final searchHistoryProvider =
     StateNotifierProvider<SearchHistoryNotifier, List<String>>(
-  (ref) => SearchHistoryNotifier(),
-);
+      (ref) => SearchHistoryNotifier(),
+    );
 
 class SearchHistoryNotifier extends StateNotifier<List<String>> {
   SearchHistoryNotifier() : super([]) {
@@ -124,7 +124,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.background,
         foregroundColor: AppColors.dark,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -139,8 +139,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           child: Container(
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.surfaceAlt,
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border),
             ),
             child: TextField(
@@ -159,15 +159,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               decoration: InputDecoration(
                 isDense: true,
                 hintText: 'ابحث عن منتج...',
-                hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
+                hintStyle: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 14,
+                ),
                 border: InputBorder.none,
-                prefixIcon: const Icon(Icons.search,
-                    color: AppColors.muted, size: 20),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: AppColors.muted,
+                  size: 20,
+                ),
                 suffixIcon: _controller.text.isNotEmpty
                     ? IconButton(
                         splashRadius: 18,
-                        icon: const Icon(Icons.close,
-                            color: AppColors.muted, size: 18),
+                        icon: const Icon(
+                          Icons.close,
+                          color: AppColors.muted,
+                          size: 18,
+                        ),
                         onPressed: _clear,
                       )
                     : null,
@@ -274,8 +283,7 @@ class _SuggestionsView extends ConsumerWidget {
           const Center(
             child: Column(
               children: [
-                Icon(Icons.search_rounded,
-                    color: AppColors.border, size: 56),
+                Icon(Icons.search_rounded, color: AppColors.border, size: 56),
                 SizedBox(height: 12),
                 Text(
                   'ابحث عن أي منتج تريده',
@@ -307,8 +315,8 @@ class _RecentChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: AppColors.surfaceAlt,
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
@@ -384,8 +392,9 @@ class _ResultsView extends ConsumerWidget {
       return ErrorView(
         message: products.error!,
         onRetry: () => ref
-            .read(productsControllerProvider(ProductQuery(search: query))
-                .notifier)
+            .read(
+              productsControllerProvider(ProductQuery(search: query)).notifier,
+            )
             .refresh(),
       );
     }
@@ -395,8 +404,11 @@ class _ResultsView extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.search_off_rounded,
-                color: AppColors.border, size: 56),
+            const Icon(
+              Icons.search_off_rounded,
+              color: AppColors.border,
+              size: 56,
+            ),
             const SizedBox(height: 12),
             Text(
               'لا توجد نتائج لـ "$query"',

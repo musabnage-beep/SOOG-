@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/order.dart';
 import '../../providers/orders_providers.dart';
+import '../../widgets/ambient_background.dart';
 import '../../widgets/order_status_chip.dart';
 import '../../widgets/state_views.dart';
 
@@ -44,12 +45,16 @@ class OrdersScreen extends ConsumerWidget {
           }
           return RefreshIndicator(
             color: AppColors.primary,
+            backgroundColor: AppColors.surface,
             onRefresh: () async => ref.invalidate(myOrdersProvider),
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: page.items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (_, i) => _OrderCard(order: page.items[i]),
+              itemBuilder: (_, i) => FadeSlideIn(
+                index: i,
+                child: _OrderCard(order: page.items[i]),
+              ),
             ),
           );
         },
@@ -65,15 +70,16 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return PressableScale(
       onTap: () => context.push('/order/${order.id}'),
-      borderRadius: BorderRadius.circular(14),
+      scale: 0.985,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.cardShadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,16 +87,20 @@ class _OrderCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text('طلب #${order.orderNumber}',
-                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                  child: Text(
+                    'طلب #${order.orderNumber}',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
                 OrderStatusChip(status: order.status),
               ],
             ),
             const SizedBox(height: 8),
             if (order.createdAt != null)
-              Text(Formatters.date(order.createdAt!),
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+              Text(
+                Formatters.date(order.createdAt!),
+                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              ),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -100,28 +110,46 @@ class _OrderCard extends StatelessWidget {
                   color: AppColors.muted,
                 ),
                 const SizedBox(width: 6),
-                Text(order.isDelivery ? 'توصيل' : 'استلام',
-                    style: const TextStyle(color: AppColors.muted)),
+                Text(
+                  order.isDelivery ? 'توصيل' : 'استلام',
+                  style: const TextStyle(color: AppColors.muted),
+                ),
                 const Spacer(),
-                Text(Formatters.money(order.total),
-                    style: const TextStyle(
-                        color: AppColors.primary, fontWeight: FontWeight.w800)),
+                Text(
+                  Formatters.money(order.total),
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ],
             ),
             if (order.needsConfirmation) ...[
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.warning.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.warning.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16, color: AppColors.warning),
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: AppColors.warning,
+                    ),
                     SizedBox(width: 6),
-                    Text('بانتظار تأكيدك على التعديلات',
-                        style: TextStyle(color: AppColors.warning, fontSize: 12)),
+                    Text(
+                      'بانتظار تأكيدك على التعديلات',
+                      style: TextStyle(color: AppColors.warning, fontSize: 12),
+                    ),
                   ],
                 ),
               ),

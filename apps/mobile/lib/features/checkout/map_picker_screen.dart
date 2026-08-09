@@ -85,13 +85,17 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   Future<void> _reverseGeocode() async {
     setState(() => _resolving = true);
     try {
-      final placemarks =
-          await placemarkFromCoordinates(_picked.latitude, _picked.longitude);
+      final placemarks = await placemarkFromCoordinates(
+        _picked.latitude,
+        _picked.longitude,
+      );
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
-        final parts = [p.street, p.subLocality, p.locality]
-            .where((e) => e != null && e.isNotEmpty)
-            .join('، ');
+        final parts = [
+          p.street,
+          p.subLocality,
+          p.locality,
+        ].where((e) => e != null && e.isNotEmpty).join('، ');
         setState(() => _label = parts.isEmpty ? 'موقع محدّد' : parts);
       }
     } catch (_) {
@@ -104,8 +108,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   Future<void> _confirm() async {
     String city = '', district = '', street = '';
     try {
-      final placemarks =
-          await placemarkFromCoordinates(_picked.latitude, _picked.longitude);
+      final placemarks = await placemarkFromCoordinates(
+        _picked.latitude,
+        _picked.longitude,
+      );
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
         city = p.locality ?? p.administrativeArea ?? '';
@@ -156,11 +162,13 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: AppColors.border),
+                boxShadow: const [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 16,
+                    color: Color(0x99000000),
+                    blurRadius: 24,
+                    offset: Offset(0, 10),
                   ),
                 ],
               ),
@@ -170,14 +178,23 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.place_outlined, color: AppColors.primary),
+                      const Icon(
+                        Icons.place_outlined,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: _resolving
-                            ? const Text('جارٍ تحديد العنوان...',
-                                style: TextStyle(color: AppColors.muted))
-                            : Text(_label,
-                                style: const TextStyle(fontWeight: FontWeight.w600)),
+                            ? const Text(
+                                'جارٍ تحديد العنوان...',
+                                style: TextStyle(color: AppColors.muted),
+                              )
+                            : Text(
+                                _label,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                       ),
                     ],
                   ),

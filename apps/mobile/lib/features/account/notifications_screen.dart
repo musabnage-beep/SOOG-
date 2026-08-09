@@ -11,14 +11,17 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(notificationsControllerProvider.notifier).load());
+    Future.microtask(
+      () => ref.read(notificationsControllerProvider.notifier).load(),
+    );
   }
 
   @override
@@ -31,8 +34,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         actions: [
           if (state.unreadCount > 0)
             TextButton(
-              onPressed: () =>
-                  ref.read(notificationsControllerProvider.notifier).markAllRead(),
+              onPressed: () => ref
+                  .read(notificationsControllerProvider.notifier)
+                  .markAllRead(),
               child: const Text('قراءة الكل'),
             ),
         ],
@@ -40,21 +44,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       body: state.isLoading
           ? const AppLoader()
           : state.items.isEmpty
-              ? const EmptyView(
-                  icon: Icons.notifications_none,
-                  title: 'لا توجد إشعارات',
-                )
-              : RefreshIndicator(
-                  color: AppColors.primary,
-                  onRefresh: () =>
-                      ref.read(notificationsControllerProvider.notifier).load(),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: state.items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) => _NotifTile(notification: state.items[i]),
-                  ),
-                ),
+          ? const EmptyView(
+              icon: Icons.notifications_none,
+              title: 'لا توجد إشعارات',
+            )
+          : RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () =>
+                  ref.read(notificationsControllerProvider.notifier).load(),
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: state.items.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (_, i) => _NotifTile(notification: state.items[i]),
+              ),
+            ),
     );
   }
 }
@@ -70,26 +74,36 @@ class _NotifTile extends ConsumerWidget {
       onTap: notification.isRead
           ? null
           : () => ref
-              .read(notificationsControllerProvider.notifier)
-              .markRead(notification.id),
+                .read(notificationsControllerProvider.notifier)
+                .markRead(notification.id),
       borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: notification.isRead ? AppColors.surface : AppColors.cream,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: notification.isRead
+                ? AppColors.border
+                : AppColors.primary.withValues(alpha: 0.35),
+          ),
+          boxShadow: AppColors.cardShadow,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
                 shape: BoxShape.circle,
+                boxShadow: AppColors.glowGreen(intensity: 0.45),
               ),
-              child: const Icon(Icons.notifications, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.notifications,
+                color: AppColors.onPrimary,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -99,25 +113,36 @@ class _NotifTile extends ConsumerWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(notification.title,
-                            style: const TextStyle(fontWeight: FontWeight.w800)),
+                        child: Text(
+                          notification.title,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
                       ),
                       if (!notification.isRead)
                         Container(
                           width: 8,
                           height: 8,
                           decoration: const BoxDecoration(
-                              color: AppColors.danger, shape: BoxShape.circle),
+                            color: AppColors.danger,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(notification.body,
-                      style: const TextStyle(color: AppColors.muted)),
+                  Text(
+                    notification.body,
+                    style: const TextStyle(color: AppColors.muted),
+                  ),
                   if (notification.createdAt != null) ...[
                     const SizedBox(height: 6),
-                    Text(Formatters.date(notification.createdAt!),
-                        style: const TextStyle(color: AppColors.muted, fontSize: 11)),
+                    Text(
+                      Formatters.date(notification.createdAt!),
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ],
               ),

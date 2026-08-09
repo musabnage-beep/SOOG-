@@ -33,6 +33,7 @@ class _ErrorApp extends StatelessWidget {
         home: Directionality(
           textDirection: TextDirection.rtl,
           child: Scaffold(
+            backgroundColor: const Color(0xFF0D0F0E),
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -43,13 +44,17 @@ class _ErrorApp extends StatelessWidget {
                     SizedBox(height: 16),
                     Text(
                       'حدث خطأ غير متوقع',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFF2F5F3),
+                      ),
                     ),
                     SizedBox(height: 8),
                     Text(
                       'يرجى إغلاق التطبيق وإعادة فتحه',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black54),
+                      style: TextStyle(color: Color(0xFFB0B8B3)),
                     ),
                   ],
                 ),
@@ -96,7 +101,9 @@ class _AldiafaAppState extends ConsumerState<AldiafaApp> {
     return MaterialApp.router(
       title: 'الضيافة',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.dark(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.dark,
       routerConfig: router,
       locale: const Locale('ar'),
       supportedLocales: const [Locale('ar'), Locale('en')],

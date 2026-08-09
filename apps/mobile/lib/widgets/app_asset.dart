@@ -77,11 +77,8 @@ class CategoryArt extends StatelessWidget {
     return _glyph();
   }
 
-  Widget _glyph() => Icon(
-        categoryIconData(slug),
-        size: size,
-        color: AppColors.primary,
-      );
+  Widget _glyph() =>
+      Icon(categoryIconData(slug), size: size, color: AppColors.primary);
 }
 
 /// Resilient asset loaders.
@@ -163,8 +160,9 @@ class AppSvgIcon extends StatelessWidget {
             path,
             width: size,
             height: size,
-            colorFilter:
-                color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
+            colorFilter: color != null
+                ? ColorFilter.mode(color!, BlendMode.srcIn)
+                : null,
           );
         }
         return fallback ?? SizedBox(width: size, height: size);

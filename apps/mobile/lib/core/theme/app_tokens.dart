@@ -83,20 +83,20 @@ abstract class AppTokens {
 
   // ── Glow (gold bloom used on splash/cards/hover) ──────────────────────────
   static List<BoxShadow> glowGold({double intensity = 1}) => [
-        BoxShadow(
-          color: primaryGold.withValues(alpha: 0.35 * intensity),
-          blurRadius: 16 * intensity,
-          spreadRadius: 2 * intensity,
-        ),
-      ];
+    BoxShadow(
+      color: primaryGold.withValues(alpha: 0.35 * intensity),
+      blurRadius: 16 * intensity,
+      spreadRadius: 2 * intensity,
+    ),
+  ];
 
   static List<BoxShadow> glowGreen({double intensity = 1}) => [
-        BoxShadow(
-          color: primaryGreen.withValues(alpha: 0.28 * intensity),
-          blurRadius: 22 * intensity,
-          offset: const Offset(0, 10),
-        ),
-      ];
+    BoxShadow(
+      color: primaryGreen.withValues(alpha: 0.28 * intensity),
+      blurRadius: 22 * intensity,
+      offset: const Offset(0, 10),
+    ),
+  ];
 
   // ── Motion durations / curves ─────────────────────────────────────────────
   static const Duration splash = Duration(milliseconds: 7000);

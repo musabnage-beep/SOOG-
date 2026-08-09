@@ -32,26 +32,32 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addAddress,
         backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('عنوان جديد', style: TextStyle(color: Colors.white)),
+        icon: const Icon(Icons.add, color: AppColors.onPrimary),
+        label: const Text(
+          'عنوان جديد',
+          style: TextStyle(
+            color: AppColors.onPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
       body: state.isLoading
           ? const AppLoader()
           : state.items.isEmpty
-              ? const EmptyView(
-                  icon: Icons.location_off_outlined,
-                  title: 'لا توجد عناوين',
-                  subtitle: 'أضف عنواناً لتسهيل التوصيل',
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: state.items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (_, i) => _AddressTile(
-                    address: state.items[i],
-                    onDelete: () => _delete(state.items[i]),
-                  ),
-                ),
+          ? const EmptyView(
+              icon: Icons.location_off_outlined,
+              title: 'لا توجد عناوين',
+              subtitle: 'أضف عنواناً لتسهيل التوصيل',
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: state.items.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (_, i) => _AddressTile(
+                address: state.items[i],
+                onDelete: () => _delete(state.items[i]),
+              ),
+            ),
     );
   }
 
@@ -90,13 +96,16 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('تفاصيل العنوان',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  const Text(
+                    'تفاصيل العنوان',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: labelCtrl,
                     decoration: const InputDecoration(
-                        labelText: 'اسم العنوان (المنزل، العمل...)'),
+                      labelText: 'اسم العنوان (المنزل، العمل...)',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -130,30 +139,34 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                                 streetCtrl.text.trim().isEmpty) {
                               ScaffoldMessenger.of(ctx).showSnackBar(
                                 const SnackBar(
-                                    content: Text('أدخل المدينة والشارع'),
-                                    backgroundColor: AppColors.danger),
+                                  content: Text('أدخل المدينة والشارع'),
+                                  backgroundColor: AppColors.danger,
+                                ),
                               );
                               return;
                             }
                             setSheet(() => saving = true);
                             try {
-                              await ref.read(addressControllerProvider.notifier).create({
-                                'label': labelCtrl.text.trim(),
-                                'city': cityCtrl.text.trim(),
-                                'district': districtCtrl.text.trim(),
-                                'street': streetCtrl.text.trim(),
-                                'latitude': picked.latitude,
-                                'longitude': picked.longitude,
-                                'isDefault': isDefault,
-                              });
+                              await ref
+                                  .read(addressControllerProvider.notifier)
+                                  .create({
+                                    'label': labelCtrl.text.trim(),
+                                    'city': cityCtrl.text.trim(),
+                                    'district': districtCtrl.text.trim(),
+                                    'street': streetCtrl.text.trim(),
+                                    'latitude': picked.latitude,
+                                    'longitude': picked.longitude,
+                                    'isDefault': isDefault,
+                                  });
                               if (ctx.mounted) Navigator.pop(ctx);
                             } on ApiException catch (e) {
                               setSheet(() => saving = false);
                               if (ctx.mounted) {
                                 ScaffoldMessenger.of(ctx).showSnackBar(
                                   SnackBar(
-                                      content: Text(e.message),
-                                      backgroundColor: AppColors.danger),
+                                    content: Text(e.message),
+                                    backgroundColor: AppColors.danger,
+                                  ),
                                 );
                               }
                             }
@@ -163,7 +176,10 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2,
+                              color: AppColors.onPrimary,
+                            ),
+                          )
                         : const Text('حفظ العنوان'),
                   ),
                 ],
@@ -182,7 +198,10 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
         title: const Text('حذف العنوان'),
         content: const Text('هل تريد حذف هذا العنوان؟'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('حذف', style: TextStyle(color: AppColors.danger)),
@@ -208,8 +227,9 @@ class _AddressTile extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Row(
         children: [
@@ -221,27 +241,41 @@ class _AddressTile extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(address.label ?? address.city,
-                        style: const TextStyle(fontWeight: FontWeight.w800)),
+                    Text(
+                      address.label ?? address.city,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     if (address.isDefault) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.cream,
-                          borderRadius: BorderRadius.circular(20),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
                         ),
-                        child: const Text('افتراضي',
-                            style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700)),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: const Text(
+                          'افتراضي',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ],
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(address.summary, style: const TextStyle(color: AppColors.muted)),
+                Text(
+                  address.summary,
+                  style: const TextStyle(color: AppColors.muted),
+                ),
               ],
             ),
           ),

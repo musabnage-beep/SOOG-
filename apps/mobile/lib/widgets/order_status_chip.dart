@@ -29,12 +29,17 @@ class OrderStatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: _color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        color: _color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _color.withValues(alpha: 0.35)),
       ),
       child: Text(
         status.labelAr,
-        style: TextStyle(color: _color, fontWeight: FontWeight.w700, fontSize: 12),
+        style: TextStyle(
+          color: _color,
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
+        ),
       ),
     );
   }

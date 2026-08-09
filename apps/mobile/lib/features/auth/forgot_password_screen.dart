@@ -11,7 +11,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -37,7 +38,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     }
     setState(() => _busy = true);
     try {
-      await ref.read(authRepositoryProvider).forgotPassword(_target.text.trim());
+      await ref
+          .read(authRepositoryProvider)
+          .forgotPassword(_target.text.trim());
       setState(() => _sent = true);
       _show('تم إرسال رمز الاستعادة', error: false);
     } on ApiException catch (e) {
@@ -54,7 +57,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     }
     setState(() => _busy = true);
     try {
-      await ref.read(authRepositoryProvider).resetPassword(
+      await ref
+          .read(authRepositoryProvider)
+          .resetPassword(
             target: _target.text.trim(),
             code: _code.text.trim(),
             newPassword: _password.text,
@@ -122,7 +127,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       onPressed: () => setState(() => _obscure = !_obscure),
-                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                      icon: Icon(
+                        _obscure ? Icons.visibility_off : Icons.visibility,
+                      ),
                     ),
                   ),
                 ),
@@ -135,7 +142,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         height: 22,
                         width: 22,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: AppColors.onPrimary,
+                        ),
                       )
                     : Text(_sent ? 'تغيير كلمة المرور' : 'إرسال الرمز'),
               ),

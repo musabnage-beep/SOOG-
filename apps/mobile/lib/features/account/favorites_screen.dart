@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../providers/favorites_controller.dart';
+import '../../widgets/ambient_background.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/state_views.dart';
 
@@ -18,7 +19,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(favoritesControllerProvider.notifier).load());
+    Future.microtask(
+      () => ref.read(favoritesControllerProvider.notifier).load(),
+    );
   }
 
   @override
@@ -30,36 +33,41 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
       body: state.isLoading
           ? const AppLoader()
           : state.items.isEmpty
-              ? EmptyView(
-                  icon: Icons.favorite_border,
-                  title: 'لا توجد مفضّلات',
-                  subtitle: 'أضف المنتجات التي تعجبك للوصول السريع',
-                  action: ElevatedButton(
-                    onPressed: () => context.go('/home'),
-                    child: const Text('تصفّح المنتجات'),
-                  ),
-                )
-              : RefreshIndicator(
-                  color: AppColors.primary,
-                  onRefresh: () => ref.read(favoritesControllerProvider.notifier).load(),
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.66,
-                    ),
-                    itemCount: state.items.length,
-                    itemBuilder: (_, i) {
-                      final p = state.items[i];
-                      return ProductCard(
-                        product: p,
-                        onTap: () => context.push('/product/${p.id}'),
-                      );
-                    },
-                  ),
+          ? EmptyView(
+              icon: Icons.favorite_border,
+              title: 'لا توجد مفضّلات',
+              subtitle: 'أضف المنتجات التي تعجبك للوصول السريع',
+              action: ElevatedButton(
+                onPressed: () => context.go('/home'),
+                child: const Text('تصفّح المنتجات'),
+              ),
+            )
+          : RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              onRefresh: () =>
+                  ref.read(favoritesControllerProvider.notifier).load(),
+              child: GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.66,
                 ),
+                itemCount: state.items.length,
+                itemBuilder: (_, i) {
+                  final p = state.items[i];
+                  return FadeSlideIn(
+                    index: i,
+                    child: ProductCard(
+                      product: p,
+                      onTap: () => context.push('/product/${p.id}'),
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }

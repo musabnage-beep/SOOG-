@@ -72,9 +72,7 @@ class BrandLogo extends StatelessWidget {
         children: [
           // The swoosh arc + descending gold dots.
           Positioned.fill(
-            child: CustomPaint(
-              painter: _BrandPainter(arcColor: arcColor),
-            ),
+            child: CustomPaint(painter: _BrandPainter(arcColor: arcColor)),
           ),
           // Wordmark.
           Column(

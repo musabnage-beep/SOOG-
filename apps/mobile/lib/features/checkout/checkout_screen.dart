@@ -57,7 +57,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       ref.read(storeSettingsProvider).valueOrNull?.deliveryEnabled ?? true;
 
   /// Falls back to pickup while delivery is paused, whatever the user picked.
-  FulfillmentType get _effectiveType => _deliveryOn ? _type : FulfillmentType.pickup;
+  FulfillmentType get _effectiveType =>
+      _deliveryOn ? _type : FulfillmentType.pickup;
 
   Address? get _selectedAddress {
     final list = ref.read(addressControllerProvider).items;
@@ -72,7 +73,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final cart = ref.watch(cartControllerProvider);
     final addresses = ref.watch(addressControllerProvider);
     // Accounts created before the mobile number became mandatory have none.
-    final needsPhone = (ref.watch(authControllerProvider).user?.phone ?? '').isEmpty;
+    final needsPhone =
+        (ref.watch(authControllerProvider).user?.phone ?? '').isEmpty;
     // Rebuild once the store settings land so the pause banner shows up.
     ref.watch(storeSettingsProvider);
     final type = _effectiveType;
@@ -92,9 +94,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ],
           Row(
             children: [
-              _typeCard(FulfillmentType.delivery, Icons.delivery_dining, 'توصيل'),
+              _typeCard(
+                FulfillmentType.delivery,
+                Icons.delivery_dining,
+                'توصيل',
+              ),
               const SizedBox(width: 12),
-              _typeCard(FulfillmentType.pickup, Icons.storefront, 'استلام من المتجر'),
+              _typeCard(
+                FulfillmentType.pickup,
+                Icons.storefront,
+                'استلام من المتجر',
+              ),
             ],
           ),
           const SizedBox(height: 22),
@@ -107,7 +117,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   onPressed: () async {
                     await context.push('/addresses');
                     await ref.read(addressControllerProvider.notifier).load();
-                    final def = ref.read(addressControllerProvider).defaultAddress;
+                    final def = ref
+                        .read(addressControllerProvider)
+                        .defaultAddress;
                     if (mounted) setState(() => _addressId ??= def?.id);
                   },
                   icon: const Icon(Icons.add, size: 18),
@@ -127,7 +139,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               RadioGroup<String>(
                 groupValue: _addressId,
                 onChanged: (v) => setState(() => _addressId = v),
-                child: Column(children: addresses.items.map(_addressTile).toList()),
+                child: Column(
+                  children: addresses.items.map(_addressTile).toList(),
+                ),
               ),
             const SizedBox(height: 22),
             _DeliveryQuoteCard(address: address),
@@ -182,18 +196,27 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             padding: const EdgeInsets.symmetric(vertical: 18),
             decoration: BoxDecoration(
               color: active ? AppColors.primary : AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: active ? AppColors.primary : AppColors.border),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: active ? AppColors.primary : AppColors.border,
+              ),
+              boxShadow: active
+                  ? AppColors.glowGreen(intensity: 0.45)
+                  : AppColors.cardShadow,
             ),
             child: Column(
               children: [
-                Icon(icon, color: active ? Colors.white : AppColors.primary, size: 28),
+                Icon(
+                  icon,
+                  color: active ? AppColors.onPrimary : AppColors.primary,
+                  size: 28,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   label,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: active ? Colors.white : AppColors.dark,
+                    color: active ? AppColors.onPrimary : AppColors.dark,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -220,8 +243,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       child: RadioListTile<String>(
         value: a.id,
         activeColor: AppColors.primary,
-        title: Text(a.label ?? a.city,
-            style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(
+          a.label ?? a.city,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         subtitle: Text(a.summary),
       ),
     );
@@ -231,7 +256,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: AppColors.surfaceAlt,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -261,7 +286,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ? const SizedBox(
                   height: 22,
                   width: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.onPrimary,
+                  ),
                 )
               : const Text('تأكيد الطلب'),
         ),
@@ -275,9 +303,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       _show('اختر عنوان التوصيل');
       return;
     }
-    final needsPhone = (ref.read(authControllerProvider).user?.phone ?? '').isEmpty;
+    final needsPhone =
+        (ref.read(authControllerProvider).user?.phone ?? '').isEmpty;
     final typed = _phone.text.replaceAll(RegExp(r'[\s-]'), '');
-    if (needsPhone && !RegExp(r'^(\+966|00966|966|0)?5\d{8}$').hasMatch(typed)) {
+    if (needsPhone &&
+        !RegExp(r'^(\+966|00966|966|0)?5\d{8}$').hasMatch(typed)) {
       _show('أدخل رقم جوال سعودي صحيح');
       return;
     }
@@ -289,7 +319,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             .updateProfile(phone: _normalizeSaudi(typed));
         ref.read(authControllerProvider.notifier).setUser(user);
       }
-      final order = await ref.read(orderRepositoryProvider).checkout(
+      final order = await ref
+          .read(orderRepositoryProvider)
+          .checkout(
             fulfillmentType: type,
             addressId: type == FulfillmentType.delivery ? _addressId : null,
             customerNote: _note.text.trim(),
@@ -320,8 +352,10 @@ class _SectionTitle extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) =>
-      Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800));
+  Widget build(BuildContext context) => Text(
+    text,
+    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+  );
 }
 
 class _PausedDeliveryBanner extends StatelessWidget {
@@ -332,8 +366,9 @@ class _PausedDeliveryBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.danger.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.danger.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.35)),
       ),
       child: const Row(
         children: [
@@ -359,22 +394,31 @@ class _DeliveryQuoteCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (address == null) return const SizedBox.shrink();
-    final quote = ref.watch(deliveryQuoteProvider(
-      DeliveryQuoteArgs(latitude: address!.latitude, longitude: address!.longitude),
-    ));
+    final quote = ref.watch(
+      deliveryQuoteProvider(
+        DeliveryQuoteArgs(
+          latitude: address!.latitude,
+          longitude: address!.longitude,
+        ),
+      ),
+    );
     return quote.when(
       loading: () => const Padding(
         padding: EdgeInsets.all(8),
         child: LinearProgressIndicator(),
       ),
-      error: (e, _) => Text(e.toString(), style: const TextStyle(color: AppColors.danger)),
+      error: (e, _) =>
+          Text(e.toString(), style: const TextStyle(color: AppColors.danger)),
       data: (q) {
         if (!q.withinRange) {
           return Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.danger.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.danger.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.danger.withValues(alpha: 0.35),
+              ),
             ),
             child: const Row(
               children: [
@@ -388,8 +432,9 @@ class _DeliveryQuoteCard extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.cream,
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.surfaceAlt,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
           ),
           child: Column(
             children: [
@@ -397,8 +442,10 @@ class _DeliveryQuoteCard extends ConsumerWidget {
               const SizedBox(height: 6),
               _row('الوقت المتوقّع', Formatters.eta(q.etaMinutes)),
               const SizedBox(height: 6),
-              _row('رسوم التوصيل',
-                  q.freeDelivery ? 'مجاني' : Formatters.money(q.fee)),
+              _row(
+                'رسوم التوصيل',
+                q.freeDelivery ? 'مجاني' : Formatters.money(q.fee),
+              ),
             ],
           ),
         );
@@ -407,12 +454,12 @@ class _DeliveryQuoteCard extends ConsumerWidget {
   }
 
   Widget _row(String label, String value) => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: AppColors.muted)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(label, style: const TextStyle(color: AppColors.muted)),
+      Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
+    ],
+  );
 }
 
 class _OrderSummary extends ConsumerWidget {
@@ -430,9 +477,14 @@ class _OrderSummary extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     double fee = 0;
     if (type == FulfillmentType.delivery && address != null) {
-      final quote = ref.watch(deliveryQuoteProvider(
-        DeliveryQuoteArgs(latitude: address!.latitude, longitude: address!.longitude),
-      ));
+      final quote = ref.watch(
+        deliveryQuoteProvider(
+          DeliveryQuoteArgs(
+            latitude: address!.latitude,
+            longitude: address!.longitude,
+          ),
+        ),
+      );
       fee = quote.maybeWhen(
         data: (q) => q.freeDelivery ? 0 : q.fee,
         orElse: () => 0,
@@ -443,15 +495,18 @@ class _OrderSummary extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         children: [
           _row('الإجمالي الفرعي', Formatters.money(subtotal)),
           const SizedBox(height: 8),
-          _row('رسوم التوصيل',
-              type == FulfillmentType.pickup ? '—' : Formatters.money(fee)),
+          _row(
+            'رسوم التوصيل',
+            type == FulfillmentType.pickup ? '—' : Formatters.money(fee),
+          ),
           const Divider(height: 24),
           _row('الإجمالي', Formatters.money(total), bold: true),
         ],
@@ -460,20 +515,24 @@ class _OrderSummary extends ConsumerWidget {
   }
 
   Widget _row(String label, String value, {bool bold = false}) => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: TextStyle(
-                color: bold ? AppColors.dark : AppColors.muted,
-                fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
-                fontSize: bold ? 17 : 14,
-              )),
-          Text(value,
-              style: TextStyle(
-                color: bold ? AppColors.primary : AppColors.dark,
-                fontWeight: FontWeight.w800,
-                fontSize: bold ? 17 : 14,
-              )),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          color: bold ? AppColors.dark : AppColors.muted,
+          fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+          fontSize: bold ? 17 : 14,
+        ),
+      ),
+      Text(
+        value,
+        style: TextStyle(
+          color: bold ? AppColors.primary : AppColors.dark,
+          fontWeight: FontWeight.w800,
+          fontSize: bold ? 17 : 14,
+        ),
+      ),
+    ],
+  );
 }

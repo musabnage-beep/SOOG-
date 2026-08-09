@@ -10,8 +10,6 @@ import '../../providers/cart_controller.dart';
 import '../../widgets/quantity_stepper.dart';
 import '../../widgets/state_views.dart';
 
-const _kBg = Color(0xFF0A1A0C);
-
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
@@ -19,7 +17,7 @@ class CartScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(cartControllerProvider);
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: AppColors.background,
       body: SafeArea(child: _body(context, ref, state)),
       bottomNavigationBar: state.isEmpty ? null : _BottomBar(state: state),
     );
@@ -34,12 +32,17 @@ class CartScreen extends ConsumerWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(30),
+              boxShadow: AppColors.glowGreen(intensity: 0.6),
             ),
             child: const Text(
               'سلة التسوّق',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: AppColors.onPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ),
@@ -65,7 +68,7 @@ class CartScreen extends ConsumerWidget {
                   child: Text(
                     state.cart!.items.length.toString(),
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.onPrimary,
                       fontWeight: FontWeight.w800,
                       fontSize: 14,
                     ),
@@ -74,7 +77,11 @@ class CartScreen extends ConsumerWidget {
                 const Spacer(),
                 const Text(
                   'سلة مشترياتك',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    color: AppColors.dark,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -84,6 +91,7 @@ class CartScreen extends ConsumerWidget {
           Expanded(
             child: RefreshIndicator(
               color: AppColors.primary,
+              backgroundColor: AppColors.surface,
               onRefresh: () => ref.read(cartControllerProvider.notifier).load(),
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -102,16 +110,24 @@ class CartScreen extends ConsumerWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.shopping_cart_outlined, size: 72, color: Colors.white38),
+        const Icon(
+          Icons.shopping_cart_outlined,
+          size: 72,
+          color: AppColors.muted,
+        ),
         const SizedBox(height: 16),
         const Text(
           'سلتك فارغة',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: AppColors.dark,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: 8),
         const Text(
           'تصفّح المنتجات وأضف ما يعجبك',
-          style: TextStyle(color: Colors.white54, fontSize: 14),
+          style: TextStyle(color: AppColors.muted, fontSize: 14),
         ),
         const SizedBox(height: 28),
         ElevatedButton(
@@ -119,11 +135,13 @@ class CartScreen extends ConsumerWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
           ),
           child: const Text(
             'ابدأ التسوّق',
-            style: TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: AppColors.onPrimary, fontSize: 16),
           ),
         ),
       ],
@@ -142,8 +160,10 @@ class _CartTile extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Row(
         children: [
@@ -152,19 +172,27 @@ class _CartTile extends ConsumerWidget {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF3E0),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
             ),
             clipBehavior: Clip.antiAlias,
             child: (line.image == null || line.image!.isEmpty)
                 ? const Center(
-                    child: Icon(Icons.shopping_bag_outlined, color: AppColors.warning, size: 32),
+                    child: Icon(
+                      Icons.shopping_bag_outlined,
+                      color: AppColors.warning,
+                      size: 32,
+                    ),
                   )
                 : CachedNetworkImage(
                     imageUrl: line.image!,
                     fit: BoxFit.cover,
                     errorWidget: (_, __, ___) => const Center(
-                      child: Icon(Icons.shopping_bag_outlined, color: AppColors.warning, size: 32),
+                      child: Icon(
+                        Icons.shopping_bag_outlined,
+                        color: AppColors.warning,
+                        size: 32,
+                      ),
                     ),
                   ),
           ),
@@ -188,10 +216,13 @@ class _CartTile extends ConsumerWidget {
                 if (line.unit != 'PIECE') ...[
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: const Color(0x1443C46A),
-                      borderRadius: BorderRadius.circular(6),
+                      color: AppColors.primary.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       line.isCarton && line.unitsPerCarton != null
@@ -230,10 +261,14 @@ class _CartTile extends ConsumerWidget {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: const Color(0x14DC2626),
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.danger.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.delete_outline, color: AppColors.danger, size: 18),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.danger,
+                          size: 18,
+                        ),
                       ),
                     ),
                   ],
@@ -255,11 +290,12 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = state.cart?.items.length ?? 0;
-    final totalQty = state.cart?.items.fold<int>(0, (s, i) => s + i.quantity) ?? 0;
+    final totalQty =
+        state.cart?.items.fold<int>(0, (s, i) => s + i.quantity) ?? 0;
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        color: _kBg,
+        color: AppColors.surface,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -269,7 +305,7 @@ class _BottomBar extends StatelessWidget {
                 Text(
                   Formatters.rawNumber(state.subtotal),
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.dark,
                     fontSize: 30,
                     fontWeight: FontWeight.w800,
                   ),
@@ -277,7 +313,7 @@ class _BottomBar extends StatelessWidget {
                 const Spacer(),
                 Text(
                   'الإجمالي ($count منتجات $totalQty)',
-                  style: const TextStyle(color: Color(0x80FFFFFF), fontSize: 12),
+                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
               ],
             ),
@@ -286,14 +322,23 @@ class _BottomBar extends StatelessWidget {
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed: state.mutating ? null : () => context.push('/checkout'),
+                onPressed: state.mutating
+                    ? null
+                    : () => context.push('/checkout'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  foregroundColor: AppColors.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
                 child: const Text(
                   'إتمام الطلب',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    color: AppColors.onPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),

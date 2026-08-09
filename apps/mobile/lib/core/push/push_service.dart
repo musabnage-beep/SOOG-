@@ -42,7 +42,9 @@ class PushService {
         _token = t;
         try {
           await _authRepo.registerFcmToken(t);
-        } catch (_) {/* best-effort */}
+        } catch (_) {
+          /* best-effort */
+        }
       });
     } catch (e) {
       debugPrint('PushService: token registration failed ($e)');
@@ -55,7 +57,9 @@ class PushService {
     if (token == null) return;
     try {
       await _authRepo.removeFcmToken(token);
-    } catch (_) {/* best-effort */}
+    } catch (_) {
+      /* best-effort */
+    }
     _token = null;
   }
 }

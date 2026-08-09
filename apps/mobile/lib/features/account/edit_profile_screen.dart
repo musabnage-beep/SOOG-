@@ -44,7 +44,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Future<void> _saveProfile() async {
     setState(() => _savingProfile = true);
     try {
-      final user = await ref.read(authRepositoryProvider).updateProfile(
+      final user = await ref
+          .read(authRepositoryProvider)
+          .updateProfile(
             fullName: _name.text.trim(),
             email: _email.text.trim().isEmpty ? null : _email.text.trim(),
             phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
@@ -65,7 +67,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
     setState(() => _savingPass = true);
     try {
-      await ref.read(authRepositoryProvider).changePassword(
+      await ref
+          .read(authRepositoryProvider)
+          .changePassword(
             currentPassword: _current.text,
             newPassword: _newPass.text,
           );
@@ -96,8 +100,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('المعلومات الشخصية',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          const Text(
+            'المعلومات الشخصية',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _name,
@@ -131,12 +137,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.onPrimary,
+                    ),
+                  )
                 : const Text('حفظ التغييرات'),
           ),
           const Divider(height: 40),
-          const Text('تغيير كلمة المرور',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          const Text(
+            'تغيير كلمة المرور',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _current,
@@ -162,7 +174,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Text('تغيير كلمة المرور'),
           ),
         ],

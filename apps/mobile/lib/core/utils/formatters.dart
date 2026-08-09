@@ -15,7 +15,8 @@ abstract class Formatters {
   static String date(DateTime date) =>
       DateFormat('d MMM y • h:mm a', 'ar').format(date.toLocal());
 
-  static String shortDate(DateTime date) => DateFormat('d MMM y', 'ar').format(date.toLocal());
+  static String shortDate(DateTime date) =>
+      DateFormat('d MMM y', 'ar').format(date.toLocal());
 
   static String distance(int meters) {
     if (meters < 1000) return '$meters م';

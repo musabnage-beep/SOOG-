@@ -5,15 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/assets/app_assets.dart';
+import '../../core/theme/app_colors.dart';
 import '../../router/app_router.dart';
 import '../../widgets/app_asset.dart';
 
 // ─── Brand Colours ────────────────────────────────────────────────────────────
-const _kBlack = Color(0xFF050505);
-const _kGold = Color(0xFFCFA347);
-const _kGoldLight = Color(0xFFFFD77A);
-const _kGreen = Color(0xFF1F6E3D);
-const _kGreenLight = Color(0xFF43C46A);
+const _kBlack = Color(0xFF070A08);
+const _kGold = AppColors.gold;
+const _kGoldLight = Color(0xFFFFE9A8);
+const _kGreen = AppColors.secondary;
+const _kGreenLight = AppColors.primary;
 
 // ─── Splash Screen ───────────────────────────────────────────────────────────
 //
@@ -58,19 +59,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 7000),
-    )
-      ..addStatusListener((s) {
-        if (s == AnimationStatus.completed && mounted) {
-          ref.read(splashDoneProvider.notifier).state = true;
-        }
-      })
-      ..forward();
+    _ctrl =
+        AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 7000),
+          )
+          ..addStatusListener((s) {
+            if (s == AnimationStatus.completed && mounted) {
+              ref.read(splashDoneProvider.notifier).state = true;
+            }
+          })
+          ..forward();
 
-    Animation<double> a(double s, double e, Curve curve) =>
-        CurvedAnimation(parent: _ctrl, curve: Interval(s, e, curve: curve));
+    Animation<double> a(double s, double e, Curve curve) => CurvedAnimation(
+      parent: _ctrl,
+      curve: Interval(s, e, curve: curve),
+    );
 
     _bgFade = a(0.00, 0.14, Curves.easeOut);
     _swoosh = a(0.06, 0.32, Curves.easeOutCubic);
@@ -82,6 +86,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _basketRise = a(0.36, 0.62, Curves.easeOutCubic);
     _progressBar = a(0.50, 0.98, Curves.easeInOut);
     _loadingFade = a(0.48, 0.60, Curves.easeIn);
+  }
+
+  bool _motionChecked = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_motionChecked) return;
+    _motionChecked = true;
+    // "Reduce motion" is on → skip the choreography and settle on the final
+    // frame immediately (the status listener then releases the router).
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      _ctrl.stop();
+      Future.microtask(() {
+        if (mounted) _ctrl.value = 1;
+      });
+    }
   }
 
   @override
@@ -110,8 +131,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         center: const Alignment(0, -0.35),
                         radius: 1.15,
                         colors: [
-                          const Color(0xFF141007)
-                              .withValues(alpha: _bgFade.value),
+                          const Color(
+                            0xFF141007,
+                          ).withValues(alpha: _bgFade.value),
                           _kBlack,
                         ],
                       ),
@@ -272,8 +294,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 ),
                                 child: FractionallySizedBox(
                                   alignment: Alignment.centerLeft,
-                                  widthFactor:
-                                      _progressBar.value.clamp(0.0, 1.0),
+                                  widthFactor: _progressBar.value.clamp(
+                                    0.0,
+                                    1.0,
+                                  ),
                                   child: Container(
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(999),
@@ -282,8 +306,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: _kGreenLight
-                                              .withValues(alpha: 0.55),
+                                          color: _kGreenLight.withValues(
+                                            alpha: 0.55,
+                                          ),
                                           blurRadius: 10,
                                           spreadRadius: 0.5,
                                         ),
@@ -331,8 +356,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   List<Widget> _buildFloats(double w, double h) {
     return _floatSlots.map((slot) {
       // Staggered appearance across the _floatsIn window.
-      final appear =
-          ((_floatsIn.value - slot.delay) / 0.30).clamp(0.0, 1.0);
+      final appear = ((_floatsIn.value - slot.delay) / 0.30).clamp(0.0, 1.0);
       // Gentle continuous bob once settled.
       final bob = math.sin(_ctrl.value * math.pi * 2 + slot.phase) * 5.0;
       final size = slot.size;
@@ -358,8 +382,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
 // ─── Floating slot data ───────────────────────────────────────────────────────
 class _FloatSlot {
-  const _FloatSlot(this.key, this.dx, this.dy, this.size, this.delay,
-      this.phase);
+  const _FloatSlot(
+    this.key,
+    this.dx,
+    this.dy,
+    this.size,
+    this.delay,
+    this.phase,
+  );
 
   final String key; // → assets/products/splash-<key>.png
   final double dx; // centre-x as fraction of width
@@ -483,11 +513,12 @@ class _AnimatedBrandLogo extends StatelessWidget {
                         height: 1.0,
                         fontWeight: FontWeight.w900,
                         foreground: Paint()
-                          ..shader = const LinearGradient(
-                            colors: [_kGoldLight, _kGold],
-                          ).createShader(
-                            Rect.fromLTWH(0, 0, size, size * 0.28),
-                          ),
+                          ..shader =
+                              const LinearGradient(
+                                colors: [_kGoldLight, _kGold],
+                              ).createShader(
+                                Rect.fromLTWH(0, 0, size, size * 0.28),
+                              ),
                       ),
                     ),
                   ),
@@ -566,9 +597,15 @@ class _DrawingBrandPainter extends CustomPainter {
       final r = h * 0.045;
       canvas.drawCircle(Offset(w * 0.14, h * 0.58), r * dotOpacity, dotPaint);
       canvas.drawCircle(
-          Offset(w * 0.10, h * 0.70), r * 0.85 * dotOpacity, dotPaint);
+        Offset(w * 0.10, h * 0.70),
+        r * 0.85 * dotOpacity,
+        dotPaint,
+      );
       canvas.drawCircle(
-          Offset(w * 0.07, h * 0.82), r * 0.70 * dotOpacity, dotPaint);
+        Offset(w * 0.07, h * 0.82),
+        r * 0.70 * dotOpacity,
+        dotPaint,
+      );
     }
   }
 
@@ -603,7 +640,8 @@ List<_Particle> _generateParticles(int count) {
     return _Particle(
       x: rnd.nextDouble(),
       baseY: rnd.nextDouble(),
-      radius: [0.6, 1.2, 2.0][layer] + rnd.nextDouble() * [0.4, 0.8, 1.0][layer],
+      radius:
+          [0.6, 1.2, 2.0][layer] + rnd.nextDouble() * [0.4, 0.8, 1.0][layer],
       speed: [0.08, 0.15, 0.25][layer] + rnd.nextDouble() * 0.12,
       twinklePhase: rnd.nextDouble() * math.pi * 2,
       layer: layer,
@@ -631,7 +669,8 @@ class _ParticlePainter extends CustomPainter {
       final dx = p.x * size.width;
       final dy = y * size.height;
 
-      final twinkle = 0.3 +
+      final twinkle =
+          0.3 +
           0.7 * (0.5 + 0.5 * math.sin(progress * math.pi * 4 + p.twinklePhase));
       final baseAlpha = [0.3, 0.5, 0.7][p.layer];
       final alpha = baseAlpha * twinkle * density;

@@ -4,11 +4,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../providers/catalog_providers.dart';
+import '../../widgets/ambient_background.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/state_views.dart';
 
 class ProductsArgs {
-  const ProductsArgs({this.categoryId, this.categorySlug, this.search, this.title});
+  const ProductsArgs({
+    this.categoryId,
+    this.categorySlug,
+    this.search,
+    this.title,
+  });
 
   final String? categoryId;
   final String? categorySlug;
@@ -72,7 +78,8 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
     });
   }
 
-  void _applySort(String sort) => setState(() => _query = _query.copyWith(sort: sort));
+  void _applySort(String sort) =>
+      setState(() => _query = _query.copyWith(sort: sort));
 
   @override
   Widget build(BuildContext context) {
@@ -109,30 +116,37 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                 ),
                 const SizedBox(width: 8),
                 PopupMenuButton<String>(
+                  color: AppColors.surface,
                   icon: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.cream,
-                      borderRadius: BorderRadius.circular(12),
+                      color: AppColors.surfaceAlt,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.border),
                     ),
                     child: const Icon(Icons.tune, color: AppColors.primary),
                   ),
                   onSelected: _applySort,
                   itemBuilder: (_) => _sortOptions.entries
-                      .map((e) => PopupMenuItem(
-                            value: e.key,
-                            child: Row(
-                              children: [
-                                if (_query.sort == e.key)
-                                  const Icon(Icons.check,
-                                      size: 18, color: AppColors.primary)
-                                else
-                                  const SizedBox(width: 18),
-                                const SizedBox(width: 8),
-                                Text(e.value),
-                              ],
-                            ),
-                          ))
+                      .map(
+                        (e) => PopupMenuItem(
+                          value: e.key,
+                          child: Row(
+                            children: [
+                              if (_query.sort == e.key)
+                                const Icon(
+                                  Icons.check,
+                                  size: 18,
+                                  color: AppColors.primary,
+                                )
+                              else
+                                const SizedBox(width: 18),
+                              const SizedBox(width: 8),
+                              Text(e.value),
+                            ],
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
               ],
@@ -149,7 +163,8 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
     if (state.error != null && state.items.isEmpty) {
       return ErrorView(
         message: state.error!,
-        onRetry: () => ref.read(productsControllerProvider(_query).notifier).refresh(),
+        onRetry: () =>
+            ref.read(productsControllerProvider(_query).notifier).refresh(),
       );
     }
     if (state.items.isEmpty) {
@@ -161,7 +176,9 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
     }
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: () => ref.read(productsControllerProvider(_query).notifier).refresh(),
+      backgroundColor: AppColors.surface,
+      onRefresh: () =>
+          ref.read(productsControllerProvider(_query).notifier).refresh(),
       child: GridView.builder(
         controller: _scroll,
         padding: const EdgeInsets.all(16),
@@ -177,9 +194,12 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final p = state.items[i];
-          return ProductCard(
-            product: p,
-            onTap: () => context.push('/product/${p.id}'),
+          return FadeSlideIn(
+            index: i,
+            child: ProductCard(
+              product: p,
+              onTap: () => context.push('/product/${p.id}'),
+            ),
           );
         },
       ),
