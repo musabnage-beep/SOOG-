@@ -146,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: const [
                                   Text(
-                                    'مرحبًا بك في ضياف',
+                                    'مرحبًا بك في الضيافة',
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w800,
