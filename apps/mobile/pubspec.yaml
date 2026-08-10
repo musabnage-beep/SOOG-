@@ -38,6 +38,9 @@ dependencies:
   flutter_svg: ^2.0.10+1
   intl: ^0.20.2
 
+  # Payments (opens the gateway's hosted page in the system browser)
+  url_launcher: ^6.3.1
+
   # Firebase (push notifications)
   firebase_core: ^3.8.1
   firebase_messaging: ^15.1.6

@@ -8,6 +8,7 @@ import '../../data/models/order.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/orders_providers.dart';
 import '../../widgets/order_status_chip.dart';
+import '../checkout/payment_launcher.dart';
 import '../../widgets/state_views.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
@@ -195,6 +196,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
+                if (order.awaitingPayment && order.status.isActive) ...[
+                  _payPrompt(order),
+                  const SizedBox(height: 12),
+                ],
                 // Items
                 const _SectionTitle('المنتجات'),
                 const SizedBox(height: 8),
@@ -362,6 +367,60 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       ],
     ),
   );
+
+  /// Card orders stay unpaid until the gateway confirms; let the customer
+  /// reopen the hosted page if they closed it or the payment failed.
+  Widget _payPrompt(Order order) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: AppColors.gold.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.credit_card, color: AppColors.gold),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            order.paymentStatus == PaymentStatus.failed
+                ? 'لم تتم عملية الدفع. يمكنك المحاولة مرة أخرى.'
+                : 'هذا الطلب بانتظار الدفع الإلكتروني.',
+            style: const TextStyle(color: AppColors.gold),
+          ),
+        ),
+        const SizedBox(width: 10),
+        ElevatedButton(
+          onPressed: _busy ? null : () => _payNow(order.id),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.gold,
+            foregroundColor: AppColors.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: const Text(
+            'ادفع الآن',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _payNow(String orderId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    final opened = await openPaymentPage(
+      messenger,
+      ref.read(orderRepositoryProvider),
+      orderId,
+    );
+    // Reconciliation happens on the gateway callback; refresh so returning
+    // customers see the settled status.
+    if (opened) ref.invalidate(orderDetailProvider(orderId));
+    if (mounted) setState(() => _busy = false);
+  }
 
   Widget? _actions(Order order) {
     final canCancel = order.status.isActive && !order.needsConfirmation;

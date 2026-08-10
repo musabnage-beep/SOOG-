@@ -13,6 +13,7 @@ import '../../providers/cart_controller.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/orders_providers.dart';
 import '../../providers/settings_providers.dart';
+import 'payment_launcher.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -25,6 +26,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _note = TextEditingController();
   final _phone = TextEditingController();
   FulfillmentType _type = FulfillmentType.delivery;
+  PaymentMethod _payment = PaymentMethod.cod;
   String? _addressId;
   bool _placing = false;
 
@@ -59,6 +61,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   /// Falls back to pickup while delivery is paused, whatever the user picked.
   FulfillmentType get _effectiveType =>
       _deliveryOn ? _type : FulfillmentType.pickup;
+
+  /// Card checkout only appears once a real gateway is configured.
+  bool get _onlinePayOn =>
+      ref.read(storeSettingsProvider).valueOrNull?.onlinePaymentEnabled ?? false;
+
+  PaymentMethod get _effectivePayment =>
+      _onlinePayOn ? _payment : PaymentMethod.cod;
 
   Address? get _selectedAddress {
     final list = ref.read(addressControllerProvider).items;
@@ -165,6 +174,26 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ),
             const SizedBox(height: 22),
           ],
+          if (_onlinePayOn) ...[
+            const _SectionTitle('طريقة الدفع'),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _payCard(
+                  PaymentMethod.cod,
+                  Icons.payments_outlined,
+                  'الدفع عند الاستلام',
+                ),
+                const SizedBox(width: 12),
+                _payCard(
+                  PaymentMethod.card,
+                  Icons.credit_card,
+                  'مدى أو بطاقة ائتمانية',
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+          ],
           const _SectionTitle('ملاحظات (اختياري)'),
           const SizedBox(height: 10),
           TextField(
@@ -222,6 +251,46 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _payCard(PaymentMethod method, IconData icon, String label) {
+    final active = _effectivePayment == method;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _payment = method),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+          decoration: BoxDecoration(
+            color: active ? AppColors.primary : AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: active ? AppColors.primary : AppColors.border,
+            ),
+            boxShadow: active
+                ? AppColors.glowGreen(intensity: 0.45)
+                : AppColors.cardShadow,
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: active ? AppColors.onPrimary : AppColors.primary,
+                size: 28,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: active ? AppColors.onPrimary : AppColors.dark,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -311,6 +380,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       _show('أدخل رقم جوال سعودي صحيح');
       return;
     }
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _placing = true);
     try {
       if (needsPhone) {
@@ -319,15 +389,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             .updateProfile(phone: _normalizeSaudi(typed));
         ref.read(authControllerProvider.notifier).setUser(user);
       }
-      final order = await ref
-          .read(orderRepositoryProvider)
-          .checkout(
-            fulfillmentType: type,
-            addressId: type == FulfillmentType.delivery ? _addressId : null,
-            customerNote: _note.text.trim(),
-          );
+      final orders = ref.read(orderRepositoryProvider);
+      final order = await orders.checkout(
+        fulfillmentType: type,
+        paymentMethod: _effectivePayment,
+        addressId: type == FulfillmentType.delivery ? _addressId : null,
+        customerNote: _note.text.trim(),
+      );
       await ref.read(cartControllerProvider.notifier).load();
       ref.invalidate(myOrdersProvider);
+      if (order.isCard) {
+        // The order exists either way; if the browser fails to open the
+        // customer can retry from the order screen.
+        await openPaymentPage(messenger, orders, order.id);
+      }
       if (!mounted) return;
       context.pushReplacement('/order/${order.id}');
     } on ApiException catch (e) {

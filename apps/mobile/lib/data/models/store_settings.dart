@@ -8,6 +8,7 @@ class StoreSettings {
     required this.deliveryRadiusM,
     required this.baseDeliveryFee,
     this.deliveryEnabled = true,
+    this.onlinePaymentEnabled = false,
     this.currency = 'SAR',
     this.storeName,
     this.storePhone,
@@ -21,6 +22,10 @@ class StoreSettings {
 
   /// False when the store paused delivery — only pickup orders are accepted.
   final bool deliveryEnabled;
+
+  /// True once a real payment gateway is configured; otherwise checkout is
+  /// cash-on-delivery only.
+  final bool onlinePaymentEnabled;
   final String currency;
   final String? storeName;
   final String? storePhone;
@@ -32,6 +37,7 @@ class StoreSettings {
         deliveryRadiusM: asInt(json['deliveryRadiusM'], 15000),
         baseDeliveryFee: asDouble(json['baseDeliveryFee'], 15),
         deliveryEnabled: json['deliveryEnabled'] != false,
+        onlinePaymentEnabled: json['onlinePaymentEnabled'] == true,
         currency: asString(json['currency'], 'SAR'),
         storeName: json['storeName'] as String?,
         storePhone: json['storePhone'] as String?,
