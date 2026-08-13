@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client/index.ts",
-    "./ui": "./src/ui/index.ts"
+    "./ui": "./src/ui/index.ts",
+    "./views": "./src/views/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
