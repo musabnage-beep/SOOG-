@@ -13,9 +13,9 @@ import {
   Loading,
   ErrorState,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import type { CreateProductInput } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 import { ProductForm } from '@/components/product-form';
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {

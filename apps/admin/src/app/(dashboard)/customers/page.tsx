@@ -20,9 +20,9 @@ import {
   EmptyState,
   Pagination,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import { formatDate } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 export default function CustomersPage() {
   const [page, setPage] = useState(1);

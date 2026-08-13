@@ -22,9 +22,9 @@ import {
   EmptyState,
   Pagination,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import { formatDate, type CreateEmployeeInput } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 const empty: CreateEmployeeInput = { fullName: '', email: '', phone: '', password: '' };
 

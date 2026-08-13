@@ -21,9 +21,9 @@ import {
   ErrorState,
   EmptyState,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import { REPORT_TYPE_LABEL_AR, type ReportType, type ReportFormat } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 const TYPES: ReportType[] = ['SALES', 'ORDERS', 'INVENTORY', 'CUSTOMERS', 'EMPLOYEES'];
 

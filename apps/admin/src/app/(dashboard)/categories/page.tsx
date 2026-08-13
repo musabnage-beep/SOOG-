@@ -22,9 +22,9 @@ import {
   EmptyState,
   ConfirmDialog,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import type { Category, CreateCategoryInput } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 const empty: CreateCategoryInput = {
   nameAr: '',

@@ -21,6 +21,7 @@ import {
   ErrorState,
   EmptyState,
   Pagination,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import {
   money,
@@ -30,7 +31,6 @@ import {
   FULFILLMENT_LABEL_AR,
   type OrderStatus,
 } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 const STATUSES: OrderStatus[] = [
   'SUBMITTED',

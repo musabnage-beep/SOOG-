@@ -23,9 +23,9 @@ import {
   Pagination,
   ConfirmDialog,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import { money, type Product } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 export default function ProductsPage() {
   const [page, setPage] = useState(1);

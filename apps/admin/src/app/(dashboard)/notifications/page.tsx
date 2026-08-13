@@ -10,9 +10,9 @@ import {
   ErrorState,
   EmptyState,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import { formatDateTime } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 export default function NotificationsPage() {
   const { data, isLoading, isError, refetch } = useNotifications();

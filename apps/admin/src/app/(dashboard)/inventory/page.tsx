@@ -22,6 +22,7 @@ import {
   ErrorState,
   EmptyState,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import {
   num,
@@ -32,7 +33,6 @@ import {
   type Product,
   type InventoryLogType,
 } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 export default function InventoryPage() {
   const { data, isLoading, isError, refetch } = useLowStock();

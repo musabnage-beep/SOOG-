@@ -19,6 +19,7 @@ import {
   ErrorState,
   EmptyState,
   Pagination,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import {
   money,
@@ -27,7 +28,6 @@ import {
   ORDER_STATUS_TONE,
   FULFILLMENT_LABEL_AR,
 } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 export default function ReviewQueuePage() {
   const [page, setPage] = useState(1);

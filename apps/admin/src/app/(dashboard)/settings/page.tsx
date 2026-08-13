@@ -13,9 +13,9 @@ import {
   Loading,
   ErrorState,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import type { UpdateSettingsInput } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 export default function SettingsPage() {
   const { data, isLoading, isError, refetch } = useSettings();

@@ -6,5 +6,6 @@ export * from './modal';
 export * from './toast';
 export * from './pagination';
 export * from './stat-card';
+export * from './page-header';
 export * from './charts';
 export * from './brand-logo';

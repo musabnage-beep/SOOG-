@@ -3,9 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { useProductMutations } from '@aldiafa/shared/client';
-import { Button, useToast } from '@aldiafa/shared/ui';
+import { Button, useToast, PageHeader } from '@aldiafa/shared/ui';
 import type { CreateProductInput } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 import { ProductForm } from '@/components/product-form';
 
 export default function NewProductPage() {

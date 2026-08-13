@@ -22,9 +22,9 @@ import {
   EmptyState,
   ConfirmDialog,
   useToast,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import { money, num, type DeliveryZone, type UpsertDeliveryZoneInput } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 const empty: UpsertDeliveryZoneInput = { name: '', minRadiusM: 0, maxRadiusM: 0, fee: 0, isActive: true };
 

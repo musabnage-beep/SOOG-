@@ -31,6 +31,7 @@ import {
   TR,
   TH,
   TD,
+  PageHeader,
 } from '@aldiafa/shared/ui';
 import {
   money,
@@ -44,7 +45,6 @@ import {
   advanceTargets,
   type OrderStatus,
 } from '@aldiafa/shared';
-import { PageHeader } from '@/components/page-header';
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
