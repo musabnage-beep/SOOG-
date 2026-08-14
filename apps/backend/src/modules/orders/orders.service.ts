@@ -37,6 +37,25 @@ const ORDER_INCLUDE = {
   user: { select: { id: true, fullName: true, phone: true, email: true } },
 } satisfies Prisma.OrderInclude;
 
+type CartItemWithProduct = Prisma.CartItemGetPayload<{ include: { product: true } }>;
+
+/** Freezes the cart into order lines: prices, names and totals stop tracking the catalogue. */
+function buildOrderItems(cartItems: CartItemWithProduct[]) {
+  return cartItems.map((ci) => {
+    const unitPrice = unitPriceOf(ci.product, ci.unit) ?? unitPriceOf(ci.product, SaleUnit.PIECE)!;
+    return {
+      productId: ci.productId,
+      nameAr: ci.product.nameAr,
+      nameEn: ci.product.nameEn,
+      unitPrice: new Prisma.Decimal(unitPrice),
+      quantity: ci.quantity,
+      unit: ci.unit,
+      unitsPerCarton: ci.unit === SaleUnit.CARTON ? ci.product.unitsPerCarton : null,
+      lineTotal: new Prisma.Decimal(+(unitPrice * ci.quantity).toFixed(2)),
+    };
+  });
+}
+
 @Injectable()
 export class OrdersService {
   constructor(
@@ -47,62 +66,13 @@ export class OrdersService {
 
   // ── Checkout ────────────────────────────────────────────────────────────
   async checkout(userId: string, dto: CheckoutDto) {
-    // The courier / shipping company must be able to reach the customer.
-    const customer = await this.prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-      select: { phone: true },
-    });
-    if (!customer.phone) throw new BadRequestException('أضف رقم جوالك قبل إتمام الطلب');
+    const cartItems = await this.loadCheckoutCart(userId);
+    const { deliveryFee, distanceMeters, etaMinutes, addressId } = await this.resolveFulfillment(
+      userId,
+      dto,
+    );
 
-    const cartItems = await this.prisma.cartItem.findMany({
-      where: { userId },
-      include: { product: true },
-    });
-    if (cartItems.length === 0) throw new BadRequestException('Cart is empty');
-
-    for (const ci of cartItems) {
-      if (!ci.product.isActive) {
-        throw new BadRequestException(`"${ci.product.nameAr}" is no longer available`);
-      }
-    }
-
-    let deliveryFee = 0;
-    let distanceMeters: number | null = null;
-    let etaMinutes: number | null = null;
-    let addressId: string | null = null;
-
-    if (dto.fulfillmentType === FulfillmentType.DELIVERY) {
-      const address = await this.prisma.address.findFirst({
-        where: { id: dto.addressId, userId },
-      });
-      if (!address) throw new BadRequestException('Delivery address not found');
-      const quote = await this.delivery.quote(address.latitude, address.longitude);
-      if (!quote.deliveryEnabled) {
-        throw new BadRequestException('التوصيل متوقف مؤقتاً — يمكنك الاستلام من المتجر');
-      }
-
-      if (!quote.withinRange) {
-        throw new BadRequestException('Delivery address is outside the delivery range');
-      }
-      deliveryFee = quote.fee;
-      distanceMeters = quote.distanceMeters;
-      etaMinutes = quote.etaMinutes;
-      addressId = address.id;
-    }
-
-    const items = cartItems.map((ci) => {
-      const unitPrice = unitPriceOf(ci.product, ci.unit) ?? unitPriceOf(ci.product, SaleUnit.PIECE)!;
-      return {
-        productId: ci.productId,
-        nameAr: ci.product.nameAr,
-        nameEn: ci.product.nameEn,
-        unitPrice: new Prisma.Decimal(unitPrice),
-        quantity: ci.quantity,
-        unit: ci.unit,
-        unitsPerCarton: ci.unit === SaleUnit.CARTON ? ci.product.unitsPerCarton : null,
-        lineTotal: new Prisma.Decimal(+(unitPrice * ci.quantity).toFixed(2)),
-      };
-    });
+    const items = buildOrderItems(cartItems);
     const subtotal = items.reduce((sum, i) => sum + Number(i.lineTotal), 0);
     const total = +(subtotal + deliveryFee).toFixed(2);
 
@@ -137,6 +107,55 @@ export class OrdersService {
     await this.notifyCustomer(order.userId, NotificationType.ORDER_SUBMITTED, order.orderNumber);
     await this.notifyStaff(order.orderNumber);
     return order;
+  }
+
+  /** Returns the cart the order will be built from, rejecting anything unorderable. */
+  private async loadCheckoutCart(userId: string) {
+    // The courier / shipping company must be able to reach the customer.
+    const customer = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { phone: true },
+    });
+    if (!customer.phone) throw new BadRequestException('أضف رقم جوالك قبل إتمام الطلب');
+
+    const cartItems = await this.prisma.cartItem.findMany({
+      where: { userId },
+      include: { product: true },
+    });
+    if (cartItems.length === 0) throw new BadRequestException('Cart is empty');
+
+    for (const ci of cartItems) {
+      if (!ci.product.isActive) {
+        throw new BadRequestException(`"${ci.product.nameAr}" is no longer available`);
+      }
+    }
+    return cartItems;
+  }
+
+  /** Prices the delivery leg; pickup orders resolve to a free, address-less order. */
+  private async resolveFulfillment(userId: string, dto: CheckoutDto) {
+    if (dto.fulfillmentType !== FulfillmentType.DELIVERY) {
+      return { deliveryFee: 0, distanceMeters: null, etaMinutes: null, addressId: null };
+    }
+
+    const address = await this.prisma.address.findFirst({
+      where: { id: dto.addressId, userId },
+    });
+    if (!address) throw new BadRequestException('Delivery address not found');
+
+    const quote = await this.delivery.quote(address.latitude, address.longitude);
+    if (!quote.deliveryEnabled) {
+      throw new BadRequestException('التوصيل متوقف مؤقتاً — يمكنك الاستلام من المتجر');
+    }
+    if (!quote.withinRange) {
+      throw new BadRequestException('Delivery address is outside the delivery range');
+    }
+    return {
+      deliveryFee: quote.fee,
+      distanceMeters: quote.distanceMeters,
+      etaMinutes: quote.etaMinutes,
+      addressId: address.id,
+    };
   }
 
   // ── Queries ──────────────────────────────────────────────────────────────
