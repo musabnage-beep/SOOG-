@@ -165,7 +165,18 @@ export class OrdersService {
   }
 
   async listForStaff(query: QueryOrdersDto) {
-    const where: Prisma.OrderWhereInput = query.status ? { status: query.status } : {};
+    const where: Prisma.OrderWhereInput = {
+      ...(query.status ? { status: query.status } : {}),
+      // Matches the dashboard placeholder: order number or customer name.
+      ...(query.search
+        ? {
+            OR: [
+              { orderNumber: { contains: query.search, mode: 'insensitive' as const } },
+              { user: { fullName: { contains: query.search, mode: 'insensitive' as const } } },
+            ],
+          }
+        : {}),
+    };
     return this.paginatedList(where, query);
   }
 
