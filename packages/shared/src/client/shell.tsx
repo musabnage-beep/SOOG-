@@ -13,7 +13,7 @@ export interface NavItem {
   icon: ComponentType<{ className?: string }>;
 }
 
-type LinkLike = (props: {
+export type LinkLike = (props: {
   href: string;
   className?: string;
   children: ReactNode;
