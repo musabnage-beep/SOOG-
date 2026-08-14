@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/snack.dart';
 import '../../providers/auth_controller.dart';
 import '../../providers/core_providers.dart';
 
@@ -97,12 +98,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   void _show(String msg, {bool error = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: error ? AppColors.danger : AppColors.success,
-      ),
-    );
+    if (error) {
+      showErrorSnack(context, msg);
+    } else {
+      showSuccessSnack(context, msg);
+    }
   }
 
   @override

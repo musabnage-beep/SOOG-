@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/snack.dart';
 import '../../data/models/order.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/orders_providers.dart';
@@ -62,17 +63,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       await fn();
       ref.invalidate(orderDetailProvider(widget.orderId));
       ref.invalidate(myOrdersProvider);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(success), backgroundColor: AppColors.success),
-        );
-      }
+      if (mounted) showSuccessSnack(context, success);
     } on ApiException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppColors.danger),
-        );
-      }
+      if (mounted) showErrorSnack(context, e.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/snack.dart';
 import '../../data/models/product.dart';
 import '../../providers/auth_controller.dart';
 import '../../providers/cart_controller.dart';
@@ -173,14 +174,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.danger,
-          ),
-        );
-      }
+      if (mounted) showErrorSnack(context, e.toString());
     } finally {
       if (mounted) setState(() => _busy = false);
     }

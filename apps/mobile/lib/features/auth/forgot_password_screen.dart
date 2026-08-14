@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/snack.dart';
 import '../../providers/core_providers.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -75,12 +76,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   void _show(String msg, {bool error = true}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: error ? AppColors.danger : AppColors.success,
-      ),
-    );
+    if (error) {
+      showErrorSnack(context, msg);
+    } else {
+      showSuccessSnack(context, msg);
+    }
   }
 
   @override

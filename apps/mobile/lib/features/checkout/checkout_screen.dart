@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/snack.dart';
 import '../../data/models/address.dart';
 import '../../data/models/order.dart';
 import '../../providers/address_controller.dart';
@@ -414,11 +415,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     }
   }
 
-  void _show(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.danger),
-    );
-  }
+  void _show(String msg) => showErrorSnack(context, msg);
 }
 
 class _SectionTitle extends StatelessWidget {

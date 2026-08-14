@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/snack.dart';
 import '../../providers/auth_controller.dart';
 import '../../providers/core_providers.dart';
 import '../../widgets/ambient_background.dart';
@@ -67,11 +68,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  void _show(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.danger),
-    );
-  }
+  void _show(String msg) => showErrorSnack(context, msg);
 
   @override
   Widget build(BuildContext context) {

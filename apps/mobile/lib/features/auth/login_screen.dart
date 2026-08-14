@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/snack.dart';
 import '../../providers/auth_controller.dart';
 import '../../widgets/ambient_background.dart';
 
@@ -52,9 +53,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _show(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.danger),
-    );
+    showErrorSnack(context, msg);
   }
 
   @override

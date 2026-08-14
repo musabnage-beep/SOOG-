@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/snack.dart';
 import '../../data/models/address.dart';
 import '../../providers/address_controller.dart';
 import '../../widgets/state_views.dart';
@@ -137,12 +138,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                         : () async {
                             if (cityCtrl.text.trim().isEmpty ||
                                 streetCtrl.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(ctx).showSnackBar(
-                                const SnackBar(
-                                  content: Text('أدخل المدينة والشارع'),
-                                  backgroundColor: AppColors.danger,
-                                ),
-                              );
+                              showErrorSnack(ctx, 'أدخل المدينة والشارع');
                               return;
                             }
                             setSheet(() => saving = true);
@@ -161,14 +157,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                               if (ctx.mounted) Navigator.pop(ctx);
                             } on ApiException catch (e) {
                               setSheet(() => saving = false);
-                              if (ctx.mounted) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  SnackBar(
-                                    content: Text(e.message),
-                                    backgroundColor: AppColors.danger,
-                                  ),
-                                );
-                              }
+                              if (ctx.mounted) showErrorSnack(ctx, e.message);
                             }
                           },
                     child: saving
