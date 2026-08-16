@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RoleName } from '@prisma/client';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -11,6 +21,7 @@ import { UsersService } from './users.service';
 import {
   ChangePasswordDto,
   CreateEmployeeDto,
+  DeleteAccountDto,
   UpdateProfileDto,
   UpdateUserStatusDto,
 } from './dto/user.dto';
@@ -34,6 +45,11 @@ export class UsersController {
   @Patch('me/password')
   changePassword(@CurrentUser('id') userId: string, @Body() dto: ChangePasswordDto) {
     return this.service.changePassword(userId, dto);
+  }
+
+  @Delete('me')
+  deleteAccount(@CurrentUser('id') userId: string, @Body() dto: DeleteAccountDto) {
+    return this.service.deleteAccount(userId, dto);
   }
 
   // ── Admin: customers ──────────────────────────────────────────────────────

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/snack.dart';
 import '../../providers/auth_controller.dart';
 import '../../widgets/ambient_background.dart';
 
@@ -105,6 +107,12 @@ class AccountScreen extends ConsumerWidget {
               () => _logout(context, ref),
               color: AppColors.danger,
             ),
+            _tile(
+              Icons.delete_forever_outlined,
+              'حذف الحساب',
+              () => _deleteAccount(context, ref),
+              color: AppColors.danger,
+            ),
             const SizedBox(height: 24),
           ],
         ),
@@ -191,5 +199,82 @@ class AccountScreen extends ConsumerWidget {
     if (ok == true) {
       await ref.read(authControllerProvider.notifier).logout();
     }
+  }
+
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+    final password = await showDialog<String>(
+      context: context,
+      builder: (_) => const _DeleteAccountDialog(),
+    );
+    if (password == null) return;
+
+    try {
+      await ref.read(authControllerProvider.notifier).deleteAccount(password);
+      if (context.mounted) showSuccessSnack(context, 'تم حذف حسابك');
+    } on ApiException catch (e) {
+      if (context.mounted) showErrorSnack(context, e.message);
+    }
+  }
+}
+
+/// Asks the customer to re-enter their password before closing the account.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _password = TextEditingController();
+  bool _canSubmit = false;
+
+  @override
+  void dispose() {
+    _password.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('حذف الحساب'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'سيتم حذف حسابك وبياناتك الشخصية وعناوينك وسلّتك ومفضّلتك نهائياً، '
+            'ولن تتمكّن من تسجيل الدخول بعدها. تُحفظ فواتير طلباتك السابقة '
+            'للأغراض النظامية فقط.\n\nأدخل كلمة المرور للتأكيد.',
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _password,
+            obscureText: true,
+            autofocus: true,
+            onChanged: (v) => setState(() => _canSubmit = v.isNotEmpty),
+            decoration: const InputDecoration(
+              labelText: 'كلمة المرور',
+              prefixIcon: Icon(Icons.lock_outline),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('إلغاء'),
+        ),
+        TextButton(
+          onPressed:
+              _canSubmit ? () => Navigator.pop(context, _password.text) : null,
+          child: const Text(
+            'حذف نهائي',
+            style: TextStyle(color: AppColors.danger),
+          ),
+        ),
+      ],
+    );
   }
 }

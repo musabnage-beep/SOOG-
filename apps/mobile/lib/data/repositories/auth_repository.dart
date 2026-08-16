@@ -96,4 +96,8 @@ class AuthRepository {
       'newPassword': newPassword,
     });
   }
+
+  Future<void> deleteAccount(String password) async {
+    await _api.delete<dynamic>('/users/me', data: {'password': password});
+  }
 }

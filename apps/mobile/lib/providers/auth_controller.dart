@@ -82,6 +82,15 @@ class AuthController extends StateNotifier<AuthState> {
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
+  /// Closes the customer's account, then drops the local session.
+  ///
+  /// The password is re-entered by the customer and checked server-side.
+  Future<void> deleteAccount(String password) async {
+    await _repo.deleteAccount(password);
+    await _tokens.clear();
+    state = const AuthState(status: AuthStatus.unauthenticated);
+  }
+
   /// Called by the API client when refresh fails.
   void onSessionExpired() {
     state = const AuthState(status: AuthStatus.unauthenticated);

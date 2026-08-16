@@ -1,19 +1,25 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { RoleName } from '@prisma/client';
+import { randomBytes } from 'crypto';
 import * as argon2 from 'argon2';
 import { PrismaService } from '@/prisma/prisma.service';
 import { paginate, PaginationDto } from '@/common/dto/pagination.dto';
 import {
   ChangePasswordDto,
   CreateEmployeeDto,
+  DeleteAccountDto,
   UpdateProfileDto,
   UpdateUserStatusDto,
 } from './dto/user.dto';
+
+/** Name left on an anonymised row so staff still see something in order history. */
+const DELETED_ACCOUNT_NAME = 'حساب محذوف';
 
 const PUBLIC_SELECT = {
   id: true,
@@ -64,6 +70,55 @@ export class UsersService {
       where: { id: userId },
       data: { passwordHash: await argon2.hash(dto.newPassword) },
     });
+    return { ok: true };
+  }
+
+  /**
+   * Closes a customer's own account (App Store guideline 5.1.1(v)).
+   *
+   * The row is anonymised rather than deleted: orders reference the user
+   * without a cascade, and invoices must be retained for tax purposes. Clearing
+   * the email and phone frees them for re-registration and, together with
+   * `isActive: false`, makes every login path fail — so from the customer's
+   * side the account is gone.
+   */
+  async deleteAccount(userId: string, dto: DeleteAccountDto) {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      include: { role: true },
+    });
+    if (user.role.name !== RoleName.CUSTOMER) {
+      throw new ForbiddenException('حسابات الموظفين تُغلق من لوحة الإدارة');
+    }
+
+    const valid = await argon2.verify(user.passwordHash, dto.password);
+    if (!valid) throw new BadRequestException('كلمة المرور غير صحيحة');
+
+    const scrambledPassword = await argon2.hash(randomBytes(32).toString('hex'));
+
+    await this.prisma.$transaction([
+      this.prisma.address.deleteMany({ where: { userId } }),
+      this.prisma.cartItem.deleteMany({ where: { userId } }),
+      this.prisma.wishlist.deleteMany({ where: { userId } }),
+      this.prisma.notification.deleteMany({ where: { userId } }),
+      this.prisma.session.deleteMany({ where: { userId } }),
+      this.prisma.otpCode.deleteMany({ where: { userId } }),
+      this.prisma.passwordReset.deleteMany({ where: { userId } }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          fullName: DELETED_ACCOUNT_NAME,
+          email: null,
+          phone: null,
+          passwordHash: scrambledPassword,
+          isActive: false,
+          isEmailVerified: false,
+          isPhoneVerified: false,
+          fcmTokens: [],
+        },
+      }),
+    ]);
+
     return { ok: true };
   }
 

@@ -63,3 +63,9 @@ export class UpdateUserStatusDto {
   @IsBoolean()
   isActive!: boolean;
 }
+
+export class DeleteAccountDto {
+  @ApiProperty({ description: 'Current password, re-entered to confirm the deletion.' })
+  @IsString()
+  password!: string;
+}
