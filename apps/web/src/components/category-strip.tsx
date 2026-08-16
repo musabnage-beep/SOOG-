@@ -44,11 +44,11 @@ export function CategoryStrip({ categories }: { categories: Category[] }) {
   return (
     <section className="mx-auto max-w-7xl px-6 py-6">
       <div className="no-scrollbar flex items-start gap-4 overflow-x-auto">
-        <Tile href="/categories" label="عرض جميع الأقسام">
+        <Tile href="/#products" label="عرض جميع الأقسام">
           <IconAllCategories size={28} className="text-brand" />
         </Tile>
         {categories.map((c) => (
-          <Tile key={c.slug} href={`/category/${c.slug}`} label={c.nameAr}>
+          <Tile key={c.slug} href="/#products" label={c.nameAr}>
             <SafeImage
               src={`/category-icons/${ICON_FILE[c.slug] ?? c.slug}.png`}
               alt={c.nameAr}

@@ -1,4 +1,4 @@
-import { API_URL } from './config';
+import { API_URL, API_ORIGIN, MEDIA_PREFIX } from './config';
 
 export interface Category {
   id: string;
@@ -96,9 +96,19 @@ export function formatPrice(value: number): string {
   return value.toFixed(2);
 }
 
+/**
+ * Rewrites an absolute API image URL onto the same-origin media proxy so it is
+ * not blocked as mixed content when the site is served over HTTPS. URLs on any
+ * other origin (or already-relative ones) are returned untouched.
+ */
+export function mediaUrl(url: string): string {
+  if (!url.startsWith(API_ORIGIN)) return url;
+  return `${MEDIA_PREFIX}${url.slice(API_ORIGIN.length)}`;
+}
+
 /** Main product photo, or null when the product has no uploaded image. */
 export function mainImage(product: Product): string | null {
   if (!product.images?.length) return null;
   const main = product.images.find((img) => img.isMain) ?? product.images[0];
-  return main?.url ?? null;
+  return main?.url ? mediaUrl(main.url) : null;
 }
