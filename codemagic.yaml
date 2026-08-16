@@ -12,6 +12,7 @@ workflows:
       cocoapods: default
       groups:
         - google_maps             # GOOGLE_MAPS_API_KEY
+        - ios_signing             # CERTIFICATE_PRIVATE_KEY (base64 RSA key)
       vars:
         BUNDLE_ID: com.aldiafah.aldiafa
         APP_STORE_APP_ID: "6791276970"
