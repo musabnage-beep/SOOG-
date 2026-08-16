@@ -53,3 +53,5 @@ apps/mobile/.flutter-plugins*
 # next (phase 3)
 apps/admin/.next/
 apps/employee/.next/
+apps/web/.next/
+.vercel/
