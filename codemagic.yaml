@@ -11,7 +11,6 @@ workflows:
       xcode: latest
       cocoapods: default
       groups:
-        - google_maps             # GOOGLE_MAPS_API_KEY
         - ios_signing             # CERTIFICATE_PRIVATE_KEY (base64 RSA key)
       vars:
         BUNDLE_ID: com.aldiafah.aldiafa
@@ -40,16 +39,11 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-      - name: Inject Google Maps API key
-        script: |
-          XCCONFIG="apps/mobile/ios/Flutter/Release.xcconfig"
-          echo "GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY" >> "$XCCONFIG"
-
       - name: Build iOS IPA
         script: |
           cd apps/mobile
           flutter build ipa --release \
-            --build-name=1.0.24 \
+            --build-name=1.0.25 \
             --build-number=$PROJECT_BUILD_NUMBER \
             --export-options-plist=$HOME/export_options.plist
 
@@ -70,8 +64,6 @@ workflows:
     instance_type: linux_x2
     environment:
       flutter: stable
-      groups:
-        - google_maps   # GOOGLE_MAPS_API_KEY
       vars:
         PACKAGE_NAME: com.aldiafah.aldiafa
 

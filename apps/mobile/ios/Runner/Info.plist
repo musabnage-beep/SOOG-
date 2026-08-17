@@ -31,11 +31,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 
-	<!-- Google Maps API key (set via Xcode build settings or replace directly) -->
-	<key>GMSApiKey</key>
-	<string>$(GOOGLE_MAPS_API_KEY)</string>
-
-	<!-- Location permissions (required for Google Maps address picker) -->
+	<!-- Location permissions (required for the address picker map) -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>نحتاج إلى موقعك لتحديد عنوان التوصيل</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

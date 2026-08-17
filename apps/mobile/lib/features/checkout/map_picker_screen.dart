@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../core/theme/app_colors.dart';
 
@@ -39,7 +40,7 @@ class MapPickerScreen extends StatefulWidget {
 }
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
-  GoogleMapController? _controller;
+  final _controller = MapController();
   late LatLng _picked;
   bool _resolving = false;
   String _label = 'حرّك الخريطة لتحديد الموقع';
@@ -57,12 +58,12 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
-  Future<void> _tryMyLocation() async {
-    if (widget.initial != null) return;
+  Future<void> _tryMyLocation({bool force = false}) async {
+    if (widget.initial != null && !force) return;
     try {
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
@@ -75,7 +76,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       final pos = await Geolocator.getCurrentPosition();
       final target = LatLng(pos.latitude, pos.longitude);
       setState(() => _picked = target);
-      _controller?.animateCamera(CameraUpdate.newLatLng(target));
+      _controller.move(target, _controller.camera.zoom);
       _reverseGeocode();
     } catch (_) {
       // ignore, keep default
@@ -140,14 +141,37 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       body: Stack(
         alignment: Alignment.center,
         children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(target: _picked, zoom: 15),
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
-            zoomControlsEnabled: false,
-            onMapCreated: (c) => _controller = c,
-            onCameraMove: (pos) => _picked = pos.target,
-            onCameraIdle: _reverseGeocode,
+          FlutterMap(
+            mapController: _controller,
+            options: MapOptions(
+              initialCenter: _picked,
+              initialZoom: 15,
+              onPositionChanged: (camera, _) => _picked = camera.center,
+              onMapEvent: (event) {
+                if (event is MapEventMoveEnd ||
+                    event is MapEventFlingAnimationEnd) {
+                  _reverseGeocode();
+                }
+              },
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.aldiafah.aldiafa',
+              ),
+              RichAttributionWidget(
+                attributions: [TextSourceAttribution('OpenStreetMap')],
+              ),
+            ],
+          ),
+          Positioned(
+            top: 16,
+            left: 16,
+            child: FloatingActionButton.small(
+              heroTag: 'map_my_location',
+              onPressed: () => _tryMyLocation(force: true),
+              child: const Icon(Icons.my_location),
+            ),
           ),
           // Center pin.
           const Padding(

@@ -1,7 +1,7 @@
 name: aldiafa
 description: "ALDIAFAH — الضيافة customer app"
 publish_to: 'none'
-version: 1.0.24+25
+version: 1.0.25+26
 
 environment:
   sdk: ^3.11.1
@@ -27,8 +27,9 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   shared_preferences: ^2.3.4
 
-  # Maps & location
-  google_maps_flutter: ^2.10.0
+  # Maps & location — OpenStreetMap tiles, no API key or billing required
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
   geolocator: ^13.0.2
   geocoding: ^3.0.0
 

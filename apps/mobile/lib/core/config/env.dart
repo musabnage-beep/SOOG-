@@ -10,12 +10,6 @@ abstract class Env {
     defaultValue: 'http://18.194.190.26:3000/api',
   );
 
-  /// Optional Google Maps API key for the Android manifest is configured
-  /// natively; this value is used only where the SDK needs it at runtime.
-  static const String googleMapsApiKey = String.fromEnvironment(
-    'GOOGLE_MAPS_API_KEY',
-  );
-
   static const Duration connectTimeout = Duration(seconds: 20);
   static const Duration receiveTimeout = Duration(seconds: 30);
 
