@@ -132,6 +132,9 @@ async function main() {
   //    The emoji is only a placeholder: once a real photo is uploaded from the
   //    dashboard `icon` holds its URL and `iconKey` its storage key, so re-seeding
   //    must not write the emoji back over it.
+  //    `sortOrder` is likewise only seeded on creation — the admin reorders
+  //    categories from the dashboard and the seed runs on every container start,
+  //    so overwriting it here would wipe that ordering on every deploy.
   for (let i = 0; i < CATEGORIES.length; i++) {
     const c = CATEGORIES[i];
     const existing = await prisma.category.findUnique({ where: { slug: c.slug } });
@@ -140,7 +143,6 @@ async function main() {
       update: {
         nameAr: c.nameAr,
         nameEn: c.nameEn,
-        sortOrder: i,
         ...(existing?.iconKey ? {} : { icon: c.icon }),
       },
       create: { ...c, sortOrder: i },
