@@ -1,13 +1,14 @@
 /// App-wide configuration. Override [apiBaseUrl] at build time with:
-/// `flutter run --dart-define=API_BASE_URL=https://api.aldiafah.com/api`
+/// `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000/api`
 abstract class Env {
   /// Base URL of the ALDIAFAH backend, including the `/api` prefix.
   ///
-  /// Defaults to the Android emulator loopback (`10.0.2.2`) so the app talks to
-  /// a backend running on the host machine during development.
+  /// Must stay HTTPS: plain HTTP is rejected by Apple's App Transport Security
+  /// and is silently rewritten by some ISPs into an HTML captive page, which
+  /// makes every JSON decode fail.
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://18.194.190.26:3000/api',
+    defaultValue: 'https://api.aldiafah.org/api',
   );
 
   static const Duration connectTimeout = Duration(seconds: 20);
