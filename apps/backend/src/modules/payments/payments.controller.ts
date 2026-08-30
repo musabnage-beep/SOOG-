@@ -1,12 +1,16 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Logger, Param, Post, Query, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
+import { renderPaymentResult } from './payment-result.page';
 import { PaymentsService } from './payments.service';
 
 @ApiTags('Payments')
 @Controller('payments')
 export class PaymentsController {
+  private readonly logger = new Logger('PAYMENT');
+
   constructor(private readonly service: PaymentsService) {}
 
   /** Customer starts an online card payment for one of their orders. */
@@ -16,11 +20,44 @@ export class PaymentsController {
     return this.service.initiate(userId, orderId);
   }
 
-  /** Redirect target after the hosted payment page. Reconciles with the gateway. */
+  /**
+   * Redirect target after the hosted payment page. Reconciles with the gateway
+   * and answers with an HTML page — a real customer reads this in their browser,
+   * so it must never be the JSON envelope. `@Res()` bypasses the global response
+   * interceptor, which means failures have to be rendered here too rather than
+   * bubbling up to the JSON exception filter.
+   */
   @Public()
   @Get('callback')
-  callback(@Query('order') orderId: string, @Query('id') reference?: string) {
-    return this.service.confirmCallback(orderId, reference);
+  async callback(
+    @Res() res: Response,
+    @Query('order') orderId: string,
+    @Query('id') reference?: string,
+  ) {
+    try {
+      const result = await this.service.confirmCallback(orderId, reference);
+      const outcome =
+        result.paymentStatus === 'PAID'
+          ? 'paid'
+          : result.paymentStatus === 'FAILED'
+            ? 'failed'
+            : 'pending';
+      this.sendPage(res, outcome, result.orderNumber);
+    } catch (error) {
+      this.logger.error(`Payment callback failed for order ${orderId}: ${String(error)}`);
+      this.sendPage(res, 'error');
+    }
+  }
+
+  private sendPage(
+    res: Response,
+    outcome: 'paid' | 'failed' | 'pending' | 'error',
+    orderNumber?: string,
+  ) {
+    res
+      .status(200)
+      .type('html')
+      .send(renderPaymentResult(outcome, orderNumber));
   }
 
   /** Gateway server-to-server webhook. */
