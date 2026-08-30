@@ -12,23 +12,23 @@ export const BUSINESS = {
   nameAr: 'الضيافة',
   nameEn: 'Aldiafah',
 
-  /** TODO: legal entity name exactly as printed on the commercial registration. */
-  legalNameAr: 'مؤسسة الضيافة للتجارة',
+  /** Legal entity name exactly as printed on the commercial registration. */
+  legalNameAr: 'مؤسسة أسرة الضيافة للتجارة',
 
-  /** TODO: commercial registration number (رقم السجل التجاري). */
-  commercialRegistration: '0000000000',
+  /** Commercial registration number (الرقم الوطني الموحد). */
+  commercialRegistration: '7017180105',
 
-  /** TODO: VAT registration number, or null if the store is not VAT registered. */
-  vatNumber: null as string | null,
+  /** VAT registration number, or null if the store is not VAT registered. */
+  vatNumber: '310698841900003' as string | null,
 
-  /** TODO: national address / street address of the store. */
-  addressAr: 'المملكة العربية السعودية',
+  /** National address / street address of the store. */
+  addressAr: 'حي الخالدية، طريق الملك سلمان، الدوادمي',
 
-  /** TODO: customer-facing phone in international format. */
-  phone: '+966500000000',
+  /** Customer-facing phone in international format. */
+  phone: '+966544818511',
 
-  /** TODO: customer-facing support mailbox. */
-  email: 'support@aldiafah.com',
+  /** Customer-facing support mailbox. */
+  email: 'support@aldiafah.org',
 
   /** Working hours copy shown on the contact page. */
   hoursAr: 'يومياً من ٩ صباحاً حتى ١١ مساءً',
