@@ -55,3 +55,5 @@ apps/admin/.next/
 apps/employee/.next/
 apps/web/.next/
 .vercel/
+
+.vercel
