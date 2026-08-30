@@ -55,8 +55,12 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
-        beta_groups:
-          - team
+        # No `beta_groups:` — "team" is an INTERNAL TestFlight group and the App
+        # Store Connect API refuses to attach builds to internal groups
+        # ("Cannot add internal group to a build"), which failed the whole step
+        # even though the IPA had already uploaded fine. Internal testers receive
+        # every processed build automatically, so nothing is lost. Only list a
+        # group here if it is an EXTERNAL one.
 
   android-release:
     name: Android Release — الضيافة
