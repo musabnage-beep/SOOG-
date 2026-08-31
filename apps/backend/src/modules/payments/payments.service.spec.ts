@@ -92,6 +92,24 @@ describe('PaymentsService', () => {
     expect(notify).toHaveBeenCalled();
   });
 
+  it('matches a payment event by its invoice id, not the payment id', async () => {
+    orderFindFirst.mockResolvedValue(order({ paymentRef: 'inv_1' }));
+
+    await service.handleWebhook({
+      secret_token: 's',
+      data: { id: 'pay_9', invoice_id: 'inv_1', status: 'paid' },
+    });
+
+    expect(orderFindFirst).toHaveBeenCalledWith({
+      where: { paymentRef: { in: ['inv_1', 'pay_9'] } },
+    });
+    expect(orderUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ paymentStatus: PaymentStatus.PAID, paymentRef: 'inv_1' }),
+      }),
+    );
+  });
+
   it('rejects a webhook with an invalid signature', async () => {
     verifyWebhook.mockReturnValue(false);
     await expect(

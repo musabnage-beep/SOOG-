@@ -29,13 +29,20 @@ export class PaymentsController {
    */
   @Public()
   @Get('callback')
-  async callback(
-    @Res() res: Response,
-    @Query('order') orderId: string,
-    @Query('id') reference?: string,
-  ) {
+  callbackFromRedirect(@Res() res: Response, @Query('order') orderId: string) {
+    return this.callback(res, orderId);
+  }
+
+  /** Same reconciliation, but for the gateway's server-side POST. */
+  @Public()
+  @Post('callback')
+  callbackFromGateway(@Res() res: Response, @Query('order') orderId: string) {
+    return this.callback(res, orderId);
+  }
+
+  private async callback(res: Response, orderId: string) {
     try {
-      const result = await this.service.confirmCallback(orderId, reference);
+      const result = await this.service.confirmCallback(orderId);
       const outcome =
         result.paymentStatus === 'PAID'
           ? 'paid'

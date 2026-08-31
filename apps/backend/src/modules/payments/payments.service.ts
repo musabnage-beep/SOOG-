@@ -63,14 +63,17 @@ export class PaymentsService {
    * Customer redirect target after the hosted payment page. We never trust the
    * query string — payment is reconciled by re-querying the gateway.
    */
-  async confirmCallback(orderId: string, reference: string | undefined) {
+  async confirmCallback(orderId: string) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found');
     if (order.paymentStatus === PaymentStatus.PAID) {
       return { orderId: order.id, orderNumber: order.orderNumber, paymentStatus: order.paymentStatus };
     }
 
-    const ref = reference ?? order.paymentRef ?? undefined;
+    // Only ever reconcile against the reference we stored ourselves. The gateway
+    // appends its own `id` to the redirect, but that is the payment id and the
+    // provider looks references up as invoices.
+    const ref = order.paymentRef ?? undefined;
     if (!ref) throw new BadRequestException('Missing payment reference');
 
     const status = await this.provider.getPayment(ref);
@@ -96,21 +99,29 @@ export class PaymentsService {
     }
 
     const data = (body.data ?? {}) as Record<string, unknown>;
-    const reference = typeof data.id === 'string' ? data.id : undefined;
     const gatewayStatus = typeof data.status === 'string' ? data.status : undefined;
-    if (!reference) {
+
+    // `paymentRef` holds the *invoice* id, but a payment_* event carries the
+    // *payment* id in `data.id` and the invoice it belongs to in `data.invoice_id`.
+    // Match on either so both invoice and payment events reconcile.
+    const references = [data.invoice_id, data.id].filter(
+      (value): value is string => typeof value === 'string' && value.length > 0,
+    );
+    if (references.length === 0) {
       this.logger.warn('Webhook received without a payment reference');
       return { received: true };
     }
 
-    const order = await this.prisma.order.findFirst({ where: { paymentRef: reference } });
+    const order = await this.prisma.order.findFirst({
+      where: { paymentRef: { in: references } },
+    });
     if (!order) {
-      this.logger.warn(`Webhook for unknown payment reference ${reference}`);
+      this.logger.warn(`Webhook for unknown payment reference ${references.join(', ')}`);
       return { received: true };
     }
 
     if (gatewayStatus === 'paid') {
-      await this.markPaid(order, reference);
+      await this.markPaid(order, order.paymentRef!);
     } else if (gatewayStatus === 'failed') {
       await this.markFailed(order);
     }
