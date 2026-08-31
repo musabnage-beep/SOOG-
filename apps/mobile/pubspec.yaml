@@ -1,7 +1,7 @@
 name: aldiafa
 description: "ALDIAFAH — الضيافة customer app"
 publish_to: 'none'
-version: 1.0.26+27
+version: 1.0.27+28
 
 environment:
   sdk: ^3.11.1

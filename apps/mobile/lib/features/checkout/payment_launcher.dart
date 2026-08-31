@@ -6,10 +6,13 @@ import '../../core/theme/app_colors.dart';
 import '../../data/repositories/order_repository.dart';
 
 /// Asks the backend for a gateway session and opens the hosted payment page in
-/// the system browser. Returns false (after showing why) when it cannot start.
+/// an in-app browser sheet. Returns false (after showing why) when it cannot
+/// start.
 ///
-/// The browser is deliberately external: the gateway page is where mada, Apple
-/// Pay and 3-D Secure run, and Safari is the only place Apple Pay is offered.
+/// The page stays inside the app: `inAppBrowserView` maps to
+/// SFSafariViewController on iOS and Custom Tabs on Android. That keeps mada,
+/// Apple Pay and 3-D Secure working — Apple supports Apple Pay in Safari *and*
+/// SFSafariViewController — without kicking the customer out to another app.
 Future<bool> openPaymentPage(
   ScaffoldMessengerState messenger,
   OrderRepository orders,
@@ -25,7 +28,7 @@ Future<bool> openPaymentPage(
     final url = await orders.initiatePayment(orderId);
     final opened = await launchUrl(
       Uri.parse(url),
-      mode: LaunchMode.externalApplication,
+      mode: LaunchMode.inAppBrowserView,
     );
     if (!opened) fail('تعذّر فتح صفحة الدفع.');
     return opened;
