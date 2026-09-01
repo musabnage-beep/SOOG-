@@ -34,6 +34,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   void initState() {
     super.initState();
+    // Carry over anything the customer already typed in the cart.
+    _note.text = ref.read(orderNoteProvider);
+    _note.addListener(
+      () => ref.read(orderNoteProvider.notifier).state = _note.text,
+    );
     Future.microtask(() async {
       await ref.read(addressControllerProvider.notifier).load();
       final def = ref.read(addressControllerProvider).defaultAddress;
@@ -397,6 +402,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         customerNote: _note.text.trim(),
       );
       await ref.read(cartControllerProvider.notifier).load();
+      // The note belonged to this order; the next one starts blank.
+      ref.read(orderNoteProvider.notifier).state = '';
       ref.invalidate(myOrdersProvider);
       if (order.isCard) {
         if (!mounted) return;

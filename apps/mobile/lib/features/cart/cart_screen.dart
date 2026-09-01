@@ -26,82 +26,32 @@ class CartScreen extends ConsumerWidget {
   Widget _body(BuildContext context, WidgetRef ref, CartState state) {
     return Column(
       children: [
-        const SizedBox(height: 16),
-        // ── Title pill ──────────────────────────────────────────────
-        Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: AppColors.glowGreen(intensity: 0.6),
-            ),
-            child: const Text(
-              'سلة التسوّق',
-              style: TextStyle(
-                color: AppColors.onPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
+        _Header(count: state.cart?.items.length ?? 0),
         if (state.isLoading && state.cart == null)
           const Expanded(child: AppLoader())
         else if (state.isEmpty)
           Expanded(child: _emptyState(context))
-        else ...[
-          // ── Count badge + label ────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    state.cart!.items.length.toString(),
-                    style: const TextStyle(
-                      color: AppColors.onPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                const Text(
-                  'سلة مشترياتك',
-                  style: TextStyle(
-                    color: AppColors.dark,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          // ── Items list ──────────────────────────────────────────
+        else
           Expanded(
             child: RefreshIndicator(
               color: AppColors.primary,
               backgroundColor: AppColors.surface,
               onRefresh: () => ref.read(cartControllerProvider.notifier).load(),
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: state.cart!.items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, i) => _CartTile(line: state.cart!.items[i]),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                children: [
+                  for (final line in state.cart!.items) ...[
+                    _CartTile(line: line),
+                    const SizedBox(height: 10),
+                  ],
+                  const SizedBox(height: 10),
+                  const _NoteSection(),
+                  const SizedBox(height: 22),
+                  _PaymentSummary(subtotal: state.subtotal),
+                ],
               ),
             ),
           ),
-        ],
       ],
     );
   }
@@ -149,9 +99,66 @@ class CartScreen extends ConsumerWidget {
   }
 }
 
+// ── Header ────────────────────────────────────────────────────────────────────
+class _Header extends StatelessWidget {
+  const _Header({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'السلة',
+                  style: TextStyle(
+                    color: AppColors.dark,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  count == 0 ? 'الضيافة' : 'الضيافة · $count أصناف',
+                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => context.go('/home'),
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: const Text('إضافة أصناف'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.border),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Cart tile ─────────────────────────────────────────────────────────────────
 class _CartTile extends ConsumerWidget {
   const _CartTile({required this.line});
+
   final CartLine line;
 
   @override
@@ -163,118 +170,58 @@ class _CartTile extends ConsumerWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
-        boxShadow: AppColors.cardShadow,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product image
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: (line.image == null || line.image!.isEmpty)
-                ? const Center(
-                    child: Icon(
-                      Icons.shopping_bag_outlined,
-                      color: AppColors.warning,
-                      size: 32,
-                    ),
-                  )
-                : CachedNetworkImage(
-                    imageUrl: line.image!,
-                    fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) => const Center(
-                      child: Icon(
-                        Icons.shopping_bag_outlined,
-                        color: AppColors.warning,
-                        size: 32,
-                      ),
-                    ),
-                  ),
-          ),
+          _Thumb(url: line.image),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Name
                 Text(
                   line.nameAr,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
+                    height: 1.35,
                     color: AppColors.dark,
                   ),
                 ),
                 if (line.unit != 'PIECE') ...[
                   const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      line.isCarton && line.unitsPerCarton != null
-                          ? 'كرتون (${line.unitsPerCarton} حبة)'
-                          : line.unitLabel ?? '',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  Text(
+                    line.isCarton && line.unitsPerCarton != null
+                        ? 'كرتون (${line.unitsPerCarton} حبة)'
+                        : line.unitLabel ?? '',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
                 const SizedBox(height: 8),
-                // Stepper + price + delete
-                Row(
-                  children: [
-                    QuantityStepper(
-                      quantity: line.quantity,
-                      min: 0,
-                      onChanged: (v) => notifier.setQuantity(line.id, v),
-                    ),
-                    const Spacer(),
-                    Text(
-                      Formatters.money(line.unitPrice),
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => notifier.remove(line.id),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: AppColors.danger.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.danger,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  Formatters.money(line.lineTotal),
+                  style: const TextStyle(
+                    color: AppColors.dark,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(width: 8),
+          // Dropping to zero removes the line, so no separate delete button.
+          QuantityStepper(
+            quantity: line.quantity,
+            min: 0,
+            onChanged: (v) => notifier.setQuantity(line.id, v),
           ),
         ],
       ),
@@ -282,67 +229,278 @@ class _CartTile extends ConsumerWidget {
   }
 }
 
-// ── Bottom bar ────────────────────────────────────────────────────────────────
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.state});
-  final CartState state;
+class _Thumb extends StatelessWidget {
+  const _Thumb({required this.url});
+
+  final String? url;
 
   @override
   Widget build(BuildContext context) {
-    final count = state.cart?.items.length ?? 0;
-    final totalQty =
-        state.cart?.items.fold<int>(0, (s, i) => s + i.quantity) ?? 0;
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        color: AppColors.surface,
+    const fallback = Center(
+      child: Icon(Icons.shopping_bag_outlined, color: AppColors.muted, size: 28),
+    );
+    return Container(
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        color: url == null || url!.isEmpty ? AppColors.surfaceAlt : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: url == null || url!.isEmpty
+          ? fallback
+          : CachedNetworkImage(
+              imageUrl: url!,
+              fit: BoxFit.cover,
+              errorWidget: (_, _, _) => fallback,
+            ),
+    );
+  }
+}
+
+// ── Special requests ──────────────────────────────────────────────────────────
+class _NoteSection extends ConsumerWidget {
+  const _NoteSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final note = ref.watch(orderNoteProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionTitle('ملاحظات خاصة'),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () => _edit(context, ref, note),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.chat_bubble_outline_rounded,
+                color: AppColors.muted,
+                size: 22,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: note.isEmpty
+                    ? const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'هل لديك طلب خاص؟',
+                            style: TextStyle(
+                              color: AppColors.dark,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'أي شيء آخر نحتاج معرفته؟',
+                            style: TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        note,
+                        style: const TextStyle(
+                          color: AppColors.dark,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+              ),
+              const Icon(
+                Icons.edit_outlined,
+                color: AppColors.primary,
+                size: 18,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _edit(BuildContext context, WidgetRef ref, String note) async {
+    final controller = TextEditingController(text: note);
+    final saved = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  Formatters.rawNumber(state.subtotal),
-                  style: const TextStyle(
-                    color: AppColors.dark,
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  'الإجمالي ($count منتجات $totalQty)',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
-                ),
-              ],
+            const _SectionTitle('ملاحظات خاصة'),
+            const SizedBox(height: 14),
+            TextField(
+              controller: controller,
+              maxLines: 4,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'أي تعليمات خاصة بالطلب...',
+              ),
             ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              height: 54,
+              height: 48,
               child: ElevatedButton(
-                onPressed: state.mutating
-                    ? null
-                    : () => context.push('/checkout'),
+                onPressed: () => Navigator.pop(ctx, controller.text.trim()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.onPrimary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: const Text(
-                  'إتمام الطلب',
-                  style: TextStyle(
-                    color: AppColors.onPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  'حفظ',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+    controller.dispose();
+    if (saved != null) ref.read(orderNoteProvider.notifier).state = saved;
+  }
+}
+
+// ── Payment summary ───────────────────────────────────────────────────────────
+class _PaymentSummary extends StatelessWidget {
+  const _PaymentSummary({required this.subtotal});
+
+  final double subtotal;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionTitle('ملخّص الدفع'),
+        const SizedBox(height: 14),
+        _row('مجموع السلة', Formatters.money(subtotal)),
+        const SizedBox(height: 10),
+        // The fee depends on the delivery address, which is only chosen on the
+        // next screen, so the cart cannot show a number yet.
+        _row('رسوم التوصيل', 'تُحسب بعد اختيار العنوان', muted: true),
+        const SizedBox(height: 14),
+        const Divider(color: AppColors.border, height: 1),
+        const SizedBox(height: 14),
+        _row('الإجمالي قبل التوصيل', Formatters.money(subtotal), bold: true),
+      ],
+    );
+  }
+
+  Widget _row(
+    String label,
+    String value, {
+    bool bold = false,
+    bool muted = false,
+  }) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: bold ? AppColors.dark : AppColors.muted,
+            fontSize: bold ? 16 : 14,
+            fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: TextStyle(
+            color: muted ? AppColors.muted : AppColors.dark,
+            fontSize: bold ? 16 : 14,
+            fontWeight: bold ? FontWeight.w800 : FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: const TextStyle(
+      color: AppColors.dark,
+      fontSize: 17,
+      fontWeight: FontWeight.w800,
+    ),
+  );
+}
+
+// ── Bottom bar ────────────────────────────────────────────────────────────────
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({required this.state});
+
+  final CartState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: AppColors.border)),
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: ElevatedButton(
+            onPressed: state.mutating ? null : () => context.push('/checkout'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              disabledBackgroundColor: AppColors.surfaceAlt,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'إتمام الطلب',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  Formatters.money(state.subtotal),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

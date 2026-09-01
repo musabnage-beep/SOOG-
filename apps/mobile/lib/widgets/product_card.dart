@@ -4,12 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/app_colors.dart';
 import '../core/utils/formatters.dart';
-import '../core/utils/snack.dart';
 import '../data/models/product.dart';
 import '../providers/auth_controller.dart';
-import '../providers/cart_controller.dart';
 import '../providers/favorites_controller.dart';
 import 'ambient_background.dart';
+import 'quick_add_button.dart';
 
 class ProductCard extends ConsumerWidget {
   const ProductCard({super.key, required this.product, required this.onTap});
@@ -96,6 +95,12 @@ class ProductCard extends ConsumerWidget {
                           ),
                         ),
                       ),
+                    // Sits on the photo itself, as in the reference grid.
+                    PositionedDirectional(
+                      bottom: 6,
+                      end: 6,
+                      child: QuickAddButton(product: product),
+                    ),
                   ],
                 ),
               ),
@@ -116,38 +121,49 @@ class ProductCard extends ConsumerWidget {
                       color: AppColors.dark,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  if (product.pieceLabel?.trim().isNotEmpty ?? false) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      product.pieceLabel!.trim(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 6),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              Formatters.money(product.effectivePrice),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15,
-                              ),
-                            ),
-                            if (product.hasDiscount)
-                              Text(
-                                Formatters.money(product.price),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.muted,
-                                  fontSize: 11,
-                                  decoration: TextDecoration.lineThrough,
-                                ),
-                              ),
-                          ],
+                      Flexible(
+                        child: Text(
+                          Formatters.money(product.effectivePrice),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
-                      if (authed) _AddButton(product: product),
+                      if (product.hasDiscount) ...[
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            Formatters.money(product.price),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 11,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],
@@ -226,61 +242,3 @@ class _FavButton extends StatelessWidget {
   }
 }
 
-class _AddButton extends ConsumerStatefulWidget {
-  const _AddButton({required this.product});
-
-  final Product product;
-
-  @override
-  ConsumerState<_AddButton> createState() => _AddButtonState();
-}
-
-class _AddButtonState extends ConsumerState<_AddButton> {
-  bool _busy = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final disabled = widget.product.isOutOfStock || _busy;
-    return Material(
-      color: disabled ? AppColors.surfaceAlt : AppColors.primary,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: disabled ? null : _add,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: _busy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.muted,
-                  ),
-                )
-              : Icon(
-                  Icons.add_rounded,
-                  color: disabled ? AppColors.muted : AppColors.onPrimary,
-                  size: 18,
-                ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _add() async {
-    setState(() => _busy = true);
-    try {
-      await ref.read(cartControllerProvider.notifier).add(widget.product.id);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تمت الإضافة إلى السلة')));
-      }
-    } catch (e) {
-      if (mounted) showErrorSnack(context, e.toString());
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-}

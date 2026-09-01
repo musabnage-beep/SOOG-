@@ -85,6 +85,11 @@ class CartController extends StateNotifier<CartState> {
   }
 }
 
+/// Free-text note the customer attaches to the next order. It can be written
+/// from the cart and is read back by the checkout form, so both screens edit
+/// one value instead of each keeping its own.
+final orderNoteProvider = StateProvider<String>((ref) => '');
+
 final cartControllerProvider = StateNotifierProvider<CartController, CartState>((ref) {
   final controller = CartController(ref);
   // Load the cart whenever the user becomes authenticated; reset on logout.

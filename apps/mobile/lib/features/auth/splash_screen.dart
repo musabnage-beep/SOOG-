@@ -14,7 +14,6 @@ const _kBlack = Color(0xFF070A08);
 const _kGold = AppColors.gold;
 const _kGoldLight = Color(0xFFFFE9A8);
 const _kGreen = AppColors.secondary;
-const _kGreenLight = AppColors.primary;
 
 // ─── Splash Screen ───────────────────────────────────────────────────────────
 //
@@ -25,8 +24,6 @@ const _kGreenLight = AppColors.primary;
 //   • brand mark (gold swoosh + wordmark + 3 descending dots)
 //   • main tagline «كل احتياجاتك في مكان واحد» + sub «جودة عالية · أسعار مناسبة · توصيل سريع»
 //   • green shopping basket brimming with products (hero, lower-centre)
-//   • loading label «جاري تحميل التطبيق...» + green progress bar + percent
-//   • bottom line «تجربة تسوق أفضل بانتظارك»
 //
 // Product shots and the basket load from the asset pipeline by their final
 // filenames; until the real art is dropped in they render nothing (no emoji /
@@ -50,8 +47,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final Animation<double> _floatsIn;
   late final Animation<double> _taglineSlide;
   late final Animation<double> _basketRise;
-  late final Animation<double> _progressBar;
-  late final Animation<double> _loadingFade;
 
   final List<_Particle> _particles = _generateParticles(64);
   static const List<_FloatSlot> _floatSlots = _kFloatSlots;
@@ -62,7 +57,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _ctrl =
         AnimationController(
             vsync: this,
-            duration: const Duration(milliseconds: 7000),
+            // The composition settles at ~62% of the timeline; without the old
+            // progress bar there is nothing to watch after that, so the tail is
+            // just a short beat before the router moves on.
+            duration: const Duration(milliseconds: 4500),
           )
           ..addStatusListener((s) {
             if (s == AnimationStatus.completed && mounted) {
@@ -84,8 +82,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _floatsIn = a(0.20, 0.55, Curves.easeOut);
     _taglineSlide = a(0.34, 0.56, Curves.easeOutCubic);
     _basketRise = a(0.36, 0.62, Curves.easeOutCubic);
-    _progressBar = a(0.50, 0.98, Curves.easeInOut);
-    _loadingFade = a(0.48, 0.60, Curves.easeIn);
   }
 
   bool _motionChecked = false;
@@ -262,88 +258,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                 ),
 
-                // ── Loading block ─────────────────────────────────────────────
-                Positioned(
-                  left: 30,
-                  right: 30,
-                  bottom: 46,
-                  child: Opacity(
-                    opacity: _loadingFade.value.clamp(0.0, 1.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'جاري تحميل التطبيق...',
-                          textAlign: TextAlign.center,
-                          textDirection: TextDirection.rtl,
-                          style: GoogleFonts.cairo(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 9,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.14),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: FractionallySizedBox(
-                                  alignment: Alignment.centerLeft,
-                                  widthFactor: _progressBar.value.clamp(
-                                    0.0,
-                                    1.0,
-                                  ),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(999),
-                                      gradient: const LinearGradient(
-                                        colors: [_kGreen, _kGreenLight],
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: _kGreenLight.withValues(
-                                            alpha: 0.55,
-                                          ),
-                                          blurRadius: 10,
-                                          spreadRadius: 0.5,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              '${(_progressBar.value * 100).round()}%',
-                              style: GoogleFonts.cairo(
-                                color: _kGreenLight,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          'تجربة تسوق أفضل بانتظارك',
-                          textAlign: TextAlign.center,
-                          textDirection: TextDirection.rtl,
-                          style: GoogleFonts.cairo(
-                            color: _kGold.withValues(alpha: 0.85),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           );

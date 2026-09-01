@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,7 +13,12 @@ import '../../providers/cart_controller.dart';
 import '../../providers/catalog_providers.dart';
 import '../../providers/favorites_controller.dart';
 import '../../widgets/quantity_stepper.dart';
+import '../../widgets/quick_add_button.dart';
 import '../../widgets/state_views.dart';
+import 'products_screen.dart';
+
+const double _kImageHeight = 300;
+const double _kSheetOverlap = 26;
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({super.key, required this.productId});
@@ -65,6 +71,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ),
           bottomNavigationBar: _BottomBar(
             product: product,
+            option: product.saleOptions[_unitIndex.clamp(
+              0,
+              product.saleOptions.length - 1,
+            )],
             qty: _qty,
             busy: _busy,
             isFav: isFav,
@@ -85,64 +95,83 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final index = _unitIndex.clamp(0, options.length - 1);
 
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      // The info sheet is lifted over the photo so its rounded top corners cut
+      // into the image, which is what gives the reference layout its depth.
+      child: Stack(
         children: [
-          // ── Image carousel ──────────────────────────────────────────
-          _ImageSection(
-            images: images,
-            index: _imageIndex,
-            onPageChanged: (i) => setState(() => _imageIndex = i),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _ImageSection(
+              images: images,
+              height: _kImageHeight,
+              index: _imageIndex,
+              onPageChanged: (i) => setState(() => _imageIndex = i),
+            ),
           ),
-
-          // ── Info ────────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name
-                Text(
-                  product.nameAr,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.dark,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                // Subtitle (English name or category)
-                if (product.nameEn.isNotEmpty)
+            padding: const EdgeInsets.only(top: _kImageHeight - _kSheetOverlap),
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Category, styled as a link the way the reference shows the brand.
+                  if (product.categoryNameAr != null &&
+                      product.categoryNameAr!.isNotEmpty)
+                    _CategoryLink(
+                      name: product.categoryNameAr!,
+                      categoryId: product.categoryId,
+                    ),
+                  const SizedBox(height: 8),
+                  // Name
                   Text(
-                    product.nameEn,
+                    product.nameAr,
                     style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.muted,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      height: 1.3,
+                      color: AppColors.dark,
                     ),
                   ),
-                const SizedBox(height: 16),
-                // Unit selector (base unit / نص كيلو / كيلو / carton)
-                if (options.length > 1) ...[
-                  _UnitSelector(
-                    options: options,
-                    selected: index,
-                    onChanged: (i) => setState(() => _unitIndex = i),
-                  ),
+                  const SizedBox(height: 4),
+                  // Subtitle (English name or category)
+                  if (product.nameEn.isNotEmpty)
+                    Text(
+                      product.nameEn,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.muted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   const SizedBox(height: 16),
+                  // Unit selector (base unit / نص كيلو / كيلو / carton)
+                  if (options.length > 1) ...[
+                    _UnitSelector(
+                      options: options,
+                      selected: index,
+                      onChanged: (i) => setState(() => _unitIndex = i),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Description
+                  if (desc.isNotEmpty)
+                    _DescriptionSection(
+                      desc: desc,
+                      expanded: _expanded,
+                      onToggle: () => setState(() => _expanded = !_expanded),
+                    ),
+                  const SizedBox(height: 20),
+                  _RelatedSection(product: product),
                 ],
-                // Price row
-                _PriceRow(product: product, option: options[index]),
-                const SizedBox(height: 24),
-                // Description
-                if (desc.isNotEmpty)
-                  _DescriptionSection(
-                    desc: desc,
-                    expanded: _expanded,
-                    onToggle: () => setState(() => _expanded = !_expanded),
-                  ),
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
           ),
         ],
@@ -207,14 +236,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 }
 
 // ── Top bar ───────────────────────────────────────────────────────────────────
-class _TopBar extends StatelessWidget {
+class _TopBar extends ConsumerWidget {
   const _TopBar({required this.isFav, required this.onToggleFav});
 
   final bool isFav;
   final VoidCallback onToggleFav;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(cartControllerProvider).count;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
@@ -224,14 +254,87 @@ class _TopBar extends StatelessWidget {
             onTap: () => context.pop(),
           ),
           const Spacer(),
-          _CircleBtn(icon: Icons.share_outlined, onTap: () {}),
-          const SizedBox(width: 8),
           _CircleBtn(
             icon: isFav ? Icons.favorite : Icons.favorite_border,
             color: isFav ? AppColors.danger : Colors.white,
             onTap: onToggleFav,
           ),
+          const SizedBox(width: 8),
+          _CartBtn(count: count),
         ],
+      ),
+    );
+  }
+}
+
+/// Bag button carrying the live cart count, as in the reference header.
+class _CartBtn extends StatelessWidget {
+  const _CartBtn({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _CircleBtn(
+          icon: Icons.shopping_bag_outlined,
+          onTap: () => context.push('/cart'),
+        ),
+        if (count > 0)
+          Positioned(
+            top: -2,
+            left: -2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 18),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: AppColors.background, width: 1.5),
+              ),
+              child: Text(
+                '$count',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.onPrimary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Category chip above the product name — the reference puts the brand here.
+class _CategoryLink extends StatelessWidget {
+  const _CategoryLink({required this.name, required this.categoryId});
+
+  final String name;
+  final String? categoryId;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: categoryId == null
+          ? null
+          : () => context.push('/products', extra: ProductsArgs(
+              categoryId: categoryId,
+              title: name,
+            )),
+      child: Text(
+        name,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          decoration: TextDecoration.underline,
+          decorationColor: AppColors.primary,
+        ),
       ),
     );
   }
@@ -266,18 +369,20 @@ class _CircleBtn extends StatelessWidget {
 class _ImageSection extends StatelessWidget {
   const _ImageSection({
     required this.images,
+    required this.height,
     required this.index,
     required this.onPageChanged,
   });
 
   final List<String> images;
+  final double height;
   final int index;
   final ValueChanged<int> onPageChanged;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 280,
+      height: height,
       color: const Color(0xFFF8F8F8),
       child: images.isEmpty
           ? const Center(
@@ -308,8 +413,9 @@ class _ImageSection extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Kept clear of the info sheet that overlaps the image bottom.
                 Positioned(
-                  bottom: 12,
+                  bottom: _kSheetOverlap + 10,
                   left: 12,
                   child: GestureDetector(
                     onTap: () => _openViewer(context, index),
@@ -333,7 +439,7 @@ class _ImageSection extends StatelessWidget {
                 ),
                 if (images.length > 1)
                   Positioned(
-                    bottom: 12,
+                    bottom: _kSheetOverlap + 12,
                     left: 0,
                     right: 0,
                     child: Row(
@@ -657,48 +763,169 @@ class _DescriptionSection extends StatelessWidget {
   final bool expanded;
   final VoidCallback onToggle;
 
+  /// Characters kept before the inline «المزيد» link. The reference truncates
+  /// mid-sentence and parks the link on the same line, which a plain
+  /// `maxLines` + ellipsis cannot do.
+  static const int _collapsedLength = 130;
+
   @override
   Widget build(BuildContext context) {
-    const maxLines = 3;
-    final isLong = desc.length > 120;
+    final isLong = desc.length > _collapsedLength;
+    final shown = expanded || !isLong
+        ? desc
+        : '${desc.substring(0, _collapsedLength).trimRight()}… ';
+
+    return Text.rich(
+      TextSpan(
+        text: shown,
+        children: [
+          if (isLong)
+            TextSpan(
+              text: expanded ? ' أقل' : 'المزيد',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+                decoration: TextDecoration.underline,
+                decorationColor: AppColors.primary,
+              ),
+              recognizer: TapGestureRecognizer()..onTap = onToggle,
+            ),
+        ],
+      ),
+      style: const TextStyle(
+        color: AppColors.muted,
+        height: 1.7,
+        fontSize: 14,
+      ),
+    );
+  }
+}
+
+// ── Frequently bought together ────────────────────────────────────────────────
+class _RelatedSection extends ConsumerWidget {
+  const _RelatedSection({required this.product});
+
+  final Product product;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoryId = product.categoryId;
+    if (categoryId == null) return const SizedBox.shrink();
+
+    final state = ref.watch(
+      productsControllerProvider(ProductQuery(categoryId: categoryId)),
+    );
+    final items = state.items
+        .where((p) => p.id != product.id && !p.isOutOfStock)
+        .take(8)
+        .toList();
+    if (items.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Divider(color: AppColors.border, height: 1),
+        const SizedBox(height: 20),
         const Text(
-          'وصف المنتج',
+          'يُشترى معه عادة',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 17,
             fontWeight: FontWeight.w800,
             color: AppColors.dark,
           ),
         ),
-        const SizedBox(height: 10),
-        Text(
-          desc,
-          maxLines: expanded ? null : maxLines,
-          overflow: expanded ? TextOverflow.visible : TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.muted,
-            height: 1.7,
-            fontSize: 14,
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 176,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (_, i) => _RelatedCard(product: items[i]),
           ),
         ),
-        if (isLong) ...[
-          const SizedBox(height: 6),
-          GestureDetector(
-            onTap: onToggle,
-            child: Text(
-              expanded ? 'اقرأ أقل' : 'اقرأ المزيد',
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+}
+
+class _RelatedCard extends ConsumerWidget {
+  const _RelatedCard({required this.product});
+
+  final Product product;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final url = product.mainImage;
+    return GestureDetector(
+      // Replace rather than stack, so browsing sideways cannot grow the
+      // navigation history one entry per tap.
+      onTap: () => context.replace('/product/${product.id}'),
+      child: SizedBox(
+        width: 124,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                Container(
+                  height: 108,
+                  width: 124,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: url == null || url.isEmpty
+                      ? const Icon(
+                          Icons.shopping_bag_outlined,
+                          color: AppColors.muted,
+                        )
+                      : ColoredBox(
+                          color: Colors.white,
+                          child: CachedNetworkImage(
+                            imageUrl: url,
+                            fit: BoxFit.cover,
+                            errorWidget: (_, _, _) => const Icon(
+                              Icons.broken_image_outlined,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ),
+                ),
+                Positioned(
+                  bottom: 6,
+                  left: 6,
+                  child: QuickAddButton(product: product),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              product.nameAr,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 12.5,
+                height: 1.3,
+                fontWeight: FontWeight.w700,
+                color: AppColors.dark,
               ),
             ),
-          ),
-        ],
-      ],
+            const SizedBox(height: 2),
+            Text(
+              Formatters.money(product.effectivePrice),
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -707,6 +934,7 @@ class _DescriptionSection extends StatelessWidget {
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.product,
+    required this.option,
     required this.qty,
     required this.busy,
     required this.isFav,
@@ -716,6 +944,7 @@ class _BottomBar extends StatelessWidget {
   });
 
   final Product product;
+  final SaleOption option;
   final int qty;
   final bool busy;
   final bool isFav;
@@ -744,21 +973,21 @@ class _BottomBar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Quantity stepper row
-            if (!product.isOutOfStock)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+            // Price on one side, quantity on the other — the reference layout.
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Expanded(child: _PriceRow(product: product, option: option)),
+                  if (!product.isOutOfStock)
                     QuantityStepper(
                       quantity: qty,
                       min: 1,
                       onChanged: onQtyChanged,
                     ),
-                  ],
-                ),
+                ],
               ),
+            ),
             // Add to cart + heart
             Row(
               children: [

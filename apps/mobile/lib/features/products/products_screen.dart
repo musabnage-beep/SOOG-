@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/formatters.dart';
+import '../../providers/cart_controller.dart';
 import '../../providers/catalog_providers.dart';
 import '../../widgets/ambient_background.dart';
 import '../../widgets/product_card.dart';
@@ -42,6 +44,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
   final _scroll = ScrollController();
   final _searchCtrl = TextEditingController();
   late ProductQuery _query;
+  late bool _searchOpen;
 
   @override
   void initState() {
@@ -52,6 +55,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
       search: widget.args?.search,
     );
     _searchCtrl.text = widget.args?.search ?? '';
+    _searchOpen = _searchCtrl.text.isNotEmpty;
     _scroll.addListener(_onScroll);
   }
 
@@ -81,80 +85,94 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
   void _applySort(String sort) =>
       setState(() => _query = _query.copyWith(sort: sort));
 
+  /// Builds a fresh query instead of `copyWith`, because the screen can be
+  /// opened by slug and a leftover slug would fight the newly picked id.
+  void _applyCategory(String? id) => setState(() {
+    _query = ProductQuery(
+      categoryId: id,
+      search: _query.search,
+      sort: _query.sort,
+    );
+  });
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(productsControllerProvider(_query));
     final title = widget.args?.title ?? 'المنتجات';
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [
+          IconButton(
+            icon: Icon(_searchOpen ? Icons.search_off : Icons.search),
+            onPressed: () {
+              setState(() => _searchOpen = !_searchOpen);
+              if (!_searchOpen && _searchCtrl.text.isNotEmpty) {
+                _searchCtrl.clear();
+                _applySearch('');
+              }
+            },
+          ),
+          PopupMenuButton<String>(
+            color: AppColors.surface,
+            icon: const Icon(Icons.tune),
+            onSelected: _applySort,
+            itemBuilder: (_) => _sortOptions.entries
+                .map(
+                  (e) => PopupMenuItem(
+                    value: e.key,
+                    child: Row(
+                      children: [
+                        if (_query.sort == e.key)
+                          const Icon(
+                            Icons.check,
+                            size: 18,
+                            color: AppColors.primary,
+                          )
+                        else
+                          const SizedBox(width: 18),
+                        const SizedBox(width: 8),
+                        Text(e.value),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: _applySearch,
-                    decoration: InputDecoration(
-                      hintText: 'ابحث...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchCtrl.text.isEmpty
-                          ? null
-                          : IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                _searchCtrl.clear();
-                                _applySearch('');
-                              },
-                            ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                PopupMenuButton<String>(
-                  color: AppColors.surface,
-                  icon: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceAlt,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Icon(Icons.tune, color: AppColors.primary),
-                  ),
-                  onSelected: _applySort,
-                  itemBuilder: (_) => _sortOptions.entries
-                      .map(
-                        (e) => PopupMenuItem(
-                          value: e.key,
-                          child: Row(
-                            children: [
-                              if (_query.sort == e.key)
-                                const Icon(
-                                  Icons.check,
-                                  size: 18,
-                                  color: AppColors.primary,
-                                )
-                              else
-                                const SizedBox(width: 18),
-                              const SizedBox(width: 8),
-                              Text(e.value),
-                            ],
-                          ),
+          if (_searchOpen)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: TextField(
+                controller: _searchCtrl,
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                onSubmitted: _applySearch,
+                decoration: InputDecoration(
+                  hintText: 'ابحث...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchCtrl.text.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            _searchCtrl.clear();
+                            _applySearch('');
+                          },
                         ),
-                      )
-                      .toList(),
                 ),
-              ],
+              ),
             ),
-          ),
+          _CategoryTabs(query: _query, onSelected: _applyCategory),
           Expanded(child: _body(state)),
         ],
       ),
+      bottomNavigationBar: const _ViewCartBar(),
     );
   }
 
@@ -202,6 +220,161 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Horizontal category chips above the grid. Categories are flat, so this is
+/// simply the whole list with «الكل» in front.
+class _CategoryTabs extends ConsumerWidget {
+  const _CategoryTabs({required this.query, required this.onSelected});
+
+  final ProductQuery query;
+  final ValueChanged<String?> onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categories = ref.watch(categoriesProvider).valueOrNull;
+    if (categories == null || categories.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return SizedBox(
+      height: 46,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        itemCount: categories.length + 1,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          if (i == 0) {
+            return _Chip(
+              label: 'الكل',
+              selected: query.categoryId == null && query.categorySlug == null,
+              onTap: () => onSelected(null),
+            );
+          }
+          final c = categories[i - 1];
+          // The screen can be entered by slug, so match either identifier.
+          final selected =
+              query.categoryId == c.id || query.categorySlug == c.slug;
+          return _Chip(
+            label: c.nameAr,
+            selected: selected,
+            onTap: () => onSelected(c.id),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.primary : AppColors.surface,
+      borderRadius: BorderRadius.circular(999),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.border,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? AppColors.onPrimary : AppColors.muted,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Floating summary that appears once the cart has something in it, so the
+/// customer can keep browsing and still see what they have picked.
+class _ViewCartBar extends ConsumerWidget {
+  const _ViewCartBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(cartControllerProvider);
+    if (state.count == 0) return const SizedBox.shrink();
+
+    return SafeArea(
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Material(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push('/cart'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.onPrimary.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '${state.count}',
+                    style: const TextStyle(
+                      color: AppColors.onPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'عرض السلة',
+                    style: TextStyle(
+                      color: AppColors.onPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+                Text(
+                  Formatters.money(state.subtotal),
+                  style: const TextStyle(
+                    color: AppColors.onPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
