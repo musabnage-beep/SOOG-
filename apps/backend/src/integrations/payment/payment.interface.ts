@@ -28,9 +28,24 @@ export interface PaymentStatusResult {
   amount: number;
 }
 
+export interface ChargeResult extends PaymentStatusResult {
+  /** Currency the gateway actually charged in. */
+  currency: string;
+}
+
 export interface PaymentProvider {
+  /**
+   * Client-side key the mobile SDK uses to tokenise a card. Safe to hand to the
+   * app — it can only create charges, never read or refund them.
+   */
+  readonly publishableKey: string;
   createPayment(input: CreatePaymentInput): Promise<CreatePaymentResult>;
   getPayment(reference: string): Promise<PaymentStatusResult>;
+  /**
+   * Reads a single charge the client created itself. Distinct from getPayment,
+   * which resolves references as invoices.
+   */
+  getCharge(paymentId: string): Promise<ChargeResult>;
   /** Validates an inbound webhook using the gateway's shared secret. */
   verifyWebhook(secretToken: string | undefined): boolean;
 }

@@ -1,6 +1,7 @@
 import '../../core/network/api_client.dart';
 import '../models/order.dart';
 import '../models/paginated.dart';
+import '../models/payment_session.dart';
 
 class OrderRepository {
   OrderRepository(this._api);
@@ -26,6 +27,23 @@ class OrderRepository {
   Future<String> initiatePayment(String orderId) async {
     final data = await _api.post<Map<String, dynamic>>('/payments/orders/$orderId/initiate');
     return data['redirectUrl'] as String;
+  }
+
+  /// Config the in-app payment SDK needs to charge the card itself.
+  Future<PaymentSession> paymentSession(String orderId) async {
+    final data = await _api.post<Map<String, dynamic>>('/payments/orders/$orderId/session');
+    return PaymentSession.fromJson(data);
+  }
+
+  /// Reports the charge the SDK created and returns the settled payment status.
+  /// The backend re-reads the charge from the gateway before trusting it, so a
+  /// forged id changes nothing.
+  Future<String> confirmPayment(String orderId, String paymentId) async {
+    final data = await _api.post<Map<String, dynamic>>(
+      '/payments/orders/$orderId/confirm',
+      data: {'paymentId': paymentId},
+    );
+    return (data['paymentStatus'] as String?) ?? '';
   }
 
   Future<Paginated<Order>> myOrders({String? status, int page = 1, int limit = 20}) async {

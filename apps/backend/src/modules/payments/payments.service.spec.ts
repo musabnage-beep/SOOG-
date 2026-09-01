@@ -15,6 +15,7 @@ describe('PaymentsService', () => {
   let notify: jest.Mock;
   let createPayment: jest.Mock;
   let getPayment: jest.Mock;
+  let getCharge: jest.Mock;
   let verifyWebhook: jest.Mock;
 
   const order = (over: Partial<Record<string, unknown>> = {}) => ({
@@ -36,6 +37,7 @@ describe('PaymentsService', () => {
     notify = jest.fn().mockResolvedValue(undefined);
     createPayment = jest.fn();
     getPayment = jest.fn();
+    getCharge = jest.fn();
     verifyWebhook = jest.fn().mockReturnValue(true);
 
     const moduleRef = await Test.createTestingModule({
@@ -52,7 +54,16 @@ describe('PaymentsService', () => {
           provide: ConfigService,
           useValue: { get: () => 'http://localhost:3000/api/payments/callback' },
         },
-        { provide: PAYMENT_PROVIDER, useValue: { createPayment, getPayment, verifyWebhook } },
+        {
+          provide: PAYMENT_PROVIDER,
+          useValue: {
+            publishableKey: 'pk_test_1',
+            createPayment,
+            getPayment,
+            getCharge,
+            verifyWebhook,
+          },
+        },
       ],
     }).compile();
     service = moduleRef.get(PaymentsService);
@@ -108,6 +119,89 @@ describe('PaymentsService', () => {
         data: expect.objectContaining({ paymentStatus: PaymentStatus.PAID, paymentRef: 'inv_1' }),
       }),
     );
+  });
+
+  it('hands the app the publishable key and the amount in halalas', async () => {
+    orderFindFirst.mockResolvedValue(order());
+
+    await expect(service.session('u1', 'o1')).resolves.toEqual(
+      expect.objectContaining({ publishableKey: 'pk_test_1', amount: 15000, currency: 'SAR' }),
+    );
+  });
+
+  it('confirms an in-app charge after re-reading it from the gateway', async () => {
+    orderFindFirst
+      .mockResolvedValueOnce(order())
+      .mockResolvedValueOnce(order())
+      .mockResolvedValueOnce(null);
+    getCharge.mockResolvedValue({
+      reference: 'pay_9',
+      status: 'paid',
+      amount: 150,
+      currency: 'SAR',
+    });
+    orderFindUnique.mockResolvedValue(order({ paymentStatus: PaymentStatus.PAID }));
+
+    const res = await service.confirmCharge('u1', 'o1', 'pay_9');
+
+    expect(res.paymentStatus).toBe(PaymentStatus.PAID);
+    expect(orderUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ paymentStatus: PaymentStatus.PAID, paymentRef: 'pay_9' }),
+      }),
+    );
+  });
+
+  // A cheap charge must never settle an expensive order.
+  it('rejects an in-app charge whose amount does not match the order', async () => {
+    orderFindFirst
+      .mockResolvedValueOnce(order())
+      .mockResolvedValueOnce(order())
+      .mockResolvedValueOnce(null);
+    getCharge.mockResolvedValue({ reference: 'pay_9', status: 'paid', amount: 1, currency: 'SAR' });
+
+    await expect(service.confirmCharge('u1', 'o1', 'pay_9')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(orderUpdate).not.toHaveBeenCalled();
+  });
+
+  it('treats an already-paid order as a successful confirmation', async () => {
+    orderFindFirst.mockResolvedValue(order({ paymentStatus: PaymentStatus.PAID }));
+
+    await expect(service.confirmCharge('u1', 'o1', 'pay_9')).resolves.toEqual(
+      expect.objectContaining({ paymentStatus: PaymentStatus.PAID }),
+    );
+    expect(getCharge).not.toHaveBeenCalled();
+  });
+
+  // In-app charges have no invoice, so metadata is the only link back to the order.
+  it('falls back to the order id in the charge metadata', async () => {
+    orderFindFirst.mockResolvedValue(null);
+    orderFindUnique.mockResolvedValue(order());
+
+    await service.handleWebhook({
+      secret_token: 's',
+      data: { id: 'pay_9', status: 'paid', amount: 15000, metadata: { order_id: 'o1' } },
+    });
+
+    expect(orderUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ paymentStatus: PaymentStatus.PAID, paymentRef: 'pay_9' }),
+      }),
+    );
+  });
+
+  it('ignores a metadata match when the charged amount is wrong', async () => {
+    orderFindFirst.mockResolvedValue(null);
+    orderFindUnique.mockResolvedValue(order());
+
+    await service.handleWebhook({
+      secret_token: 's',
+      data: { id: 'pay_9', status: 'paid', amount: 100, metadata: { order_id: 'o1' } },
+    });
+
+    expect(orderUpdate).not.toHaveBeenCalled();
   });
 
   it('rejects a webhook with an invalid signature', async () => {

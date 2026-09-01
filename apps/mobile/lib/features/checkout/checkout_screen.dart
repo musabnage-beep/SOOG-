@@ -14,7 +14,7 @@ import '../../providers/cart_controller.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/orders_providers.dart';
 import '../../providers/settings_providers.dart';
-import 'payment_launcher.dart';
+import 'payment_screen.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -381,7 +381,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       _show('أدخل رقم جوال سعودي صحيح');
       return;
     }
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _placing = true);
     try {
       if (needsPhone) {
@@ -400,9 +399,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       await ref.read(cartControllerProvider.notifier).load();
       ref.invalidate(myOrdersProvider);
       if (order.isCard) {
-        // The order exists either way; if the browser fails to open the
+        if (!mounted) return;
+        // The order exists either way; if the payment is abandoned the
         // customer can retry from the order screen.
-        await openPaymentPage(messenger, orders, order.id);
+        await openPaymentPage(context, orders, order.id);
       }
       if (!mounted) return;
       context.pushReplacement('/order/${order.id}');

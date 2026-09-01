@@ -9,7 +9,7 @@ import '../../data/models/order.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/orders_providers.dart';
 import '../../widgets/order_status_chip.dart';
-import '../checkout/payment_launcher.dart';
+import '../checkout/payment_screen.dart';
 import '../../widgets/state_views.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
@@ -402,16 +402,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   );
 
   Future<void> _payNow(String orderId) async {
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
-    final opened = await openPaymentPage(
-      messenger,
+    final paid = await openPaymentPage(
+      context,
       ref.read(orderRepositoryProvider),
       orderId,
     );
-    // Reconciliation happens on the gateway callback; refresh so returning
-    // customers see the settled status.
-    if (opened) ref.invalidate(orderDetailProvider(orderId));
+    if (paid) ref.invalidate(orderDetailProvider(orderId));
     if (mounted) setState(() => _busy = false);
   }
 

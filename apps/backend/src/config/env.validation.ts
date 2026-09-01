@@ -41,6 +41,7 @@ export const envSchema = z.object({
   PAYMENT_PROVIDER: z.enum(['console', 'moyasar']).default('console'),
   MOYASAR_SECRET_KEY: z.string().optional().default(''),
   MOYASAR_WEBHOOK_SECRET: z.string().optional().default(''),
+  MOYASAR_PUBLISHABLE_KEY: z.string().optional().default(''),
   PAYMENT_CALLBACK_URL: z.string().default('http://localhost:3000/api/payments/callback'),
 
   PUSH_PROVIDER: z.enum(['console', 'fcm']).default('console'),

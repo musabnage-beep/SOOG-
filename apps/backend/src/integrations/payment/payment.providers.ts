@@ -1,11 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  ChargeResult,
   CreatePaymentInput,
   CreatePaymentResult,
+  GatewayPaymentStatus,
   PaymentProvider,
   PaymentStatusResult,
 } from './payment.interface';
+
+/** Anything the gateway has not settled yet stays pending, never paid. */
+function mapGatewayStatus(status: string): GatewayPaymentStatus {
+  if (status === 'paid') return 'paid';
+  if (status === 'failed') return 'failed';
+  return 'pending';
+}
 
 /**
  * Dev payment provider: no real gateway. It "settles" instantly by redirecting
@@ -15,6 +24,7 @@ import {
 @Injectable()
 export class ConsolePaymentProvider implements PaymentProvider {
   private readonly logger = new Logger('PAYMENT');
+  readonly publishableKey = 'pk_test_dev';
 
   async createPayment(input: CreatePaymentInput): Promise<CreatePaymentResult> {
     const reference = `dev_${input.orderId}`;
@@ -32,6 +42,10 @@ export class ConsolePaymentProvider implements PaymentProvider {
     return { reference, status: 'paid', amount: 0 };
   }
 
+  async getCharge(paymentId: string): Promise<ChargeResult> {
+    return { reference: paymentId, status: 'paid', amount: 0, currency: 'SAR' };
+  }
+
   verifyWebhook(): boolean {
     return true;
   }
@@ -42,6 +56,13 @@ interface MoyasarInvoice {
   status: string;
   amount: number;
   url: string;
+}
+
+interface MoyasarPayment {
+  id: string;
+  status: string;
+  amount: number;
+  currency: string;
 }
 
 /**
@@ -56,11 +77,13 @@ export class MoyasarPaymentProvider implements PaymentProvider {
   private readonly baseUrl = 'https://api.moyasar.com/v1';
   private readonly authHeader: string;
   private readonly webhookSecret: string;
+  readonly publishableKey: string;
 
   constructor(config: ConfigService) {
     const secretKey = config.getOrThrow<string>('MOYASAR_SECRET_KEY');
     this.authHeader = `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}`;
     this.webhookSecret = config.get<string>('MOYASAR_WEBHOOK_SECRET', '');
+    this.publishableKey = config.get<string>('MOYASAR_PUBLISHABLE_KEY', '');
   }
 
   async createPayment(input: CreatePaymentInput): Promise<CreatePaymentResult> {
@@ -95,8 +118,25 @@ export class MoyasarPaymentProvider implements PaymentProvider {
     const invoice = (await res.json()) as MoyasarInvoice;
     return {
       reference: invoice.id,
-      status: invoice.status === 'paid' ? 'paid' : invoice.status === 'failed' ? 'failed' : 'pending',
+      status: mapGatewayStatus(invoice.status),
       amount: invoice.amount / 100,
+    };
+  }
+
+  async getCharge(paymentId: string): Promise<ChargeResult> {
+    const res = await fetch(`${this.baseUrl}/payments/${paymentId}`, {
+      headers: { Authorization: this.authHeader },
+    });
+    if (!res.ok) {
+      this.logger.error(`Moyasar fetch payment failed (${res.status}) for ${paymentId}`);
+      throw new Error(`Payment provider error: ${res.status}`);
+    }
+    const payment = (await res.json()) as MoyasarPayment;
+    return {
+      reference: payment.id,
+      status: mapGatewayStatus(payment.status),
+      amount: payment.amount / 100,
+      currency: payment.currency,
     };
   }
 

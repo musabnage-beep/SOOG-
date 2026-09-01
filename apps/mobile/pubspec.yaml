@@ -1,7 +1,7 @@
 name: aldiafa
 description: "ALDIAFAH — الضيافة customer app"
 publish_to: 'none'
-version: 1.0.27+28
+version: 1.0.28+29
 
 environment:
   sdk: ^3.11.1
@@ -39,8 +39,8 @@ dependencies:
   flutter_svg: ^2.0.10+1
   intl: ^0.20.2
 
-  # Payments (opens the gateway's hosted page in the system browser)
-  url_launcher: ^6.3.1
+  # Payments — native card form, Apple Pay and 3-D Secure, all inside the app
+  moyasar: ^3.0.5
 
   # Firebase (push notifications)
   firebase_core: ^3.8.1

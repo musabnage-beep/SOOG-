@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
+import { ConfirmChargeDto } from './dto/confirm-charge.dto';
 import { renderPaymentResult } from './payment-result.page';
 import { PaymentsService } from './payments.service';
 
@@ -18,6 +19,24 @@ export class PaymentsController {
   @Post('orders/:id/initiate')
   initiate(@CurrentUser('id') userId: string, @Param('id') orderId: string) {
     return this.service.initiate(userId, orderId);
+  }
+
+  /** Config the in-app payment SDK needs to charge the card without leaving the app. */
+  @ApiBearerAuth()
+  @Post('orders/:id/session')
+  session(@CurrentUser('id') userId: string, @Param('id') orderId: string) {
+    return this.service.session(userId, orderId);
+  }
+
+  /** The app reports the charge it created; the gateway is re-queried before trusting it. */
+  @ApiBearerAuth()
+  @Post('orders/:id/confirm')
+  confirm(
+    @CurrentUser('id') userId: string,
+    @Param('id') orderId: string,
+    @Body() dto: ConfirmChargeDto,
+  ) {
+    return this.service.confirmCharge(userId, orderId, dto.paymentId);
   }
 
   /**
