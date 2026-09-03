@@ -39,8 +39,11 @@ dependencies:
   flutter_svg: ^2.0.10+1
   intl: ^0.20.2
 
-  # Payments — native card form, Apple Pay and 3-D Secure, all inside the app
+  # Payments — the card is tokenized and charged inside the app
   moyasar: ^3.0.5
+  # Hosts the bank's 3-D Secure step; the gateway ships its own screen but does
+  # not export it, so the app opens the same redirect itself.
+  webview_flutter: ^4.14.1
 
   # Firebase (push notifications)
   firebase_core: ^3.8.1
