@@ -9,14 +9,12 @@ class AuthRepository {
 
   Future<AuthResult> register({
     required String fullName,
-    String? email,
-    String? phone,
+    required String phone,
     required String password,
   }) async {
     final data = await _api.post<Map<String, dynamic>>('/auth/register', data: {
       'fullName': fullName,
-      'email': ?email,
-      'phone': ?phone,
+      'phone': phone,
       'password': password,
     });
     return AuthResult.fromJson(data);
@@ -39,10 +37,9 @@ class AuthRepository {
     await _api.post<dynamic>('/auth/resend-otp', data: {'target': target, 'purpose': purpose});
   }
 
-  Future<AuthResult> login({String? email, String? phone, required String password}) async {
+  Future<AuthResult> login({required String phone, required String password}) async {
     final data = await _api.post<Map<String, dynamic>>('/auth/login', data: {
-      'email': ?email,
-      'phone': ?phone,
+      'phone': phone,
       'password': password,
     });
     return AuthResult.fromJson(data);
@@ -81,10 +78,9 @@ class AuthRepository {
     await _api.delete<dynamic>('/auth/fcm-token', data: {'token': token});
   }
 
-  Future<AppUser> updateProfile({String? fullName, String? email, String? phone}) async {
+  Future<AppUser> updateProfile({String? fullName, String? phone}) async {
     final data = await _api.patch<Map<String, dynamic>>('/users/me', data: {
       'fullName': ?fullName,
-      'email': ?email,
       'phone': ?phone,
     });
     return AppUser.fromJson(data);

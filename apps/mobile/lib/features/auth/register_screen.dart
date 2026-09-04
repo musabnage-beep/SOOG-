@@ -19,7 +19,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _phone = TextEditingController();
-  final _email = TextEditingController();
   final _password = TextEditingController();
   bool _obscure = true;
   bool _busy = false;
@@ -28,7 +27,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   void dispose() {
     _name.dispose();
     _phone.dispose();
-    _email.dispose();
     _password.dispose();
     super.dispose();
   }
@@ -45,13 +43,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     setState(() => _busy = true);
     try {
       final phone = _normalizeSaudi(_phone.text.trim());
-      final email = _email.text.trim();
       final result = await ref
           .read(authRepositoryProvider)
           .register(
             fullName: _name.text.trim(),
             phone: phone,
-            email: email,
             password: _password.text,
           );
       if (!mounted) return;
@@ -113,26 +109,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           r'^(\+966|00966|966|0)?5\d{8}$',
                         ).hasMatch(d)) {
                           return 'أدخل رقم جوال سعودي صحيح (05XXXXXXXX)';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'البريد الإلكتروني',
-                        hintText: 'name@example.com',
-                        prefixIcon: Icon(Icons.email_outlined),
-                      ),
-                      validator: (v) {
-                        final s = (v ?? '').trim();
-                        if (s.isEmpty) return 'أدخل البريد الإلكتروني';
-                        if (!RegExp(
-                          r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                        ).hasMatch(s)) {
-                          return 'أدخل بريداً إلكترونياً صحيحاً';
                         }
                         return null;
                       },

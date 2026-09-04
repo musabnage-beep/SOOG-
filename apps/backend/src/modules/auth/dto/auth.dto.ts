@@ -17,10 +17,12 @@ export class RegisterDto {
   @MinLength(2)
   fullName!: string;
 
-  // Email is required and is the verification channel (OTP is emailed).
-  @ApiProperty({ example: 'user@example.com' })
+  // The mobile number identifies a customer; an email is only an extra contact
+  // that older app builds still send, so it is accepted but never required.
+  @ApiPropertyOptional({ example: 'user@example.com' })
+  @IsOptional()
   @IsEmail()
-  email!: string;
+  email?: string;
 
   // A valid Saudi mobile number is required (but not OTP-verified).
   @ApiProperty({ example: '+966500000001' })

@@ -16,7 +16,6 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _name;
-  late final TextEditingController _email;
   late final TextEditingController _phone;
   final _current = TextEditingController();
   final _newPass = TextEditingController();
@@ -28,14 +27,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.initState();
     final user = ref.read(authControllerProvider).user;
     _name = TextEditingController(text: user?.fullName ?? '');
-    _email = TextEditingController(text: user?.email ?? '');
     _phone = TextEditingController(text: user?.phone ?? '');
   }
 
   @override
   void dispose() {
     _name.dispose();
-    _email.dispose();
     _phone.dispose();
     _current.dispose();
     _newPass.dispose();
@@ -49,7 +46,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           .read(authRepositoryProvider)
           .updateProfile(
             fullName: _name.text.trim(),
-            email: _email.text.trim().isEmpty ? null : _email.text.trim(),
             phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
           );
       ref.read(authControllerProvider.notifier).setUser(user);
@@ -119,15 +115,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             decoration: const InputDecoration(
               labelText: 'رقم الجوال',
               prefixIcon: Icon(Icons.phone_outlined),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _email,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'البريد الإلكتروني',
-              prefixIcon: Icon(Icons.email_outlined),
             ),
           ),
           const SizedBox(height: 16),

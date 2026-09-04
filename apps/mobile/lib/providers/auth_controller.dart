@@ -64,8 +64,8 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> completeWithTokens(AuthResult result) => _persist(result);
 
-  Future<void> login({String? email, String? phone, required String password}) async {
-    final result = await _repo.login(email: email, phone: phone, password: password);
+  Future<void> login({required String phone, required String password}) async {
+    final result = await _repo.login(phone: phone, password: password);
     await _persist(result);
   }
 

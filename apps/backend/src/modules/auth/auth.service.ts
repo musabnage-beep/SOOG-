@@ -36,15 +36,17 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto, meta: RequestMeta) {
-    const emailExists = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (emailExists) throw new ConflictException('Email already registered');
+    if (dto.email) {
+      const emailExists = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (emailExists) throw new ConflictException('Email already registered');
+    }
     const phoneExists = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
     if (phoneExists) throw new ConflictException('Phone already registered');
 
     const user = await this.prisma.user.create({
       data: {
         fullName: dto.fullName,
-        email: dto.email,
+        email: dto.email ?? null,
         phone: dto.phone,
         passwordHash: await argon2.hash(dto.password),
         roleId: await this.customerRoleId(),

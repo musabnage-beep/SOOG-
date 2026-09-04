@@ -17,14 +17,22 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _identifier = TextEditingController();
+  final _phone = TextEditingController();
   final _password = TextEditingController();
   bool _obscure = true;
   bool _busy = false;
 
+  /// Normalizes any accepted Saudi format to E.164 (+9665XXXXXXXX), so the
+  /// number matches whatever shape it was stored in at signup.
+  static String _normalizeSaudi(String v) {
+    var d = v.replaceAll(RegExp(r'[\s-]'), '');
+    d = d.replaceFirst(RegExp(r'^(\+966|00966|966|0)'), '');
+    return '+966$d';
+  }
+
   @override
   void dispose() {
-    _identifier.dispose();
+    _phone.dispose();
     _password.dispose();
     super.dispose();
   }
@@ -33,13 +41,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _busy = true);
     try {
-      final value = _identifier.text.trim();
-      final isEmail = value.contains('@');
       await ref
           .read(authControllerProvider.notifier)
           .login(
-            phone: isEmail ? null : value,
-            email: isEmail ? value : null,
+            phone: _normalizeSaudi(_phone.text.trim()),
             password: _password.text,
           );
     } on ApiException catch (e) {
@@ -166,14 +171,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const SizedBox(height: 28),
 
-                          // Identifier field
+                          // Phone field — the mobile number is the only login
+                          // identifier; accounts no longer carry an email.
                           TextFormField(
-                            controller: _identifier,
+                            controller: _phone,
                             textAlign: TextAlign.right,
                             textDirection: TextDirection.rtl,
-                            keyboardType: TextInputType.emailAddress,
+                            keyboardType: TextInputType.phone,
                             decoration: InputDecoration(
-                              hintText: 'البريد الإلكتروني أو رقم الجوال',
+                              hintText: 'رقم الجوال (05XXXXXXXX)',
                               hintStyle: const TextStyle(
                                 color: AppColors.muted,
                                 fontSize: 13,
@@ -190,9 +196,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 borderSide: BorderSide.none,
                               ),
                             ),
-                            validator: (v) => (v == null || v.trim().isEmpty)
-                                ? 'هذا الحقل مطلوب'
-                                : null,
+                            validator: (v) {
+                              final d = (v ?? '').replaceAll(
+                                RegExp(r'[\s-]'),
+                                '',
+                              );
+                              if (d.isEmpty) return 'أدخل رقم الجوال';
+                              if (!RegExp(
+                                r'^(\+966|00966|966|0)?5\d{8}$',
+                              ).hasMatch(d)) {
+                                return 'أدخل رقم جوال سعودي صحيح (05XXXXXXXX)';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 12),
 

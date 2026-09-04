@@ -32,16 +32,25 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  /// Normalizes any accepted Saudi format to E.164 (+9665XXXXXXXX).
+  static String _normalizeSaudi(String v) {
+    var d = v.replaceAll(RegExp(r'[\s-]'), '');
+    d = d.replaceFirst(RegExp(r'^(\+966|00966|966|0)'), '');
+    return '+966$d';
+  }
+
+  String get _phone => _normalizeSaudi(_target.text.trim());
+
   Future<void> _request() async {
-    if (_target.text.trim().isEmpty) {
-      _show('أدخل الجوال أو البريد');
+    if (!RegExp(
+      r'^(\+966|00966|966|0)?5\d{8}$',
+    ).hasMatch(_target.text.replaceAll(RegExp(r'[\s-]'), ''))) {
+      _show('أدخل رقم جوال سعودي صحيح (05XXXXXXXX)');
       return;
     }
     setState(() => _busy = true);
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .forgotPassword(_target.text.trim());
+      await ref.read(authRepositoryProvider).forgotPassword(_phone);
       setState(() => _sent = true);
       _show('تم إرسال رمز الاستعادة', error: false);
     } on ApiException catch (e) {
@@ -61,7 +70,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       await ref
           .read(authRepositoryProvider)
           .resetPassword(
-            target: _target.text.trim(),
+            target: _phone,
             code: _code.text.trim(),
             newPassword: _password.text,
           );
@@ -99,10 +108,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               TextField(
                 controller: _target,
                 enabled: !_sent,
-                keyboardType: TextInputType.emailAddress,
+                keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'الجوال أو البريد الإلكتروني',
-                  prefixIcon: Icon(Icons.account_circle_outlined),
+                  labelText: 'رقم الجوال',
+                  hintText: '05XXXXXXXX',
+                  prefixIcon: Icon(Icons.phone_outlined),
                 ),
               ),
               if (_sent) ...[
