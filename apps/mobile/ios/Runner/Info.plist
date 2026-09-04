@@ -43,12 +43,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>نحتاج إلى موقعك لتحديد عنوان التوصيل</string>
 
-	<!-- Push notifications -->
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>remote-notification</string>
-	</array>
+	<!-- No UIBackgroundModes. The bundle carries no GoogleService-Info.plist and
+	     no aps-environment entitlement, so a push can never arrive, and nothing
+	     refreshes in the background either. Claiming the modes anyway only
+	     invites an App Review question. Restore "remote-notification" together
+	     with the Firebase config file and the Push Notifications capability. -->
 
 	<key>UIApplicationSceneManifest</key>
 	<dict>
