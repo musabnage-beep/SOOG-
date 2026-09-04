@@ -388,6 +388,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.gold,
             foregroundColor: AppColors.onPrimary,
+            // The theme asks buttons to fill the width, which is an infinite
+            // minimum inside a row and leaves the card unpainted.
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),

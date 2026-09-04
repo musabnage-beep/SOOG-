@@ -6,6 +6,12 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<!-- The UI is Arabic-only; without this the App Store listing claims the
+	     app supports English only. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ar</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>الضيافة</string>
 	<key>CFBundleExecutable</key>
@@ -31,10 +37,10 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 
-	<!-- Location permissions (required for the address picker map) -->
+	<!-- Location permission (required for the address picker map). Only the
+	     "while using" level is declared: the app never tracks in the
+	     background, and declaring "always" invites an App Review question. -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>نحتاج إلى موقعك لتحديد عنوان التوصيل</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>نحتاج إلى موقعك لتحديد عنوان التوصيل</string>
 
 	<!-- Push notifications -->

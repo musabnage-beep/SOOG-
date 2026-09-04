@@ -139,6 +139,10 @@ class _Header extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: AppColors.border),
+              // The theme asks outlined buttons to fill the width, which is an
+              // infinite minimum inside a row and breaks the whole header.
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),
@@ -417,21 +421,26 @@ class _PaymentSummary extends StatelessWidget {
   }) {
     return Row(
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: bold ? AppColors.dark : AppColors.muted,
-            fontSize: bold ? 16 : 14,
-            fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: bold ? AppColors.dark : AppColors.muted,
+              fontSize: bold ? 16 : 14,
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+            ),
           ),
         ),
-        const Spacer(),
-        Text(
-          value,
-          style: TextStyle(
-            color: muted ? AppColors.muted : AppColors.dark,
-            fontSize: bold ? 16 : 14,
-            fontWeight: bold ? FontWeight.w800 : FontWeight.w700,
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              color: muted ? AppColors.muted : AppColors.dark,
+              fontSize: bold ? 16 : 14,
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w700,
+            ),
           ),
         ),
       ],
@@ -485,17 +494,26 @@ class _BottomBar extends StatelessWidget {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'إتمام الطلب',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                const Flexible(
+                  child: Text(
+                    'إتمام الطلب',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                  ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  Formatters.money(state.subtotal),
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                Flexible(
+                  child: Text(
+                    Formatters.money(state.subtotal),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],

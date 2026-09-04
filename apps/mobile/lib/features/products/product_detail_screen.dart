@@ -195,6 +195,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('تمت الإضافة إلى السلة'),
+            // A snack bar that carries an action defaults to `persist: true`,
+            // so it would hang on the screen until it is tapped.
+            persist: false,
+            duration: const Duration(seconds: 3),
             action: SnackBarAction(
               label: 'عرض السلة',
               onPressed: () => context.go('/cart'),
