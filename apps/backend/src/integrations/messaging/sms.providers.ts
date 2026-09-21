@@ -52,6 +52,52 @@ export class MsegatSmsProvider implements SmsProvider {
 }
 
 /**
+ * Taqnyat SMS provider (KSA). Requires SMS_API_KEY (the account bearer token)
+ * and SMS_SENDER_ID (the sender name Taqnyat approved for the account).
+ */
+@Injectable()
+export class TaqnyatSmsProvider implements SmsProvider {
+  private readonly logger = new Logger('SMS');
+  private readonly token: string;
+  private readonly senderId: string;
+
+  constructor(config: ConfigService) {
+    this.token = config.get<string>('SMS_API_KEY', '');
+    this.senderId = config.get<string>('SMS_SENDER_ID', 'ALDIAFAH');
+  }
+
+  async send(to: string, message: string): Promise<void> {
+    const res = await fetch('https://api.taqnyat.sa/v1/messages', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+      },
+      // Recipients carry no leading "+" or "00".
+      body: JSON.stringify({
+        recipients: [to.replace(/^\+|^00/, '')],
+        body: message,
+        sender: this.senderId,
+      }),
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      this.logger.error(`Taqnyat SMS failed (${res.status}) for ${to}: ${text}`);
+      throw new Error(`SMS provider error: ${res.status}`);
+    }
+
+    // A 201 can still reject the number (bad format, blocked operator). Without
+    // this check the caller would report "code sent" for a message nobody gets.
+    const parsed = JSON.parse(text) as { accepted?: unknown[]; rejected?: unknown[] };
+    if (parsed.rejected?.length || parsed.accepted?.length === 0) {
+      this.logger.error(`Taqnyat rejected ${to}: ${text}`);
+      throw new Error('SMS provider rejected the recipient');
+    }
+  }
+}
+
+/**
  * Twilio SMS provider. Requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
  * and TWILIO_PHONE_NUMBER (the purchased Twilio phone number, e.g. +12345678900).
  */

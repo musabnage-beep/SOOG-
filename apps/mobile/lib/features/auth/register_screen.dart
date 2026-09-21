@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/snack.dart';
-import '../../providers/auth_controller.dart';
 import '../../providers/core_providers.dart';
 import '../../widgets/ambient_background.dart';
+import 'otp_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -43,7 +44,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     setState(() => _busy = true);
     try {
       final phone = _normalizeSaudi(_phone.text.trim());
-      final result = await ref
+      final challenge = await ref
           .read(authRepositoryProvider)
           .register(
             fullName: _name.text.trim(),
@@ -51,10 +52,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             password: _password.text,
           );
       if (!mounted) return;
-      // No OTP — sign the user in immediately. Router redirects to /home.
-      await ref
-          .read(authControllerProvider.notifier)
-          .completeWithTokens(result);
+      // Signup always ends on the SMS code screen; the account only opens once
+      // the customer proves the number is theirs.
+      context.push(
+        '/otp',
+        extra: OtpArgs(target: challenge.target, purpose: challenge.purpose),
+      );
     } on ApiException catch (e) {
       _show(e.message);
     } catch (_) {

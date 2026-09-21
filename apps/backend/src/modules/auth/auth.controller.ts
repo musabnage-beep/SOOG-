@@ -30,7 +30,7 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 10, ttl: 60 } })
   @Post('register')
-  @ApiOperation({ summary: 'Register a customer and sign in immediately (no OTP)' })
+  @ApiOperation({ summary: 'Register a customer and send an SMS OTP to the mobile number' })
   register(@Body() dto: RegisterDto, @Ip() ip: string, @Req() req: Request) {
     return this.auth.register(dto, { ip, userAgent: this.ua(req) });
   }
@@ -53,6 +53,7 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 10, ttl: 60 } })
   @Post('login')
+  @ApiOperation({ summary: 'Sign in with a Saudi mobile number and password (no OTP)' })
   login(@Body() dto: LoginDto, @Ip() ip: string, @Req() req: Request) {
     return this.auth.login(dto, { ip, userAgent: this.ua(req) });
   }

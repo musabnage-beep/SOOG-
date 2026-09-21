@@ -16,7 +16,7 @@ export const envSchema = z.object({
 
   OTP_TTL_SECONDS: z.coerce.number().default(300),
   OTP_LENGTH: z.coerce.number().default(6),
-  SMS_PROVIDER: z.enum(['console', 'unifonic', 'twilio', 'msegat']).default('console'),
+  SMS_PROVIDER: z.enum(['console', 'unifonic', 'twilio', 'msegat', 'taqnyat']).default('console'),
   SMS_API_KEY: z.string().optional().default(''),
   SMS_USERNAME: z.string().optional().default(''),
   SMS_SENDER_ID: z.string().default('ALDIAFAH'),

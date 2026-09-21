@@ -54,9 +54,18 @@ export class AuthService {
       },
     });
 
-    // OTP verification disabled: sign the user in immediately after signup.
-    const tokens = await this.tokens.issue(user.id, RoleName.CUSTOMER, meta);
-    return { ...tokens, user: this.publicUser({ ...user, role: { name: RoleName.CUSTOMER } }) };
+    // No tokens yet: the account only becomes usable once the SMS code proves
+    // the customer owns the number.
+    try {
+      await this.otp.issue(dto.phone, OtpPurpose.REGISTRATION, user.id);
+    } catch (err) {
+      // The row would otherwise squat on the number and block every retry with
+      // "Phone already registered", even though nobody can sign in to it.
+      await this.prisma.user.delete({ where: { id: user.id } });
+      throw err;
+    }
+
+    return { requiresOtp: true, target: dto.phone, purpose: OtpPurpose.REGISTRATION };
   }
 
   async verifyOtp(dto: VerifyOtpDto, meta: RequestMeta) {
@@ -68,7 +77,9 @@ export class AuthService {
     if (dto.purpose === OtpPurpose.REGISTRATION || dto.purpose === OtpPurpose.LOGIN) {
       await this.prisma.user.update({
         where: { id: user.id },
-        data: dto.target.includes('@') ? { isEmailVerified: true } : { isPhoneVerified: true },
+        data: dto.target.includes('@')
+          ? { isEmailVerified: true, lastLoginAt: new Date() }
+          : { isPhoneVerified: true, lastLoginAt: new Date() },
       });
       const tokens = await this.tokens.issue(user.id, user.role.name, meta);
       return { ...tokens, user: this.publicUser(user) };
@@ -83,12 +94,8 @@ export class AuthService {
     const valid = await argon2.verify(user.passwordHash, dto.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    // Enforce email verification for customers (OTP is emailed).
-    if (user.role.name === RoleName.CUSTOMER && !user.isEmailVerified && user.email) {
-      await this.otp.issue(user.email, OtpPurpose.LOGIN, user.id);
-      throw new UnauthorizedException('Account not verified. OTP re-sent.');
-    }
-
+    // No OTP here by design: the number was already proven at signup, and a
+    // code on every sign-in would cost an SMS per login.
     await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     const tokens = await this.tokens.issue(user.id, user.role.name, meta);
     return { ...tokens, user: this.publicUser(user) };

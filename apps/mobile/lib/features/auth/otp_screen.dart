@@ -117,7 +117,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             children: [
               const SizedBox(height: 16),
               const Icon(
-                Icons.mark_email_read_outlined,
+                Icons.sms_outlined,
                 size: 64,
                 color: AppColors.primary,
               ),
@@ -129,8 +129,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'أرسلنا رمزاً إلى ${widget.args.target}',
+                'أرسلنا رسالة نصية تحتوي الرمز إلى ${widget.args.target}',
                 textAlign: TextAlign.center,
+                textDirection: TextDirection.rtl,
                 style: const TextStyle(color: AppColors.muted),
               ),
               const SizedBox(height: 28),

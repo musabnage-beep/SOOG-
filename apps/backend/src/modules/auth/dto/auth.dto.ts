@@ -24,7 +24,7 @@ export class RegisterDto {
   @IsEmail()
   email?: string;
 
-  // A valid Saudi mobile number is required (but not OTP-verified).
+  // The identity of the account: a valid Saudi mobile, verified by SMS OTP.
   @ApiProperty({ example: '+966500000001' })
   @IsPhoneNumber('SA')
   phone!: string;
