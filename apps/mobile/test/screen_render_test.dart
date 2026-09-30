@@ -21,7 +21,7 @@ void main() {
     return ProviderScope(
       overrides: overrides,
       child: MaterialApp(
-        theme: AppTheme.dark(),
+        theme: AppTheme.light(),
         home: Directionality(textDirection: TextDirection.rtl, child: child),
       ),
     );

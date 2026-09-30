@@ -188,11 +188,13 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(color: AppColors.border),
+                // Heavier than the standard card lift: this panel floats over
+                // map tiles, not over the page background.
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x99000000),
+                    color: Color(0x2816281D),
                     blurRadius: 24,
-                    offset: Offset(0, 10),
+                    offset: Offset(0, 8),
                   ),
                 ],
               ),

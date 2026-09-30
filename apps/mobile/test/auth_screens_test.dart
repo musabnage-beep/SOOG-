@@ -17,7 +17,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: AppTheme.dark(),
+          theme: AppTheme.light(),
           home: Directionality(textDirection: TextDirection.rtl, child: child),
         ),
       ),

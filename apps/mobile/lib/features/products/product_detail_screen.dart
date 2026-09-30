@@ -968,9 +968,9 @@ class _BottomBar extends StatelessWidget {
           border: Border(top: BorderSide(color: AppColors.border)),
           boxShadow: [
             BoxShadow(
-              color: Color(0x99000000),
-              blurRadius: 24,
-              offset: Offset(0, -6),
+              color: Color(0x1416281D),
+              blurRadius: 20,
+              offset: Offset(0, -4),
             ),
           ],
         ),

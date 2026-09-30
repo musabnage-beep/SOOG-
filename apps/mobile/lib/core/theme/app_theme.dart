@@ -5,14 +5,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 abstract class AppTheme {
-  /// Premium dark theme. Every screen inherits its surfaces, typography and
-  /// component shapes from here.
-  static ThemeData dark() {
+  /// Light theme. Every screen inherits its surfaces, typography and component
+  /// shapes from here.
+  static ThemeData light() {
     final base = ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         onPrimary: AppColors.onPrimary,
         secondary: AppColors.secondary,
@@ -42,8 +42,11 @@ abstract class AppTheme {
         scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          statusBarBrightness: Brightness.dark,
+          // Dark glyphs in the status bar, now that the bar sits on a light
+          // background. The two flags disagree on purpose: Android reads
+          // `statusBarIconBrightness`, iOS reads `statusBarBrightness`.
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
         ),
       ),
       cardTheme: CardThemeData(

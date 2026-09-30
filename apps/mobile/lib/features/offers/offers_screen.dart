@@ -222,10 +222,12 @@ class _HeroBanner extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: AppColors.glowGold(intensity: 0.5),
                         ),
+                        // Ink rather than onPrimary: this pill is filled with
+                        // the gold gradient, too light to carry white text.
                         child: const Text(
                           'حصري',
                           style: TextStyle(
-                            color: AppColors.onPrimary,
+                            color: AppColors.dark,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
@@ -242,10 +244,15 @@ class _HeroBanner extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      // Dimmed white, not `muted`: this banner keeps its dark
+                      // green fill, so page ink would disappear into it.
+                      Text(
                         'خصومات تصل إلى ٥٠٪',
                         textAlign: TextAlign.right,
-                        style: TextStyle(color: AppColors.muted, fontSize: 13),
+                        style: TextStyle(
+                          color: AppColors.white.withValues(alpha: 0.72),
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Align(

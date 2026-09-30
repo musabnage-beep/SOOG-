@@ -5,8 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/cart_controller.dart';
 
-/// Bottom navigation. The branch order and routes are unchanged — only the
-/// presentation is new (floating dark bar, animated active pill, cart badge).
+/// Bottom navigation: floating bar, animated active pill, cart badge.
 class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.shell});
 
@@ -51,9 +50,9 @@ class MainShell extends ConsumerWidget {
             border: Border(top: BorderSide(color: AppColors.border)),
             boxShadow: [
               BoxShadow(
-                color: Color(0x99000000),
-                blurRadius: 24,
-                offset: Offset(0, -6),
+                color: Color(0x1416281D),
+                blurRadius: 20,
+                offset: Offset(0, -4),
               ),
             ],
           ),

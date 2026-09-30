@@ -12,7 +12,7 @@ import 'router/app_router.dart';
 
 Future<void> main() async {
   // Safety net: if the app fails to boot, show a clean message instead of a
-  // blank white screen.
+  // blank screen.
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
     FlutterError.onError = (details) => FlutterError.presentError(details);
@@ -33,28 +33,30 @@ class _ErrorApp extends StatelessWidget {
         home: Directionality(
           textDirection: TextDirection.rtl,
           child: Scaffold(
-            backgroundColor: const Color(0xFF0D0F0E),
+            // Literal colors: this runs when the app failed to boot, so it
+            // must not depend on anything that could itself have thrown.
+            backgroundColor: const Color(0xFFF6F8F5),
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: const [
-                    Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+                    Icon(Icons.error_outline, size: 48, color: Color(0xFFD92D20)),
                     SizedBox(height: 16),
                     Text(
                       'حدث خطأ غير متوقع',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFFF2F5F3),
+                        color: Color(0xFF14211A),
                       ),
                     ),
                     SizedBox(height: 8),
                     Text(
                       'يرجى إغلاق التطبيق وإعادة فتحه',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xFFB0B8B3)),
+                      style: TextStyle(color: Color(0xFF6B7A70)),
                     ),
                   ],
                 ),
@@ -101,9 +103,9 @@ class _AldiafaAppState extends ConsumerState<AldiafaApp> {
     return MaterialApp.router(
       title: 'الضيافة',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark(),
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.dark,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.light(),
+      themeMode: ThemeMode.light,
       routerConfig: router,
       locale: const Locale('ar'),
       supportedLocales: const [Locale('ar'), Locale('en')],

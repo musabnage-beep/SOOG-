@@ -372,14 +372,16 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     ),
     child: Row(
       children: [
-        const Icon(Icons.credit_card, color: AppColors.gold),
+        // Gold carries the card's tint and fill but never its text: it is a
+        // light colour, so ink drawn in it disappears against this pale panel.
+        const Icon(Icons.credit_card, color: AppColors.warning),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             order.paymentStatus == PaymentStatus.failed
                 ? 'لم تتم عملية الدفع. يمكنك المحاولة مرة أخرى.'
                 : 'هذا الطلب بانتظار الدفع الإلكتروني.',
-            style: const TextStyle(color: AppColors.gold),
+            style: const TextStyle(color: AppColors.warning),
           ),
         ),
         const SizedBox(width: 10),
@@ -387,7 +389,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           onPressed: _busy ? null : () => _payNow(order.id),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.gold,
-            foregroundColor: AppColors.onPrimary,
+            foregroundColor: AppColors.dark,
             // The theme asks buttons to fill the width, which is an infinite
             // minimum inside a row and leaves the card unpainted.
             minimumSize: Size.zero,

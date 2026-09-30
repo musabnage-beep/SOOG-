@@ -188,8 +188,8 @@ class ProductCard extends ConsumerWidget {
         ),
       );
     }
-    // Product photography is shot on white, so a light tile keeps it crisp and
-    // makes the packaging pop against the dark card.
+    // Product photography is shot on white, so a white tile hides the seam
+    // between the cut-out and its backdrop.
     return Container(
       color: Colors.white,
       child: CachedNetworkImage(

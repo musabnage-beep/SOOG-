@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -28,6 +29,10 @@ const _kGreen = AppColors.secondary;
 // Product shots and the basket load from the asset pipeline by their final
 // filenames; until the real art is dropped in they render nothing (no emoji /
 // no substitute icon) at the exact reserved size.
+//
+// This screen stays dark while the rest of the app is light. The composition is
+// built entirely from gold glow, bokeh and blur, none of which survive on a
+// white page, and a dark opening beat into a light app is the usual pattern.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -109,6 +114,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    // The light theme asks for dark status-bar glyphs, which would vanish
+    // against this screen. No AppBar here means nothing else would override it.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: _build(context),
+    );
+  }
+
+  Widget _build(BuildContext context) {
     return Scaffold(
       backgroundColor: _kBlack,
       body: LayoutBuilder(
