@@ -655,13 +655,16 @@ class _CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visible = items.take(20).toList();
+    // No cap: the grid used to stop at 20, which was exactly the number of
+    // seeded categories, so every category added from the dashboard afterwards
+    // was invisible in the app. The grid shrink-wraps inside the page scroll,
+    // so extra categories simply add rows.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: visible.length,
+        itemCount: items.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 5,
           childAspectRatio: 0.74,
@@ -669,7 +672,7 @@ class _CategoryGrid extends StatelessWidget {
           mainAxisSpacing: 12,
         ),
         itemBuilder: (context, i) {
-          final c = visible[i];
+          final c = items[i];
           return FadeSlideIn(
             index: i,
             offset: 12,
