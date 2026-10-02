@@ -7,7 +7,11 @@ workflows:
       app_store_connect: codemagic
 
     environment:
-      flutter: stable
+      # Pinned, not `stable`: a floating channel silently moved the toolchain
+      # under a pipeline that had not changed, which enabled Swift Package
+      # Manager mid-build and broke signing. This is the version the local
+      # analyze/test run is verified against.
+      flutter: 3.41.4
       xcode: latest
       cocoapods: default
       groups:
@@ -29,6 +33,12 @@ workflows:
 
       - name: Set up code signing
         script: |
+          # Without `set -e` the step's exit status is only that of the LAST
+          # command, so a failed fetch-signing-files was swallowed: use-profiles
+          # exits 0 when it finds no profiles to apply, the step went green, and
+          # the build died a minute later inside `flutter build ipa` with the
+          # misleading "No development certificates available".
+          set -euo pipefail
           keychain initialize
           echo "$CERTIFICATE_PRIVATE_KEY" | openssl base64 -d -A > /tmp/cert_key.pem
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
@@ -37,7 +47,19 @@ workflows:
             --certificate-key=@file:/tmp/cert_key.pem \
             --create
           keychain add-certificates
-          xcode-project use-profiles
+          # This is a monorepo: the default `**/*.xcodeproj` glob runs from the
+          # repository root and also matches Pods.xcodeproj, so name the target
+          # project explicitly.
+          xcode-project use-profiles --project apps/mobile/ios/Runner.xcodeproj
+
+          # Fail here, loudly, rather than let Flutter fall back to scanning the
+          # keychain for a *development* certificate that an App Store build
+          # never has. The Flutter template ships CODE_SIGN_STYLE=Automatic with
+          # no DEVELOPMENT_TEAM; use-profiles is what rewrites both.
+          if ! grep -q DEVELOPMENT_TEAM apps/mobile/ios/Runner.xcodeproj/project.pbxproj; then
+            echo "use-profiles did not apply signing settings to Runner.xcodeproj"
+            exit 1
+          fi
 
       - name: Build iOS IPA
         script: |
@@ -67,7 +89,7 @@ workflows:
     max_build_duration: 60
     instance_type: linux_x2
     environment:
-      flutter: stable
+      flutter: 3.41.4
       vars:
         PACKAGE_NAME: com.aldiafah.aldiafa
 
