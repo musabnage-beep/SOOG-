@@ -47,10 +47,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     _session = widget.orders.paymentSession(widget.orderId);
   }
 
-  // Apple Pay is deliberately absent: it needs a merchant id registered with
-  // Apple, the in-app-payments entitlement and a certificate uploaded to the
-  // gateway. Until all three exist the button renders but cannot open the
-  // payment sheet, which reads as a broken screen.
+  // This id must match three places at once or the sheet never opens: the
+  // Merchant ID registered at Apple, the `com.apple.developer.in-app-payments`
+  // entitlement in ios/Runner/Runner.entitlements, and the Apple Pay
+  // certificate uploaded to the gateway.
+  static const _applePayMerchantId = 'merchant.org.aldiafah';
+
   PaymentConfig _config(PaymentSession session) => PaymentConfig(
     publishableApiKey: session.publishableKey,
     amount: session.amount,
@@ -65,6 +67,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
       PaymentNetwork.masterCard,
     ],
     creditCard: CreditCardConfig(saveCard: false, manual: false),
+    applePay: ApplePayConfig(
+      merchantId: _applePayMerchantId,
+      // Shown as the payee in the Apple Pay sheet.
+      label: 'الضيافة',
+      manual: false,
+      saveCard: false,
+    ),
   );
 
   void _onPaymentResult(dynamic result) {
@@ -144,6 +153,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               _AmountCard(session: session),
               const SizedBox(height: 20),
+              // Renders nothing off iOS or on a device that cannot use Apple
+              // Pay, so no platform check is needed around it.
+              ApplePay(
+                config: _config(session),
+                onPaymentResult: _onPaymentResult,
+                buttonType: ApplePayButtonType.buy,
+                buttonStyle: ApplePayButtonStyle.black,
+              ),
+              const SizedBox(height: 16),
               _CardForm(
                 config: _config(session),
                 amount: session.amount,
