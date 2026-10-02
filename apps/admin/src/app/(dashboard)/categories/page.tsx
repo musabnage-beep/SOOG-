@@ -35,6 +35,13 @@ const empty: CreateCategoryInput = {
   isActive: true,
 };
 
+/** The API rejects anything outside /^[a-z0-9-]+$/, so Arabic cannot be used. */
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 export default function CategoriesPage() {
   const { data, isLoading, isError, refetch } = useCategories();
   const { create, update, remove, uploadImage } = useCategoryMutations();
@@ -44,6 +51,7 @@ export default function CategoriesPage() {
   const [form, setForm] = useState<CreateCategoryInput>(empty);
   const [open, setOpen] = useState(false);
   const [toDelete, setToDelete] = useState<Category | null>(null);
+  const [slugEdited, setSlugEdited] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
 
@@ -69,10 +77,12 @@ export default function CategoriesPage() {
   const openNew = () => {
     setEditing(null);
     setForm(empty);
+    setSlugEdited(false);
     setOpen(true);
   };
   const openEdit = (c: Category) => {
     setEditing(c);
+    setSlugEdited(true);
     setForm({
       nameAr: c.nameAr,
       nameEn: c.nameEn,
@@ -85,6 +95,23 @@ export default function CategoriesPage() {
   };
 
   const save = async () => {
+    // Say WHICH field is missing instead of disabling the button: a silently
+    // disabled "حفظ" looked like a failed save and categories were lost.
+    const missing = !form.nameAr
+      ? 'الاسم (عربي)'
+      : !form.nameEn
+        ? 'الاسم (إنجليزي)'
+        : !form.slug
+          ? 'المعرّف (slug)'
+          : null;
+    if (missing) {
+      toast.error(`أكمل الحقل المطلوب: ${missing}`);
+      return;
+    }
+    if (!/^[a-z0-9-]+$/.test(form.slug)) {
+      toast.error('المعرّف (slug) يقبل الحروف الإنجليزية الصغيرة والأرقام والشرطة فقط');
+      return;
+    }
     try {
       if (editing) {
         await update.mutateAsync({ id: editing.id, input: form });
@@ -215,29 +242,38 @@ export default function CategoriesPage() {
             <Button variant="ghost" onClick={() => setOpen(false)}>
               إلغاء
             </Button>
-            <Button
-              loading={create.isPending || update.isPending}
-              disabled={!form.nameAr || !form.nameEn || !form.slug}
-              onClick={save}
-            >
+            <Button loading={create.isPending || update.isPending} onClick={save}>
               حفظ
             </Button>
           </>
         }
       >
         <div className="space-y-4">
-          <Field label="الاسم (عربي)">
+          <Field label="الاسم (عربي) *">
             <Input value={form.nameAr} onChange={(e) => setForm({ ...form, nameAr: e.target.value })} />
           </Field>
-          <Field label="الاسم (إنجليزي)">
-            <Input dir="ltr" value={form.nameEn} onChange={(e) => setForm({ ...form, nameEn: e.target.value })} />
+          <Field label="الاسم (إنجليزي) *">
+            <Input
+              dir="ltr"
+              value={form.nameEn}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  nameEn: e.target.value,
+                  ...(slugEdited ? {} : { slug: slugify(e.target.value) }),
+                })
+              }
+            />
           </Field>
-          <Field label="المعرّف (slug)">
+          <Field label="المعرّف (slug) * — إنجليزي فقط، يُقترح تلقائيًا">
             <Input
               dir="ltr"
               placeholder="dates-sweets"
               value={form.slug}
-              onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              onChange={(e) => {
+                setSlugEdited(true);
+                setForm({ ...form, slug: e.target.value });
+              }}
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">
