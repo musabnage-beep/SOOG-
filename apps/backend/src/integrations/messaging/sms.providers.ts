@@ -89,12 +89,29 @@ export class TaqnyatSmsProvider implements SmsProvider {
 
     // A 201 can still reject the number (bad format, blocked operator). Without
     // this check the caller would report "code sent" for a message nobody gets.
-    const parsed = JSON.parse(text) as { accepted?: unknown[]; rejected?: unknown[] };
-    if (parsed.rejected?.length || parsed.accepted?.length === 0) {
+    const parsed = JSON.parse(text) as { accepted?: unknown; rejected?: unknown };
+    const acceptedNobody =
+      parsed.accepted !== undefined && countRecipients(parsed.accepted) === 0;
+    if (countRecipients(parsed.rejected) > 0 || acceptedNobody) {
       this.logger.error(`Taqnyat rejected ${to}: ${text}`);
       throw new Error('SMS provider rejected the recipient');
     }
   }
+}
+
+/**
+ * Counts the numbers in a Taqnyat `accepted`/`rejected` field.
+ *
+ * The live API returns these as bracketed STRINGS — `"[966500000000]"` and
+ * `"[]"` — not as JSON arrays, so reading `.length` counts characters: an empty
+ * `"[]"` measures 2 and every successful send looked like two rejections. Both
+ * shapes are accepted here because the documentation shows arrays.
+ */
+function countRecipients(field: unknown): number {
+  if (Array.isArray(field)) return field.length;
+  if (typeof field !== 'string') return 0;
+  const inner = field.replace(/^\[/, '').replace(/\]$/, '').trim();
+  return inner === '' ? 0 : inner.split(',').length;
 }
 
 /**

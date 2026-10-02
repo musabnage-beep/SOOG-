@@ -83,6 +83,33 @@ describe('TaqnyatSmsProvider', () => {
       new TaqnyatSmsProvider(config).send('+966512345678', 'hi'),
     ).rejects.toThrow('SMS provider rejected the recipient');
   });
+
+  // The live API does not match its own documentation: it sends these two
+  // fields as bracketed strings. Reading `.length` on them counted characters,
+  // so "[]" looked like two rejections and every delivered message failed.
+  it('accepts the bracketed-string shape the live API actually returns', async () => {
+    reply(201, {
+      statusCode: 201,
+      messageId: 10213621187,
+      cost: '0.1500',
+      currency: 'SAR',
+      totalCount: 1,
+      accepted: '[966512345678]',
+      rejected: '[]',
+    });
+
+    await expect(
+      new TaqnyatSmsProvider(config).send('+966512345678', 'hi'),
+    ).resolves.toBeUndefined();
+  });
+
+  it('still throws when a bracketed string carries a rejected number', async () => {
+    reply(201, { accepted: '[]', rejected: '[966512345678]' });
+
+    await expect(
+      new TaqnyatSmsProvider(config).send('+966512345678', 'hi'),
+    ).rejects.toThrow('SMS provider rejected the recipient');
+  });
 });
 
 /**
