@@ -54,8 +54,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (!mounted) return;
       // Signup always ends on the SMS code screen; the account only opens once
       // the customer proves the number is theirs.
+      final from = GoRouterState.of(context).uri.queryParameters['from'];
       context.push(
-        '/otp',
+        from == null ? '/otp' : '/otp?from=${Uri.encodeComponent(from)}',
         extra: OtpArgs(target: challenge.target, purpose: challenge.purpose),
       );
     } on ApiException catch (e) {

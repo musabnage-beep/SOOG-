@@ -69,9 +69,17 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (status == AuthStatus.unauthenticated) {
         if (authRoutes.contains(loc)) return null;
-        return requiresAuth(loc) ? '/login' : null;
+        // Remember what the customer was trying to reach. Redirecting replaces
+        // the stack, so without this the origin is lost and signing in always
+        // landed on the home tab.
+        return requiresAuth(loc)
+            ? '/login?from=${Uri.encodeComponent(loc)}'
+            : null;
       }
-      if (authRoutes.contains(loc)) return '/home';
+      if (authRoutes.contains(loc)) {
+        final from = state.uri.queryParameters['from'];
+        return (from != null && from.startsWith('/')) ? from : '/home';
+      }
       return null;
     },
     routes: [

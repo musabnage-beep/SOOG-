@@ -61,6 +61,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     showErrorSnack(context, msg);
   }
 
+  /// Carries the `from` origin onto the next auth screen, so finishing the
+  /// sign-up or reset flow still returns the customer to the screen that asked
+  /// them to sign in.
+  String _withOrigin(String path) {
+    final from = GoRouterState.of(context).uri.queryParameters['from'];
+    return from == null ? path : '$path?from=${Uri.encodeComponent(from)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -257,7 +265,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () => context.push('/forgot'),
+                              onPressed: () =>
+                                  context.push(_withOrigin('/forgot')),
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,
                                 minimumSize: Size.zero,
@@ -315,7 +324,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               GestureDetector(
-                                onTap: () => context.push('/register'),
+                                onTap: () =>
+                                    context.push(_withOrigin('/register')),
                                 child: const Text(
                                   'إنشاء حساب',
                                   style: TextStyle(

@@ -229,7 +229,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.push('/login');
+              // Hand the customer back to this product once they are signed in.
+              context.push(
+                '/login?from=${Uri.encodeComponent('/product/${widget.productId}')}',
+              );
             },
             child: const Text('تسجيل الدخول'),
           ),
