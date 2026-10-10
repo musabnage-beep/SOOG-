@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/responsive.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/catalog_providers.dart';
 import '../../widgets/ambient_background.dart';
@@ -36,10 +37,11 @@ class CategoriesScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(categoriesProvider),
         ),
         data: (items) => GridView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomBarInset(context)),
           itemCount: items.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
+          // 4 across on an iPhone, more columns as the window widens.
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 110,
             childAspectRatio: 0.78,
             crossAxisSpacing: 12,
             mainAxisSpacing: 16,

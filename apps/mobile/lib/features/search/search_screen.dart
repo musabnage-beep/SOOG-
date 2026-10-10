@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/layout/responsive.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/catalog_providers.dart';
 import '../../widgets/product_card.dart';
@@ -438,12 +439,7 @@ class _ResultsView extends ConsumerWidget {
         Expanded(
           child: GridView.builder(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.66,
-            ),
+            gridDelegate: productGridDelegate,
             itemCount: products.items.length,
             itemBuilder: (context, i) {
               final p = products.items[i];

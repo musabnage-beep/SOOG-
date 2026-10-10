@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/responsive.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../providers/cart_controller.dart';
@@ -200,12 +201,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
       child: GridView.builder(
         controller: _scroll,
         padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.66,
-        ),
+        gridDelegate: productGridDelegate,
         itemCount: state.items.length + (state.isLoadingMore ? 2 : 0),
         itemBuilder: (context, i) {
           if (i >= state.items.length) {

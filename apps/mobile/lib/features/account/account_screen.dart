@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/responsive.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/snack.dart';
@@ -23,7 +24,7 @@ class AccountScreen extends ConsumerWidget {
         child: SafeArea(
           bottom: false,
           child: ListView(
-            padding: const EdgeInsets.only(bottom: 32),
+            padding: EdgeInsets.only(bottom: 32 + bottomBarInset(context)),
             children: [
               const _Header(),
               _ProfileCard(

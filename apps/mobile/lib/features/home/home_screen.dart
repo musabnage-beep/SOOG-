@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/assets/app_assets.dart';
+import '../../core/layout/responsive.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/category.dart';
 import '../../providers/cart_controller.dart';
@@ -116,15 +117,14 @@ class HomeScreen extends ConsumerWidget {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      0,
+                      16,
+                      24 + bottomBarInset(context),
+                    ),
                     sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.66,
-                          ),
+                      gridDelegate: productGridDelegate,
                       delegate: SliverChildBuilderDelegate((context, i) {
                         final p = products.items[i];
                         return FadeSlideIn(
@@ -665,12 +665,7 @@ class _CategoryGrid extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 5,
-          childAspectRatio: 0.74,
-          crossAxisSpacing: 6,
-          mainAxisSpacing: 12,
-        ),
+        gridDelegate: categoryGridDelegate,
         itemBuilder: (context, i) {
           final c = items[i];
           return FadeSlideIn(

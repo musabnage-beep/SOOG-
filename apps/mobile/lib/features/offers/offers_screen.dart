@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/responsive.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/catalog_providers.dart';
 import '../../widgets/ambient_background.dart';
@@ -76,7 +77,12 @@ class OffersScreen extends ConsumerWidget {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    0,
+                    16,
+                    24 + bottomBarInset(context),
+                  ),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate((context, i) {
                       final p = products.items[i];
@@ -88,13 +94,7 @@ class OffersScreen extends ConsumerWidget {
                         ),
                       );
                     }, childCount: products.items.length),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.66,
-                        ),
+                    gridDelegate: productGridDelegate,
                   ),
                 ),
             ],
